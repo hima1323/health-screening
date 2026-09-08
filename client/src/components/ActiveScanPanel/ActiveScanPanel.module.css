@@ -1,0 +1,125 @@
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.stepBar {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.stepDone .stepBar {
+  background: linear-gradient(90deg, var(--rose), var(--steel));
+}
+
+.stepLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.focus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px 20px;
+}
+
+.guidance {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px;
+}
+
+.instruction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.signal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signalDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.signalValue {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.doneActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.doneActions button:first-child {
+  max-width: 280px;
+}
+
+.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.fallback strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cancel {
+  align-self: center;
+}
+
+@media (max-width: 620px) {
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 10px;
+  }
+
+  .focus {
+    padding: 20px 16px;
+  }
+
+  .fallback {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}

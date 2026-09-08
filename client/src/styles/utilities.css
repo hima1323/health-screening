@@ -1,0 +1,82 @@
+/*
+ * The shared utility layer: typography and layout helpers used by nearly every
+ * component. Anything specific to one component belongs in its own .module.css.
+ */
+
+/* type */
+.numeral {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 0.98;
+  color: var(--ink);
+  /* the display serif defaults to old-style figures, which drop numerals below the baseline */
+  font-variant-numeric: lining-nums;
+  font-feature-settings: 'lnum' 1;
+}
+
+.muted {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.muted.small {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.center {
+  text-align: center;
+}
+
+.label {
+  margin-bottom: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.label.tight {
+  margin-bottom: 0;
+}
+
+.label.center {
+  text-align: center;
+}
+
+.label.accent {
+  color: var(--rose);
+}
+
+/* layout */
+.icon-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-line.center {
+  justify-content: center;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+@media (max-width: 900px) {
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+}

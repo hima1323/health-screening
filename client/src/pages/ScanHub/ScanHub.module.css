@@ -1,0 +1,71 @@
+.greeting {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.question {
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 34px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.chip {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.auraCard {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px 20px;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.captures {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.captures li {
+  display: flex;
+  gap: 12px;
+  color: var(--ink-2);
+}
+
+.captureTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .auraCard {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 620px) {
+  .auraCard {
+    padding: 20px 16px;
+  }
+}

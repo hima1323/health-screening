@@ -1,0 +1,34 @@
+/* Design tokens — the single source of truth for colour, glass and type. */
+:root {
+  --ink: #3b3238;
+  --ink-2: rgba(59, 50, 56, 0.68);
+  --ink-3: rgba(59, 50, 56, 0.44);
+  --on-ink: #f6eee9;
+
+  --rose: #c97a70;
+  --rose-deep: #a2554c;
+  --amber: #c4954f;
+  --sage: #6e9b88;
+  --steel: #7e96a6;
+
+  /* the glass is tinted rose so it sits in the sky rather than reading as cold white */
+  --glass-blur: blur(26px) saturate(135%);
+  --glass-top: rgba(253, 235, 233, 0.62);
+  --glass-bottom: rgba(249, 226, 229, 0.32);
+  --glass-solid: rgba(252, 234, 232, 0.56);
+  --glass-tile: rgba(252, 233, 232, 0.5);
+  --glass-edge: rgba(255, 242, 240, 0.78);
+  --glass-sheen: rgba(255, 247, 245, 0.9);
+  --glass-shadow: 0 14px 34px rgba(122, 84, 88, 0.16);
+
+  /* TAN Pearl is a licensed face — it is used when installed, Cormorant Garamond stands in otherwise */
+  --font-display: 'TAN Pearl', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Quicksand', system-ui, -apple-system, sans-serif;
+
+  --radius-card: 30px;
+  --radius-tile: 20px;
+  --radius-pill: 999px;
+
+  --gap: 16px;
+  --page-max: 1120px;
+}

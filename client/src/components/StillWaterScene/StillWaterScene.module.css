@@ -1,0 +1,98 @@
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 60% at 78% 8%, #f9dcc4 0%, rgba(249, 220, 196, 0) 62%),
+    radial-gradient(90% 46% at 12% 22%, #e5c6cf 0%, rgba(229, 198, 207, 0) 64%),
+    linear-gradient(180deg, #d3cfe0 0%, #e7cbcb 24%, #f0d5c4 44%, #dcd8e0 56%, #bed3e1 70%, #a5c0d5 100%);
+}
+
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(24px);
+  background: #fbefe6;
+  opacity: 0.75;
+}
+
+.cloud1 {
+  width: 56%;
+  height: 12%;
+  right: -6%;
+  top: 9%;
+}
+
+.cloud2 {
+  width: 40%;
+  height: 8%;
+  left: 4%;
+  top: 20%;
+  opacity: 0.5;
+}
+
+.cloud3 {
+  width: 70%;
+  height: 10%;
+  left: -10%;
+  top: 31%;
+  opacity: 0.4;
+  background: #f0d6ce;
+}
+
+.roseBand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 24%;
+  height: 14%;
+  background: linear-gradient(180deg, rgba(224, 152, 134, 0.42), rgba(226, 166, 150, 0));
+  filter: blur(10px);
+}
+
+.water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44%;
+  background: linear-gradient(180deg, #b4cbdb 0%, #c2d3dd 18%, #d2c9d1 46%, #b8ccd9 72%, #97b3c9 100%);
+}
+
+/* the horizon line where sky meets water */
+.water::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.ripple {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+  filter: blur(1px);
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0.02) 34%,
+    rgba(255, 255, 255, 0.2)
+  );
+}

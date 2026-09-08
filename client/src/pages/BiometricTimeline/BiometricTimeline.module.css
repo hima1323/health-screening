@@ -1,0 +1,29 @@
+.logsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 6px;
+}
+
+.logDate {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.trendCaption {
+  margin-top: 3px;
+}
+
+.summary {
+  margin-top: 12px;
+}
+
+@media (max-width: 620px) {
+  .logDate {
+    font-size: 19px;
+  }
+}

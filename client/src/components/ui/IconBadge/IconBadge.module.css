@@ -1,0 +1,25 @@
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--ink-2);
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen);
+}
+
+.rose {
+  color: var(--rose);
+  background: rgba(201, 122, 112, 0.14);
+  border-color: rgba(201, 122, 112, 0.32);
+}
+
+.amber {
+  color: var(--amber);
+  background: rgba(196, 149, 79, 0.14);
+  border-color: rgba(196, 149, 79, 0.32);
+}

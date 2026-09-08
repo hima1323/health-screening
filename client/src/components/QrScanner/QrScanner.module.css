@@ -1,0 +1,140 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px 20px;
+}
+
+.viewfinder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(260px, 72vw);
+  aspect-ratio: 1;
+  margin: 6px 0;
+  overflow: hidden;
+  border-radius: 28px;
+  color: var(--ink-2);
+  background: rgba(59, 50, 56, 0.14);
+  border: 1px solid var(--glass-edge);
+}
+
+.locked {
+  color: var(--sage);
+  border-color: rgba(110, 155, 136, 0.5);
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* frames are sampled here, never shown */
+.canvas {
+  display: none;
+}
+
+.result {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  color: inherit;
+  background: rgba(253, 240, 238, 0.8);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid var(--ink-2);
+  border-radius: 8px;
+}
+
+.locked .corner {
+  border-color: var(--sage);
+}
+
+.cornerTl {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.cornerTr {
+  top: 12px;
+  right: 12px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.cornerBl {
+  bottom: 12px;
+  left: 12px;
+  border-right: none;
+  border-top: none;
+}
+
+.cornerBr {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+.laser {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--rose), transparent);
+  animation: scan 1.6s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: 8%;
+  }
+  50% {
+    top: 90%;
+  }
+  100% {
+    top: 8%;
+  }
+}
+
+.headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 620px) {
+  .card {
+    padding: 20px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .laser {
+    animation: none;
+  }
+}
