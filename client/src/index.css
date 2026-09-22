@@ -1,4 +1,7 @@
-/* Design tokens — the single source of truth for colour, glass and type. */
+/*
+ * Global stylesheet, loaded once by main.jsx.
+ * Design tokens and the element reset — everything else is a *.module.css.
+ */
 :root {
   --ink: #3b3238;
   --ink-2: rgba(59, 50, 56, 0.68);
@@ -31,4 +34,18 @@
 
   --gap: 16px;
   --page-max: 1120px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: #cfdde5;
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }

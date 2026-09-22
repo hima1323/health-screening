@@ -5,12 +5,19 @@ const ScreeningSession = require('../models/ScreeningSession');
 const Report = require('../models/Report');
 const VitalTimeline = require('../models/VitalTimeline');
 const ScreeningLog = require('../models/ScreeningLog');
+const User = require('../models/User');
+const { bearerFrom, readToken } = require('../lib/token');
 
 const router = express.Router();
 
 // GET /api/primary — resolves the demo patient/session ids so the client never hardcodes them
 router.get('/primary', async (req, res) => {
-  const patient = await Patient.findOne();
+  // A signed-in user points at their own patient record; otherwise fall back to the seeded demo one.
+  const userId = readToken(bearerFrom(req) || '');
+  const user = userId ? await User.findById(userId) : null;
+
+  const linked = user && user.patientId ? await Patient.findById(user.patientId) : null;
+  const patient = linked || (await Patient.findOne());
   if (!patient) return res.status(404).json({ error: 'No patient found. Run the seed script.' });
   const session = await ScreeningSession.findOne({ patientId: patient._id });
   res.json({ patientId: patient._id, sessionId: session ? session.sessionId : null });

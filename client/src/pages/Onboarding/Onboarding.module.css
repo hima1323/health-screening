@@ -1,0 +1,132 @@
+.progress {
+  padding: 14px 18px;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  background: var(--glass-tile);
+  border: 1px solid transparent;
+}
+
+.stepMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(59, 50, 56, 0.12);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.stepDone {
+  color: var(--ink-2);
+}
+
+.stepDone .stepMark {
+  background: var(--sage);
+  color: var(--on-ink);
+}
+
+.stepCurrent {
+  color: var(--ink);
+  border-color: var(--glass-edge);
+  background: var(--glass-solid);
+}
+
+.stepCurrent .stepMark {
+  background: var(--rose);
+  color: var(--on-ink);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.body {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 14px 15px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.consent input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  accent-color: var(--rose);
+  cursor: pointer;
+}
+
+.error {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rose-deep);
+}
+
+.submit {
+  width: auto;
+  align-self: flex-start;
+  padding-left: 26px;
+  padding-right: 26px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

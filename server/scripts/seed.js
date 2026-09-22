@@ -6,6 +6,7 @@ const ScreeningSession = require('../models/ScreeningSession');
 const Report = require('../models/Report');
 const VitalTimeline = require('../models/VitalTimeline');
 const ScreeningLog = require('../models/ScreeningLog');
+const User = require('../models/User');
 
 async function seed() {
   await connectDB();
@@ -17,6 +18,8 @@ async function seed() {
     Report.deleteMany({}),
     VitalTimeline.deleteMany({}),
     ScreeningLog.deleteMany({}),
+    // user accounts point at a patient record, so they are reset alongside the demo data
+    User.deleteMany({}),
   ]);
 
   const patient = await Patient.create({

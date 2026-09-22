@@ -4,3 +4,7 @@ export { default as AuraOrb } from './AuraOrb';
 export { default as QrScanner } from './QrScanner';
 export { default as ActiveScanPanel } from './ActiveScanPanel';
 export { default as AmbientCurve } from './AmbientCurve';
+export { default as ReportUploader } from './ReportUploader';
+export { default as GoogleButton } from './GoogleButton';
+export { default as RequireAccount } from './RequireAccount';
+export { default as RequireGuest } from './RequireGuest';

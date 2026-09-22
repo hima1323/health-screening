@@ -1,42 +1,66 @@
 # Aura Screen — Patient App
 
-React implementation of the Aura Screen patient app (Scan Hub, Active Scan,
-Session Report, Biometric Timeline), backed by an Express API that reads all
-patient/session/report/timeline data from MongoDB — nothing is hardcoded in
-the frontend.
+Contactless biometric screening for patients: an introduction, an account, a
+QR-triggered scan, and the report and timeline that come out of it. React +
+Vite on the front, Express + Mongoose on the back — every screen reads its data
+from MongoDB, nothing is hardcoded in the client.
 
 ## Structure
 
-- `server/` — Express + Mongoose API
-  - `models/` — Patient, Station, ScreeningSession, Report, VitalTimeline, ScreeningLog
-  - `routes/api.js` — REST endpoints consumed by the client
-  - `scripts/seed.js` — seeds MongoDB with the demo patient (Ramesh, 54) and session S-8841
-- `client/` — React app (Vite)
-  - `src/pages/` — ScanHub, ActiveScan, SessionReport, BiometricTimeline
-  - `src/api.js` — fetch helpers
-  - `src/PrimaryContext.jsx` — resolves the demo patient/session ids from `/api/primary` so the frontend never hardcodes an id
+```
+webapp/
+├── client/                 Vite React app (see client/README.md)
+└── server/                 Express + Mongoose API
+    ├── index.js            app entry — mounts the routers, connects, listens
+    ├── db.js               mongoose connection
+    ├── lib/                token.js (JWT), google.js (ID-token verification)
+    ├── middleware/         requireUser.js — bearer token → req.user
+    ├── models/             User, Patient, Station, ScreeningSession,
+    │                       Report, VitalTimeline, ScreeningLog
+    ├── routes/             api.js (screening data), auth.js (accounts)
+    ├── scripts/seed.js     demo patient + session S-8841
+    └── uploads/            past reports patients attach (gitignored)
+```
 
 ## Run it
 
-Requires a local MongoDB running on `mongodb://127.0.0.1:27017` (or set `MONGODB_URI`).
+Needs MongoDB on `mongodb://127.0.0.1:27017`, or set `MONGODB_URI`.
 
 ```bash
-# 1. seed the database (one-time, or whenever you want to reset demo data)
-cd server && npm install && npm run seed
+# 1. configure and seed (once)
+cd server && npm install && cp .env.example .env && npm run seed
 
-# 2. start the API
-npm start          # http://localhost:4000
+# 2. API
+npm start                       # http://localhost:4000
 
-# 3. start the client (separate terminal)
-cd ../client && npm install && npm run dev   # http://localhost:5173
+# 3. client, in a second terminal
+cd ../client && npm install && npm run dev    # http://localhost:5173
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:4000`.
+## Environment
 
-## API endpoints
+`server/.env` — see `server/.env.example`.
 
-- `GET /api/primary` — resolves the demo patient/session ids
-- `GET /api/patients/:id/scan-hub`
-- `GET /api/sessions/:sessionId/active-scan`
-- `GET /api/sessions/:sessionId/report`
-- `GET /api/patients/:id/timeline`
+| Variable | Needed for |
+| --- | --- |
+| `MONGODB_URI` | anything other than a local MongoDB |
+| `JWT_SECRET` | signing sessions — set a long random string outside development |
+| `GOOGLE_CLIENT_ID` | the Google sign-in button; the app falls back to email + password without it |
+| `PORT` | moving the API off 4000 |
+
+For Google sign-in, add `http://localhost:5173` to the OAuth client's
+**Authorised JavaScript origins** in Google Cloud Console. No client secret is
+needed — the browser gets the ID token and the server only verifies it.
+
+## API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` · `/api/auth/login` | email + password accounts |
+| `POST` | `/api/auth/google` | exchange a Google ID token for a session |
+| `GET` | `/api/auth/me` | restore a remembered session |
+| `PUT` | `/api/auth/me/profile` | onboarding details |
+| `POST`/`DELETE` | `/api/auth/me/reports[/:id]` | attach or drop past reports |
+| `GET` | `/api/primary` | resolve the signed-in patient and session ids |
+| `GET` | `/api/patients/:id/scan-hub` · `/timeline` | screen data |
+| `GET` | `/api/sessions/:sessionId/active-scan` · `/report` | screen data |
