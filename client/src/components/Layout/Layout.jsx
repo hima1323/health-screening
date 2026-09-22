@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Leaf } from 'lucide-react';
 import StillWaterScene from '../StillWaterScene';
+import AccountChip from '../AccountChip';
 import styles from './Layout.module.css';
 
 const TABS = [
@@ -9,8 +10,11 @@ const TABS = [
   { to: '/timeline', label: 'Biometric Timeline' },
 ];
 
-/** The page shell: backdrop, header, tab strip and main column. */
-export default function Layout({ eyebrow, title, badge, children }) {
+/**
+ * The page shell: backdrop, header, tab strip and main column.
+ * The onboarding screens pass `showTabs={false}` — there is nowhere to navigate yet.
+ */
+export default function Layout({ eyebrow, title, badge, showTabs = true, children }) {
   return (
     <div className={styles.shell}>
       <StillWaterScene />
@@ -25,21 +29,26 @@ export default function Layout({ eyebrow, title, badge, children }) {
             <h1 className={styles.title}>{title}</h1>
           </div>
         </div>
-        {badge}
+        <div className={styles.headerEnd}>
+          {badge}
+          <AccountChip />
+        </div>
       </header>
 
-      <nav className={styles.tabs}>
-        {TABS.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            end={tab.end}
-            className={({ isActive }) => `${styles.tab} ${isActive ? styles.tabActive : ''}`.trim()}
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
+      {showTabs && (
+        <nav className={styles.tabs}>
+          {TABS.map((tab) => (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              end={tab.end}
+              className={({ isActive }) => `${styles.tab} ${isActive ? styles.tabActive : ''}`.trim()}
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
 
       <main className={styles.main}>{children}</main>
     </div>

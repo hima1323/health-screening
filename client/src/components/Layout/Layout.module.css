@@ -12,6 +12,13 @@
   gap: 12px;
 }
 
+.headerEnd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .brand {
   display: flex;
   align-items: center;

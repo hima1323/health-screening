@@ -1,9 +1,8 @@
-import { createContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { PrimaryContext } from './PrimaryContext';
 import { getPrimary } from '../api';
 import Spinner from '../components/ui/Spinner';
 import ErrorState from '../components/ui/ErrorState';
-
-export const PrimaryContext = createContext(null);
 
 /**
  * Resolves the demo patient/session ids once, so no screen has to hardcode them.

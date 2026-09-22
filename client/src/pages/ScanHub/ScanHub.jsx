@@ -62,9 +62,7 @@ export default function ScanHub() {
       eyebrow="Aura Screen"
       title="Scan Hub"
       badge={
-        <span className={styles.chip}>
-          {patient.name} · {patient.age}
-        </span>
+        <span className={styles.chip}>Age {patient.age}</span>
       }
     >
       <p className={styles.greeting}>
