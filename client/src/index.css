@@ -11,7 +11,8 @@
   --rose: #c97a70;
   --rose-deep: #a2554c;
   --amber: #c4954f;
-  --sage: #6e9b88;
+  /* "all good" — a dusty blue from the water, so no green clashes with the scene */
+  --calm: #6d8fad;
   --steel: #7e96a6;
 
   /* the glass is tinted rose so it sits in the sky rather than reading as cold white */

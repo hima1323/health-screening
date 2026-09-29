@@ -102,7 +102,7 @@ export default function SessionReport() {
           <p className="muted">{bodyTemp.note}</p>
         </Card>
 
-        <Card accent="sage">
+        <Card accent="calm">
           <CardRow>
             <IconBadge>
               <Wind size={17} strokeWidth={1.7} />

@@ -3,7 +3,7 @@ import styles from './Card.module.css';
 const EDGE_BY_ACCENT = {
   rose: styles.edgeRose,
   amber: styles.edgeAmber,
-  sage: styles.edgeSage,
+  calm: styles.edgeCalm,
 };
 
 /** A tinted glass surface, optionally with a coloured status stripe. */

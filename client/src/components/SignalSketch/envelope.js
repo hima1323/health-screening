@@ -1,5 +1,5 @@
 // one colour per track, eight distinct so a four-modality session never repeats one
-export const TONES = ['var(--rose)', 'var(--steel)', 'var(--amber)', 'var(--sage)', '#8a7fb5', '#3f8f8f', '#a8683e', '#6b5876'];
+export const TONES = ['var(--rose)', 'var(--steel)', 'var(--amber)', '#b07aa1', '#8a7fb5', '#4f78a6', '#a8683e', '#6b5876'];
 
 /**
  * Min/max per bucket, the way an audio overview is drawn. Averaging would

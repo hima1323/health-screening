@@ -45,8 +45,8 @@
 }
 
 .locked {
-  color: var(--sage);
-  border-color: rgba(110, 155, 136, 0.5);
+  color: var(--calm);
+  border-color: rgba(109, 143, 173, 0.5);
 }
 
 .video {
@@ -87,7 +87,7 @@
 }
 
 .locked .corner {
-  border-color: var(--sage);
+  border-color: var(--calm);
 }
 
 .cornerTl {

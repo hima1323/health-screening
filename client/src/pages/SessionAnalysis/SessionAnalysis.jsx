@@ -88,7 +88,7 @@ export default function SessionAnalysis() {
         </Card>
       )}
 
-      <Card accent={s.fusion.verdict === 'Flagged' ? 'rose' : s.fusion.verdict === 'Watch' ? 'amber' : 'sage'}>
+      <Card accent={s.fusion.verdict === 'Flagged' ? 'rose' : s.fusion.verdict === 'Watch' ? 'amber' : 'calm'}>
         <FusionPanel fusion={s.fusion} />
       </Card>
 

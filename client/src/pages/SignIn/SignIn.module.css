@@ -159,7 +159,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--sage);
+  background: var(--calm);
 }
 
 /* portrait screens (phone and kiosk) stack, with the form card filling */

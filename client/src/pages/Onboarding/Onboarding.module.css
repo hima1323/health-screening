@@ -40,7 +40,7 @@
 }
 
 .stepDone .stepMark {
-  background: var(--sage);
+  background: var(--calm);
   color: var(--on-ink);
 }
 

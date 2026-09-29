@@ -9,10 +9,10 @@ import InfoSheet from '../InfoSheet';
 import styles from './ActiveScanPanel.module.css';
 
 const SIGNAL_TONE = {
-  lighting: 'var(--sage)',
-  position: 'var(--sage)',
+  lighting: 'var(--calm)',
+  position: 'var(--calm)',
   motion: 'var(--amber)',
-  sensorStream: 'var(--sage)',
+  sensorStream: 'var(--calm)',
 };
 
 /** The live capture screen: step tracker, countdown orb and signal quality. */

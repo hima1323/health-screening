@@ -140,7 +140,7 @@ export default function SignIn() {
           </Button>
         </Card>
 
-        <Card className={`wide-only ${styles.aside}`} accent="sage">
+        <Card className={`wide-only ${styles.aside}`} accent="calm">
           <div className={styles.heading}>
             <IconBadge>
               <Lock size={17} strokeWidth={1.6} />
