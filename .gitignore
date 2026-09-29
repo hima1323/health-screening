@@ -8,3 +8,10 @@ server/uploads/*
 
 # supervisor voice notes and other local media
 *.opus
+
+# rPPG research project — code is tracked, datasets and weights are not
+rppg1/data/
+rppg1/checkpoints_mcd/
+*.mov
+__pycache__/
+.DS_Store
