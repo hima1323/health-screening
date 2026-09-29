@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, KeyRound, Lock } from 'lucide-react';
-import { getProviders } from '../../api';
+import { getProviders, rememberedEmail } from '../../api';
 import useAuth from '../../hooks/useAuth';
 import useResource from '../../hooks/useResource';
 import Layout from '../../components/Layout';
@@ -25,9 +25,12 @@ export default function SignIn() {
   // a failed Google round trip comes back as ?error=
   const [params] = useSearchParams();
 
-  const [mode, setMode] = useState('register');
+  // someone who has signed in on this browser before comes back to Sign in, email filled
+  const [returningEmail] = useState(rememberedEmail);
+  const [mode, setMode] = useState(returningEmail ? 'login' : 'register');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(params.get('error'));
+  const [notice, setNotice] = useState(null);
 
   const withGoogle = async (credential) => {
     setBusy(true);
@@ -44,18 +47,35 @@ export default function SignIn() {
   const submit = async (credentials) => {
     setBusy(true);
     setError(null);
+    setNotice(null);
+    let user;
     try {
-      const user = mode === 'register' ? await createAccount(credentials) : await signIn(credentials);
-      navigate(user.profileComplete ? '/' : '/onboarding', { replace: true });
+      user = mode === 'register' ? await createAccount(credentials) : await signIn(credentials);
     } catch (err) {
-      setError(err.message);
-      setBusy(false);
+      if (mode === 'register' && err.status === 409) {
+        // the email already has an account — sign straight into it rather than onboarding again
+        try {
+          user = await signIn({ email: credentials.email, password: credentials.password });
+        } catch {
+          setMode('login');
+          setNotice('You already have an account with this email — enter its password to sign in.');
+          setBusy(false);
+          return;
+        }
+      } else {
+        setError(err.message);
+        setBusy(false);
+        return;
+      }
     }
+    // an account that has finished onboarding already gave consent — go straight in
+    navigate(user.profileComplete ? '/' : '/onboarding', { replace: true });
   };
 
   const switchTo = (next) => {
     setMode(next);
     setError(null);
+    setNotice(null);
   };
 
   return (
@@ -100,7 +120,14 @@ export default function SignIn() {
             </>
           )}
 
-          <CredentialsForm mode={mode} busy={busy} error={error} onSubmit={submit} />
+          <CredentialsForm
+            mode={mode}
+            busy={busy}
+            error={error}
+            notice={notice}
+            initialEmail={returningEmail}
+            onSubmit={submit}
+          />
 
           <div className="phone-only">
             <InfoSheet icon={Lock} label="How your account is kept" hint="Hashed passwords, no shared data">

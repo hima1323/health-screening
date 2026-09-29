@@ -107,6 +107,15 @@
   background: var(--glass-solid);
 }
 
+.notice {
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: rgba(126, 150, 166, 0.14);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4f6b7d;
+}
+
 .error {
   font-size: 12px;
   font-weight: 500;

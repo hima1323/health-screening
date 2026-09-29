@@ -6,9 +6,9 @@ import styles from './SignIn.module.css';
 const MIN_PASSWORD = 8;
 
 /** The email-and-password form, in either its sign-in or create-account shape. */
-export default function CredentialsForm({ mode, busy, error, onSubmit }) {
+export default function CredentialsForm({ mode, busy, error, notice, initialEmail = '', onSubmit }) {
   const isRegister = mode === 'register';
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: initialEmail, password: '' });
   const [visible, setVisible] = useState(false);
 
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -70,6 +70,7 @@ export default function CredentialsForm({ mode, busy, error, onSubmit }) {
         }
       />
 
+      {notice && <p className={styles.notice}>{notice}</p>}
       {error && <p className={styles.error}>{error}</p>}
 
       <Button type="submit" className={styles.submit} disabled={busy}>
