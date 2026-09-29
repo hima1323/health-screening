@@ -5,10 +5,8 @@ const Station = require('../models/Station');
 const ScreeningSession = require('../models/ScreeningSession');
 const Report = require('../models/Report');
 const ScreeningLog = require('../models/ScreeningLog');
-const fs = require('fs');
-const path = require('path');
 const User = require('../models/User');
-const StudySession = require('../models/StudySession');
+const loadSessions = require('./load-sessions');
 
 async function seed() {
   await connectDB();
@@ -19,9 +17,6 @@ async function seed() {
     ScreeningSession.deleteMany({}),
     Report.deleteMany({}),
     ScreeningLog.deleteMany({}),
-    // user accounts point at a patient record, so they are reset alongside the demo data
-    User.deleteMany({}),
-    StudySession.deleteMany({}),
   ]);
 
   const patient = await Patient.create({
@@ -155,16 +150,11 @@ async function seed() {
     },
   ]);
 
-  // study sessions from analysis/build_sessions.py — one JSON file each
-  const sessionDir = path.join(__dirname, '..', 'data', 'sessions');
-  const files = fs.existsSync(sessionDir) ? fs.readdirSync(sessionDir).filter((f) => f.endsWith('.json')) : [];
-  await StudySession.insertMany(
-    files.map((file) => {
-      const { id, ...session } = JSON.parse(fs.readFileSync(path.join(sessionDir, file), 'utf8'));
-      return { sessionKey: id, ...session };
-    })
-  );
-  console.log(`Study sessions: ${files.length}`);
+  // accounts survive a reset — point them at the new demo patient so nobody is signed out
+  const relinked = await User.updateMany({ patientId: { $ne: null } }, { patientId: patient._id });
+  console.log(`Accounts kept: ${await User.countDocuments()} (${relinked.modifiedCount} relinked)`);
+
+  console.log(`Study sessions: ${await loadSessions()}`);
 
   console.log('Seed complete. Patient id:', patient._id.toString());
   process.exit(0);

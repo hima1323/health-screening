@@ -37,6 +37,14 @@ npm start                       # http://localhost:4000
 cd ../client && npm install && npm run dev    # http://localhost:5173
 ```
 
+After changing the analysis, rebuild the study sessions and reload just those —
+`npm run sessions` leaves user accounts alone, so nobody gets signed out.
+`npm run seed` also resets the demo patient, and keeps accounts too.
+
+```bash
+python3 analysis/build_sessions.py && (cd server && npm run sessions)
+```
+
 ## Environment
 
 `server/.env` — see `server/.env.example`.

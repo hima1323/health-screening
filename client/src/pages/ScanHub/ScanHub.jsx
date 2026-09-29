@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Video, Thermometer, HeartPulse, QrCode, ArrowRight, Radar, ShieldCheck } from 'lucide-react';
 import { getScanHub } from '../../api';
 import usePrimary from '../../hooks/usePrimary';
+import useAuth from '../../hooks/useAuth';
 import useResource from '../../hooks/useResource';
 import Layout from '../../components/Layout';
 import AuraOrb from '../../components/AuraOrb';
@@ -17,6 +18,7 @@ const CAPTURE_ICONS = { video: Video, thermal: Thermometer, ecg: HeartPulse };
 /** The patient's home screen, and the entry point into a contactless scan. */
 export default function ScanHub() {
   const { patientId, sessionId } = usePrimary();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { data, error } = useResource(() => getScanHub(patientId), [patientId]);
 
@@ -32,6 +34,9 @@ export default function ScanHub() {
   if (!data) return <Spinner />;
 
   const { patient, aura, consent, station, lastScreeningReport } = data;
+  // greet the person signed in; the patient record is a shared demo one
+  const name = user?.profile?.fullName || user?.name || patient.name;
+  const age = user?.profile?.age ?? patient.age;
 
   if (step === 'qr') {
     return (
@@ -64,12 +69,12 @@ export default function ScanHub() {
       eyebrow="Aura Screen"
       title="Scan Hub"
       badge={
-        <span className={styles.chip}>Age {patient.age}</span>
+        <span className={styles.chip}>Age {age}</span>
       }
     >
       <div>
         <p className={styles.greeting}>
-          Hello, <strong>{patient.name}</strong>
+          Hello, <strong>{name}</strong>
         </p>
         <h2 className={styles.question}>How is your body feeling today?</h2>
       </div>

@@ -12,7 +12,7 @@ skin-conductance channels are left out.
 
 Every stage is timed, so the pipeline the dashboard draws is the one that ran.
 
-    python analysis/build_sessions.py
+    python analysis/build_sessions.py && (cd server && npm run sessions)
 """
 import csv
 import json
