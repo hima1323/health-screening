@@ -5,3 +5,6 @@ dist/
 .claude/
 server/uploads/*
 !server/uploads/.gitkeep
+
+# supervisor voice notes and other local media
+*.opus

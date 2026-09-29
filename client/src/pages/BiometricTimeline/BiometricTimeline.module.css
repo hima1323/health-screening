@@ -27,3 +27,27 @@
     font-size: 19px;
   }
 }
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.clear {
+  flex: none;
+  padding: 7px 14px;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clear:hover {
+  background: var(--glass-solid);
+  color: var(--ink);
+}
