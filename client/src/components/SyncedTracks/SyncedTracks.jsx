@@ -106,6 +106,43 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
     syncView();
   }, [width, durationS, syncView]);
 
+  // the wheel listener is attached once, so it reaches the current zoom through a ref
+  const zoomRef = useRef({});
+  useEffect(() => {
+    zoomRef.current = { zoomIn, zoomOut };
+  });
+
+  /*
+   * Over the graph the wheel moves it sideways; at either end it lets the page
+   * scroll on, so the graph never traps you. Pinch — which browsers report as a
+   * ctrl-wheel — and ⌘/Ctrl + wheel zoom.
+   */
+  useEffect(() => {
+    const el = scroller.current;
+    let pinch = 0;
+    const onWheel = (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        pinch += event.deltaY;
+        if (Math.abs(pinch) >= 40) {
+          (pinch < 0 ? zoomRef.current.zoomIn : zoomRef.current.zoomOut)();
+          pinch = 0;
+        }
+        return;
+      }
+      // a sideways trackpad swipe already scrolls the graph natively
+      if (Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+      const max = el.scrollWidth - el.clientWidth;
+      const atStart = el.scrollLeft <= 0 && event.deltaY < 0;
+      const atEnd = el.scrollLeft >= max - 1 && event.deltaY > 0;
+      if (max <= 0 || atStart || atEnd) return;
+      event.preventDefault();
+      el.scrollLeft += event.deltaY * (event.deltaMode === 1 ? 30 : 1);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
   /** Mouse drag pans the graph; touch keeps the browser's own swipe. */
   const press = (event) => {
     move(event);
@@ -183,7 +220,7 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
           </span>
         ))}
         <span className={styles.toolbar}>
-          {scrollable && <span className={styles.hint}>Drag the graph or the box above to move</span>}
+          {scrollable && <span className={styles.hint}>Scroll or drag to move · pinch or ⌘-scroll to zoom</span>}
           <button type="button" className={styles.tool} onClick={zoomOut} disabled={pxPerS === null} aria-label="Zoom out">
             <Minus size={14} />
           </button>
