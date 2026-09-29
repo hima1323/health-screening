@@ -34,6 +34,8 @@ export default function SessionAnalysis() {
 
   return (
     <Layout eyebrow={`${s.source.dataset} · subject ${s.subject.id}`} title={s.label}>
+      {s.simulationNote && <p className={styles.prototype}>{s.simulationNote}</p>}
+
       <Link to="/timeline" className={styles.back}>
         <ArrowLeft size={14} aria-hidden="true" /> Past sessions
       </Link>
@@ -53,7 +55,7 @@ export default function SessionAnalysis() {
 
         <div className={styles.modalities}>
           {s.modalities.map((m) => (
-            <span key={m.key} className={styles.modality}>
+            <span key={m.key} className={`${styles.modality} ${m.simulated ? styles.simulatedModality : ''}`.trim()}>
               <strong>{m.label}</strong> {m.detail}
             </span>
           ))}

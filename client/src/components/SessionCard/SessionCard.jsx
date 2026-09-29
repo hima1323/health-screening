@@ -30,8 +30,13 @@ export default function SessionCard({ session }) {
 
       <div className={styles.chips}>
         {modalities.map((m) => (
-          <span key={m.key} className={styles.chip}>
+          <span
+            key={m.key}
+            className={`${styles.chip} ${m.simulated ? styles.simulated : ''}`.trim()}
+            title={m.simulated ? 'Simulated for the prototype' : undefined}
+          >
             {m.label}
+            {m.simulated && <em> sim</em>}
           </span>
         ))}
       </div>

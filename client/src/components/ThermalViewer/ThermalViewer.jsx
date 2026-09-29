@@ -24,8 +24,10 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
   const canvasRef = useRef(null);
   const clock = useRef(time ?? 0);
 
-  const toC = (b) => tempMinC + (b / 255) * (tempMaxC - tempMinC);
   const t = time ?? 0;
+  // a simulated session shifts a shared video per phase to its own temperatures
+  const offset = meta.offsets?.find((o) => t >= o.startS && t < o.endS)?.offsetC ?? meta.offsets?.at(-1)?.offsetC ?? 0;
+  const toC = (b) => tempMinC + (b / 255) * (tempMaxC - tempMinC) + offset;
   const index = Math.min(count - 1, Math.max(0, Math.floor(t * fps)));
   const frame = pixels ? pixels.subarray(index * W * H, (index + 1) * W * H) : null;
 
@@ -36,7 +38,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('Could not load the thermal frames'))))
       .then((buffer) => {
         if (cancelled) return;
-        if (buffer.byteLength !== count * W * H) throw new Error('The thermal frames file is incomplete');
+        if (buffer.byteLength < count * W * H) throw new Error('The thermal frames file is incomplete');
         setPixels(new Uint8Array(buffer));
       })
       .catch((err) => !cancelled && setError(err.message));
@@ -71,7 +73,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
     const { lut } = COLORMAPS[cmap];
     const span = displayMaxC - displayMinC;
     for (let i = 0; i < frame.length; i += 1) {
-      const c = tempMinC + (frame[i] / 255) * (tempMaxC - tempMinC);
+      const c = tempMinC + (frame[i] / 255) * (tempMaxC - tempMinC) + offset;
       const k = Math.max(0, Math.min(255, Math.round(((c - displayMinC) / span) * 255)));
       img.data[i * 4] = lut[k * 3];
       img.data[i * 4 + 1] = lut[k * 3 + 1];
@@ -79,7 +81,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
       img.data[i * 4 + 3] = 255;
     }
     ctx.putImageData(img, 0, 0);
-  }, [frame, cmap, W, H, tempMinC, tempMaxC, displayMinC, displayMaxC]);
+  }, [frame, cmap, W, H, tempMinC, tempMaxC, displayMinC, displayMaxC, offset]);
 
   /** Mean temperature inside each ROI box, read straight from this frame's pixels. */
   const roiTemps = useMemo(() => {
@@ -94,7 +96,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
       })
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frame, rois, W]);
+  }, [frame, rois, W, offset]);
 
   const tone = (roi) => TONES[Math.max(0, tracks.findIndex((tr) => tr.key === roi.track)) % TONES.length];
 
@@ -184,6 +186,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
           ))}
         </ul>
 
+        {meta.simulated && <p className={styles.simulated}>Simulated thermal video — prototype data</p>}
         <p className="muted small">
           {W} × {H} px · {fps} frames/s · hover the image for any pixel's temperature. Play, or move across the
           graph below — both show the same moment.

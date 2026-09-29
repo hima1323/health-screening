@@ -65,6 +65,17 @@
   color: var(--ink-2);
 }
 
+.simulated {
+  border: 1px dashed rgba(59, 50, 56, 0.28);
+  background: none;
+}
+
+.simulated em {
+  font-style: normal;
+  font-weight: 700;
+  color: #7a5820;
+}
+
 .who {
   font-weight: 500;
   color: var(--ink-3);

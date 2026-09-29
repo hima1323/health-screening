@@ -27,6 +27,7 @@ const trackSchema = new mongoose.Schema(
     unit: String,
     fs: { type: Number, required: true, min: 0 },
     values: { type: [Number], default: [] },
+    simulated: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -66,7 +67,9 @@ const studySessionSchema = new mongoose.Schema(
     label: { type: String, required: true },
     recordedOn: String,
     durationS: Number,
-    modalities: [{ _id: false, key: String, label: String, detail: String }],
+    modalities: [{ _id: false, key: String, label: String, detail: String, simulated: Boolean }],
+    // set when part of the session is simulated for the prototype — the UI shows it as a banner
+    simulationNote: String,
     phases: { type: [phaseSchema], default: [] },
     tracks: { type: [trackSchema], default: [] },
     // thermogram frames, stored as a file beside the session JSON: one uint8 per pixel,
@@ -83,6 +86,9 @@ const studySessionSchema = new mongoose.Schema(
           tempMaxC: Number,
           displayMinC: Number,
           displayMaxC: Number,
+          // per-phase shift added to every pixel — how one shared simulated video serves many sessions
+          offsets: [{ _id: false, startS: Number, endS: Number, offsetC: Number }],
+          simulated: Boolean,
         },
         { _id: false }
       ),
