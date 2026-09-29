@@ -7,6 +7,7 @@ import SyncedTracks from '../../components/SyncedTracks';
 import PhaseTable from '../../components/PhaseTable';
 import FusionPanel from '../../components/FusionPanel';
 import PipelineTrace from '../../components/PipelineTrace';
+import AssessmentPanel from '../../components/AssessmentPanel';
 import { Card, CardRow, StatusPill, Spinner, ErrorState } from '../../components/ui';
 import styles from './SessionAnalysis.module.css';
 
@@ -30,7 +31,7 @@ export default function SessionAnalysis() {
   return (
     <Layout eyebrow={`${s.source.dataset} · subject ${s.subject.id}`} title={s.label}>
       <Link to="/timeline" className={styles.back}>
-        <ArrowLeft size={14} aria-hidden="true" /> All sessions
+        <ArrowLeft size={14} aria-hidden="true" /> Past sessions
       </Link>
 
       <Card>
@@ -57,6 +58,12 @@ export default function SessionAnalysis() {
         <SyncedTracks tracks={s.tracks} phases={s.phases} durationS={s.durationS} />
         <p className="muted small">{s.quality.message}</p>
       </Card>
+
+      {s.assessment && (
+        <Card>
+          <AssessmentPanel assessment={s.assessment} />
+        </Card>
+      )}
 
       <Card accent={s.fusion.verdict === 'Flagged' ? 'rose' : s.fusion.verdict === 'Watch' ? 'amber' : 'sage'}>
         <FusionPanel fusion={s.fusion} />

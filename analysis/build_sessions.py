@@ -115,6 +115,91 @@ def news2_band(points):
     return total, "Low", "Stable"
 
 
+
+# ── Assessment ────────────────────────────────────────────────────────────
+# A screening aid, not a diagnosis. Blood pressure follows ACC/AHA 2017;
+# heart rate, temperature and breathing use standard adult resting ranges.
+
+RANK = {"ok": 0, "routine": 1, "soon": 2, "urgent": 3}
+TONE = {"ok": "ok", "routine": "warn", "soon": "bad", "urgent": "bad"}
+
+
+def bp_category(sys_bp, dia_bp):
+    if sys_bp >= 180 or dia_bp >= 120:
+        return "Hypertensive crisis", "urgent"
+    if sys_bp >= 140 or dia_bp >= 90:
+        return "Stage 2 hypertension", "soon"
+    if sys_bp >= 130 or dia_bp >= 80:
+        return "Stage 1 hypertension", "routine"
+    if sys_bp >= 120:
+        return "Elevated blood pressure", "routine"
+    return "Normal blood pressure", "ok"
+
+
+def hr_category(hr):
+    if hr >= 130:
+        return "Very fast resting heart rate", "urgent"
+    if hr > 100:
+        return "Fast resting heart rate (tachycardia)", "soon"
+    if hr < 40:
+        return "Very slow resting heart rate", "urgent"
+    if hr < 50:
+        return "Slow resting heart rate (bradycardia)", "soon"
+    return "Normal resting heart rate", "ok"
+
+
+def temp_category(t):
+    if t >= 39.1:
+        return "High fever", "urgent"
+    if t >= 38.0:
+        return "Fever", "soon"
+    if t >= 37.5:
+        return "Slightly raised temperature", "routine"
+    if t < 35.5:
+        return "Low body temperature", "soon"
+    return "Normal temperature", "ok"
+
+
+def resp_category(rr):
+    if rr >= 25 or rr <= 8:
+        return "Abnormal breathing rate", "soon"
+    if rr > 20:
+        return "Fast breathing at rest", "routine"
+    if rr < 12:
+        return "Slow breathing at rest", "routine"
+    return "Normal breathing rate", "ok"
+
+
+def advice(level, condition):
+    return {
+        "ok": {"level": "ok", "answer": "No",
+               "text": "No need to contact a doctor — the resting readings are within normal ranges."},
+        "routine": {"level": "routine", "answer": "At your next check-up",
+                    "text": f"Not urgent. Mention {condition.lower()} to your doctor at your next routine visit."},
+        "soon": {"level": "soon", "answer": "Yes, within a few days",
+                 "text": f"Book an appointment with a doctor about {condition.lower()}."},
+        "urgent": {"level": "urgent", "answer": "Yes, today",
+                   "text": f"Seek medical care today — {condition.lower()}."},
+    }[level]
+
+
+def summarise(findings):
+    """The condition line and the doctor advice follow from the worst finding."""
+    flagged = [f for f in findings if f.get("_level", "ok") != "ok"]
+    worst = max((f["_level"] for f in findings if "_level" in f), key=RANK.get, default="ok")
+    condition = "; ".join(f["label"] for f in flagged) if flagged else "No abnormal findings at rest"
+    for f in findings:
+        f.pop("_level", None)
+    return condition, advice(worst, condition)
+
+
+def finding(label, detail, level):
+    return {"label": label, "detail": detail, "tone": TONE[level], "_level": level}
+
+
+DISCLAIMER = ("Screening aid, not a diagnosis. Blood pressure uses ACC/AHA 2017 categories; heart rate, "
+              "temperature and breathing use standard adult resting ranges.")
+
 # ── MCD-rPPG ──────────────────────────────────────────────────────────────
 
 def load_model():
@@ -231,6 +316,7 @@ def build_mcd(model):
             with watch("fuse"):
                 ref = news2_points(clinical["respiratory"], clinical["saturation"],
                                    clinical["upper_ap"], clinical["pulse"], clinical["temperature"])
+                ref.pop("spo2")  # SpO2 is left out of this build
                 cam = dict(ref, pulse=news2_points(0, 99, 120, rppg_hr, 37)["pulse"])
             metrics.append({
                 "phase": phases[-1]["name"],
@@ -239,7 +325,7 @@ def build_mcd(model):
                     "hrError": r(abs(rppg_hr - clinical["pulse"]), 1), "waveCorr": r(corr, 2),
                     "netHr": r(net_hr, 1), "netError": r(abs(net_hr - clinical["pulse"]), 1),
                     "netCorr": r(net_corr, 2),
-                    "snrDb": r(snr, 1), "spo2": r(clinical["saturation"], 0),
+                    "snrDb": r(snr, 1),
                     "tempC": r(clinical["temperature"], 1), "resp": r(clinical["respiratory"], 0),
                     "bpSys": r(clinical["upper_ap"], 0), "bpDia": r(clinical["lower_ap"], 0),
                     "stress": r(clinical["stress"], 0),
@@ -258,15 +344,14 @@ def build_mcd(model):
         quality = "good" if np.mean(corrs) > 0.5 else "fair" if np.mean(corrs) > 0.25 else "poor"
         v = rest["values"]
         labels = {"resp": ("Respiration", f"{v['resp']:.0f} /min"),
-                  "spo2": ("SpO₂", f"{v['spo2']:.0f}%"),
                   "sys": ("Systolic BP", f"{v['bpSys']:.0f} mmHg"),
                   "pulse": ("Pulse", f"{v['pulse']:.0f} bpm"),
                   "temp": ("Temperature", f"{v['tempC']:.1f} °C")}
 
         fusion = {
-            "title": "NEWS2 early-warning score",
-            "method": "Royal College of Physicians NEWS2 (2017), resting sitting · consciousness and oxygen assumed alert, room air",
-            "score": total, "scoreMax": 20, "band": band, "verdict": verdict,
+            "title": "NEWS2 early-warning score, without SpO₂",
+            "method": "Royal College of Physicians NEWS2 (2017), resting sitting · SpO₂ left out for now; consciousness and oxygen assumed alert, room air",
+            "score": total, "scoreMax": 17, "band": band, "verdict": verdict,
             "stats": [
                 {"label": "Camera HR error", "value": f"{np.mean(errors):.1f} bpm", "hint": "POS vs clinical pulse, mean over sittings"},
                 {"label": "PhysFormer error", "value": f"{np.mean(net_errors):.1f} bpm", "hint": "Current checkpoint, for comparison"},
@@ -283,6 +368,42 @@ def build_mcd(model):
         for m in metrics:
             m.pop("_ref"), m.pop("_cam")
 
+        # at rest decides the condition; the exercise sitting shows the response
+        hr_label, hr_level = hr_category(v["pulse"])
+        bp_label, bp_level = bp_category(v["bpSys"], v["bpDia"])
+        t_label, t_level = temp_category(v["tempC"])
+        rr_label, rr_level = resp_category(v["resp"])
+        findings = [
+            finding(hr_label, f"{v['pulse']:.0f} bpm at rest (normal 50–100)", hr_level),
+            finding(bp_label, f"{v['bpSys']:.0f}/{v['bpDia']:.0f} mmHg (normal below 120/80)", bp_level),
+            finding(t_label, f"{v['tempC']:.1f} °C (normal below 37.5)", t_level),
+            finding(rr_label, f"{v['resp']:.0f} breaths/min (normal 12–20)", rr_level),
+        ]
+        if len(metrics) > 1:
+            rise = metrics[1]["values"]["pulse"] - v["pulse"]
+            findings.append({"label": "Heart-rate response to exercise",
+                             "detail": (f"+{rise:.0f} bpm after exercise — a normal rise" if rise >= 10 else
+                                        f"{rise:+.0f} bpm after exercise — little change; the bout may have been light"),
+                             "tone": "info"})
+        cam_off = abs(v["rppgHr"] - v["pulse"])
+        findings.append({"label": "Camera reading", "tone": "info" if cam_off <= 10 else "warn",
+                         "detail": (f"Agrees with the contact sensor within {cam_off:.0f} bpm" if cam_off <= 10 else
+                                    f"Off by {cam_off:.0f} bpm at rest — trust the contact sensor for this person")})
+        condition, advice_block = summarise(findings)
+        assessment = {
+            "groundTruth": {
+                "signal": "Contact PPG and clinical pulse",
+                "detail": "Finger PPG synchronised to the video, and the pulse oximeter reading from the same sitting",
+                "rationale": ("Contact sensors read the pulse at the skin and are the accepted reference, so the camera "
+                              "is scored against them. Blood pressure, temperature and breathing come from the cuff, "
+                              "the thermometer and a manual count."),
+            },
+            "condition": condition,
+            "findings": findings,
+            "advice": advice_block,
+            "disclaimer": DISCLAIMER,
+        }
+
         row = db[(pid, order[0])]
         sessions.append({
             "id": f"mcd-{pid}",
@@ -297,7 +418,7 @@ def build_mcd(model):
             "modalities": [
                 {"key": "rppg", "label": "Camera pulse", "detail": "POS on a FullHD webcam, 96 px face crop · PhysFormer compared"},
                 {"key": "ppg", "label": "Contact PPG", "detail": "Finger sensor, synchronised to the video"},
-                {"key": "clinical", "label": "Clinical", "detail": "Pulse oximeter, thermometer, cuff, respiration count"},
+                {"key": "clinical", "label": "Clinical", "detail": "Pulse oximeter (pulse only), thermometer, cuff, respiration count"},
             ],
             "phases": phases,
             "tracks": [
@@ -313,7 +434,6 @@ def build_mcd(model):
                 {"key": "netError", "label": "PhysFormer error", "unit": "bpm", "digits": 1, "lowerIsBetter": True},
                 {"key": "waveCorr", "label": "Waveform r", "unit": "", "digits": 2},
                 {"key": "snrDb", "label": "Camera SNR", "unit": "dB", "digits": 1},
-                {"key": "spo2", "label": "SpO₂", "unit": "%", "digits": 0},
                 {"key": "tempC", "label": "Temperature", "unit": "°C", "digits": 1},
                 {"key": "resp", "label": "Respiration", "unit": "/min", "digits": 0},
                 {"key": "bpSys", "label": "Systolic BP", "unit": "mmHg", "digits": 0},
@@ -325,6 +445,7 @@ def build_mcd(model):
             "quality": {"status": quality,
                         "message": f"Camera waveform tracks the contact PPG at r = {np.mean(corrs):.2f}."},
             "fusion": fusion,
+            "assessment": assessment,
             "pipeline": [
                 {"stage": "Face crop", "modality": "rppg", "status": "ok", "ms": None,
                  "detail": "Haar cascade on the first frame, 30% margin, resized to 96 px — done once in preprocessing"},
@@ -342,7 +463,7 @@ def build_mcd(model):
                  "status": "ok" if quality == "good" else "degraded", "ms": r(watch.ms["estimate"], 1),
                  "detail": "Periodogram peak for HR, harmonic SNR, Pearson r against the contact PPG"},
                 {"stage": "NEWS2 fusion", "modality": "clinical", "status": "ok", "ms": r(watch.ms["fuse"], 2),
-                 "detail": "Five vitals scored against NEWS2 bands, once with the clinical pulse and once with the camera's"},
+                 "detail": "Four vitals scored against NEWS2 bands, once with the clinical pulse and once with the camera's"},
             ],
         }
         )
@@ -392,6 +513,11 @@ def build_ecg():
         t = np.asarray(d["rr"]["t"]); ms = np.asarray(d["rr"]["ms"]); ok = np.asarray(d["rr"]["valid"])
         grid = np.arange(n) / fs_out
         hr = np.interp(grid, t[ok], 60000.0 / ms[ok])
+    with watch("ecgwave"):
+        # the filtered ECG, mean-pooled 248 → 62 Hz: QRS complexes stay visible
+        ecg = np.asarray(d["signal"]["filtered"], dtype=np.float64)
+        ecg = ecg[: len(ecg) // 4 * 4].reshape(-1, 4).mean(1)
+        ecg_fs = d["signal"]["fs"] / 4
     with watch("companions"):
         comp = d["companions"]
         resp = downsample(comp["resp"]["values"], n)
@@ -436,7 +562,35 @@ def build_ecg():
         "resp": r(resp_rate[name], 0), "gsrH": r(means["gsrH"][name], 2), "gsrF": r(means["gsrF"][name], 2),
         "artifact": r(hrv[name]["artifact_pct"], 1)}} for name in names]
 
+    rest_hr, rest_rmssd = hrv[rest]["mean_hr_bpm"], hrv[rest]["rmssd_ms"]
+    hr_label, hr_level = hr_category(rest_hr)
+    hrv_level = "routine" if rest_rmssd < 20 else "ok"
+    findings = [
+        finding(hr_label, f"{rest_hr:.0f} bpm at rest (normal 50–100)", hr_level),
+        finding("Healthy heart-rate variability" if hrv_level == "ok" else "Low heart-rate variability",
+                f"RMSSD {rest_rmssd:.0f} ms at rest (below 20 ms is low)", hrv_level),
+        {"label": "Acute stress response while driving", "tone": "info",
+         "detail": (f"Heart rate +{hrv[city]['mean_hr_bpm'] - rest_hr:.0f} bpm, HRV "
+                    f"{(hrv[city]['rmssd_ms'] / rest_rmssd - 1) * 100:.0f}%, skin conductance "
+                    f"×{means['gsrH'][city] / means['gsrH'][rest]:.1f} — the normal reaction to city traffic, not a disorder")},
+    ]
+    condition, advice_block = summarise(findings)
+    assessment = {
+        "groundTruth": {
+            "signal": "ECG",
+            "detail": f"{d['device']['lead']}, {d['device']['fs']:.0f} Hz",
+            "rationale": ("ECG records the heart's electrical activity directly — the gold standard for heart rate and "
+                          "HRV. The respiration belt and skin-conductance electrodes are the reference for their own "
+                          "channels; no camera was recorded in this session."),
+        },
+        "condition": condition,
+        "findings": findings,
+        "advice": advice_block,
+        "disclaimer": DISCLAIMER,
+    }
+
     return {
+        "assessment": assessment,
         "id": "drivedb-drive05",
         "source": {"dataset": "PhysioNet drivedb", "kind": "public", "url": d["source"]["url"],
                    "note": f"{d['source']['author']}. Converted from Hans's ECG dashboard export."},
@@ -451,6 +605,7 @@ def build_ecg():
         ],
         "phases": phases,
         "tracks": [
+            {"key": "ecgWave", "group": "ecgwave", "label": "ECG", "unit": "mV", "fs": r(ecg_fs, 3), "values": series(ecg, 3)},
             {"key": "ecg", "group": "hr", "label": "Heart rate (ECG)", "unit": "bpm", "fs": r(fs_out, 4), "values": series(hr, 1)},
             {"key": "resp", "group": "resp", "label": "Respiration", "unit": "a.u.", "fs": r(fs_out, 4), "values": series(resp, 2)},
             {"key": "gsr", "group": "gsr", "label": "Hand GSR", "unit": "a.u.", "fs": r(fs_out, 4), "values": series(gsr_h, 3)},
@@ -491,6 +646,8 @@ def build_ecg():
              "detail": f"{len(d['signal']['raw'])} samples at {d['signal']['fs']:.0f} Hz with R-peaks from Hans's ECG pipeline"},
             {"stage": "R-peak detection", "modality": "ecg", "status": "ok", "ms": None,
              "detail": f"{len(d['rPeaks'])} R-peaks, {d['hrv']['session']['artifact_pct']:.1f}% flagged as artifact — upstream"},
+            {"stage": "Waveform decimation", "modality": "ecg", "status": "ok", "ms": r(watch.ms["ecgwave"], 1),
+             "detail": "Filtered ECG mean-pooled from 248 to 62 Hz for display — QRS complexes stay visible"},
             {"stage": "Instantaneous HR", "modality": "ecg", "status": "ok", "ms": r(watch.ms["hr"], 1),
              "detail": "Valid R-R intervals converted to bpm and interpolated onto an even 2 Hz grid"},
             {"stage": "Companion resampling", "modality": "all", "status": "ok", "ms": r(watch.ms["companions"], 1),
@@ -520,7 +677,23 @@ def build_thermal():
     lead = max(deltas, key=lambda k: abs(deltas[k]))
     label_of = {roi["key"]: roi["label"] for roi in rois}
 
+    assessment = {
+        "groundTruth": {
+            "signal": "None available",
+            "detail": "No calibrated thermometer was recorded alongside the video",
+            "rationale": ("The temperatures were reconstructed from a false-colour video palette, not measured by a "
+                          "calibrated sensor, so there is nothing to check them against."),
+        },
+        "condition": "Not assessable from this recording",
+        "findings": [{"label": "Thermal signature of drinking", "tone": "info",
+                      "detail": f"{label_of[lead]} {deltas[lead]:+.2f} °C during {names[1].lower()} — explains the activity, not the person's health"}],
+        "advice": {"level": "na", "answer": "Not applicable",
+                   "text": "No medical conclusion can be drawn — the temperatures are illustrative."},
+        "disclaimer": DISCLAIMER,
+    }
+
     return {
+        "assessment": assessment,
         "id": "thermal-s01",
         "source": {"dataset": "Wikimedia Commons thermography", "kind": "public", "url": d["source"]["url"],
                    "note": "Temperatures are reconstructed from a false-colour palette and are illustrative. Converted from Hans's thermal dashboard export."},

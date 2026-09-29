@@ -1,0 +1,11 @@
+.sketch {
+  display: block;
+  width: 100%;
+}
+
+.band {
+  fill-opacity: 0.55;
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}

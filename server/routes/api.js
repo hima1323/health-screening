@@ -3,7 +3,6 @@ const Patient = require('../models/Patient');
 const Station = require('../models/Station');
 const ScreeningSession = require('../models/ScreeningSession');
 const Report = require('../models/Report');
-const VitalTimeline = require('../models/VitalTimeline');
 const ScreeningLog = require('../models/ScreeningLog');
 const User = require('../models/User');
 const StudySession = require('../models/StudySession');
@@ -72,22 +71,34 @@ router.get('/sessions/:sessionId/report', async (req, res) => {
   res.json(report);
 });
 
-// GET /api/patients/:id/timeline
-router.get('/patients/:id/timeline', async (req, res) => {
-  const [timeline, logs] = await Promise.all([
-    VitalTimeline.findOne({ patientId: req.params.id }),
-    ScreeningLog.find({ patientId: req.params.id }).sort({ occurredAt: -1 }),
-  ]);
-  if (!timeline) return res.status(404).json({ error: 'Timeline not found' });
-  res.json({ timeline, logs });
-});
-
-// GET /api/study-sessions — the past sessions list, without the heavy signal arrays
+// GET /api/study-sessions — the past sessions list, with an overview sketch of each track
 router.get('/study-sessions', async (req, res) => {
   const sessions = await StudySession.find()
-    .select('-tracks -metrics -pipeline -metricDefs')
-    .sort({ 'source.dataset': 1, sessionKey: 1 });
-  res.json({ sessions });
+    .select('-metrics -pipeline -metricDefs')
+    .sort({ 'source.dataset': 1, sessionKey: 1 })
+    .lean();
+
+  // a min/max envelope per bucket, the way an audio overview is drawn: averaging would
+  // cancel an oscillating pulse out, the envelope keeps its shape at any width
+  const BUCKETS = 64;
+  const envelope = (values) => {
+    const n = Math.min(BUCKETS, values.length);
+    const lo = [];
+    const hi = [];
+    for (let i = 0; i < n; i += 1) {
+      const chunk = values.slice(Math.floor((i * values.length) / n), Math.floor(((i + 1) * values.length) / n));
+      lo.push(Math.min(...chunk));
+      hi.push(Math.max(...chunk));
+    }
+    return { lo, hi };
+  };
+
+  res.json({
+    sessions: sessions.map(({ tracks, ...session }) => ({
+      ...session,
+      preview: tracks.map(({ key, label, group, values }) => ({ key, label, group, ...envelope(values) })),
+    })),
+  });
 });
 
 // GET /api/study-sessions/:key — one session with its signals and analysis

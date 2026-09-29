@@ -4,7 +4,6 @@ const Patient = require('../models/Patient');
 const Station = require('../models/Station');
 const ScreeningSession = require('../models/ScreeningSession');
 const Report = require('../models/Report');
-const VitalTimeline = require('../models/VitalTimeline');
 const ScreeningLog = require('../models/ScreeningLog');
 const fs = require('fs');
 const path = require('path');
@@ -19,7 +18,6 @@ async function seed() {
     Station.deleteMany({}),
     ScreeningSession.deleteMany({}),
     Report.deleteMany({}),
-    VitalTimeline.deleteMany({}),
     ScreeningLog.deleteMany({}),
     // user accounts point at a patient record, so they are reset alongside the demo data
     User.deleteMany({}),
@@ -127,20 +125,6 @@ async function seed() {
     },
     shareCode: '894-DXK',
     encryptionNote: 'Encrypted clinical transmission · HIPAA & GDPR certified',
-  });
-
-  await VitalTimeline.create({
-    patientId: patient._id,
-    exportedDate: '08 Sep 2026',
-    meanPulse: 74,
-    thermalAvg: 36.7,
-    curve: [
-      { label: '30d ago', pulse: 72, baseline: 74 },
-      { label: '23d ago', pulse: 74, baseline: 74 },
-      { label: '15d ago', pulse: 80, baseline: 74 },
-      { label: '7d ago', pulse: 76, baseline: 74 },
-      { label: 'Today', pulse: 112, baseline: 74 },
-    ],
   });
 
   await ScreeningLog.create([

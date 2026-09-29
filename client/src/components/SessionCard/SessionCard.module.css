@@ -65,10 +65,40 @@
   color: var(--ink-2);
 }
 
-.quality {
-  margin-left: auto;
-  transform: scale(0.88);
-  transform-origin: right center;
+.who {
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.advice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  background: rgba(59, 50, 56, 0.05);
+}
+
+.advice strong {
+  font-weight: 700;
+}
+
+.ok {
+  color: #4f7a68;
+  background: rgba(110, 155, 136, 0.14);
+}
+
+.routine {
+  color: #8a6526;
+  background: rgba(196, 149, 79, 0.16);
+}
+
+.soon,
+.urgent {
+  color: var(--rose-deep);
+  background: rgba(201, 122, 112, 0.16);
 }
 
 @media (prefers-reduced-motion: reduce) {

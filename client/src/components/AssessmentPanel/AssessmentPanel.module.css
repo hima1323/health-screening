@@ -1,0 +1,155 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.advice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: var(--radius-tile);
+  border: 1px solid transparent;
+}
+
+.advice > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.question {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.answer {
+  margin: 2px 0 4px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.adviceText {
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.ok {
+  color: #3f6857;
+  background: rgba(110, 155, 136, 0.16);
+  border-color: rgba(110, 155, 136, 0.35);
+}
+
+.routine {
+  color: #7a5820;
+  background: rgba(196, 149, 79, 0.16);
+  border-color: rgba(196, 149, 79, 0.38);
+}
+
+.soon {
+  color: var(--rose-deep);
+  background: rgba(201, 122, 112, 0.16);
+  border-color: rgba(201, 122, 112, 0.4);
+}
+
+.urgent {
+  color: var(--on-ink);
+  background: var(--rose-deep);
+}
+
+.na {
+  color: var(--ink-2);
+  background: rgba(59, 50, 56, 0.06);
+  border-color: rgba(59, 50, 56, 0.12);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 15px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headline {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.findings li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(59, 50, 56, 0.07);
+}
+
+.findings li:last-child {
+  border-bottom: none;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+}
+
+.tone_ok {
+  background: var(--sage);
+}
+
+.tone_warn {
+  background: var(--amber);
+}
+
+.tone_bad {
+  background: var(--rose-deep);
+}
+
+.tone_info {
+  background: var(--steel);
+}
+
+.findingLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.disclaimer {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}

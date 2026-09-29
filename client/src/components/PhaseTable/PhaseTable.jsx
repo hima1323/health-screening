@@ -29,7 +29,8 @@ export default function PhaseTable({ metricDefs, metrics }) {
             const a = first[def.key];
             const b = last[def.key];
             const delta = a !== null && a !== undefined && b !== null && b !== undefined ? b - a : null;
-            const better = delta !== null && delta !== 0 && (def.lowerIsBetter ? delta < 0 : null);
+            // only metrics with a healthy direction get tinted, and no change is never a regression
+            const better = delta && def.lowerIsBetter ? delta < 0 : null;
             return (
               <tr key={def.key}>
                 <th scope="row">
