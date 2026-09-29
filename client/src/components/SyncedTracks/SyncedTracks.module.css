@@ -62,7 +62,7 @@
 
 .hint {
   margin-right: 6px;
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--ink-3);
 }
 
@@ -79,7 +79,7 @@
   background: var(--glass-tile);
   color: var(--ink-2);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -159,8 +159,8 @@
   position: sticky;
   left: 8px;
   display: inline-block;
-  margin: 4px 8px 0;
-  font-size: 9.5px;
+  margin: 5px 8px 0;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -183,12 +183,12 @@
 
 .svg {
   display: block;
-  height: 58px;
+  height: 128px;
 }
 
 .line {
   fill: none;
-  stroke-width: 1.4;
+  stroke-width: 1.8;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
@@ -209,15 +209,15 @@
 .key {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 10.5px;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-2);
   white-space: nowrap;
 }
 
 .key i {
-  width: 12px;
+  width: 14px;
   height: 3px;
   border-radius: 2px;
 }
@@ -225,7 +225,7 @@
 .crosshair {
   position: absolute;
   top: 18px;
-  bottom: 18px;
+  bottom: 20px;
   width: 1.5px;
   background: var(--ink);
   opacity: 0.55;
@@ -234,13 +234,13 @@
 
 .axis {
   position: relative;
-  height: 16px;
+  height: 18px;
 }
 
 .axis span {
   position: absolute;
   transform: translateX(-50%);
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--ink-3);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -261,7 +261,7 @@
 
 .readoutHead {
   margin-bottom: 4px;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -270,8 +270,8 @@
 .readoutGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
-  font-size: 11.5px;
+  gap: 4px 18px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
@@ -280,4 +280,11 @@
   font-style: normal;
   color: var(--ink-3);
   margin-right: 3px;
+}
+
+/* a phone screen gets shorter rows, so a few channels still fit on screen */
+@container device (max-width: 620px) {
+  .svg {
+    height: 96px;
+  }
 }

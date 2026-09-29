@@ -6,7 +6,8 @@ import styles from './SyncedTracks.module.css';
 // zoom steps in px per second; 60 keeps individual pulse beats and ECG complexes legible
 const ZOOMS = [15, 30, 60, 120, 240];
 const DEFAULT_ZOOM = 60;
-const H = 64;
+// drawing height of one channel row, in viewBox units (rendered height is set in CSS)
+const H = 120;
 const TICK_STEPS = [1, 2, 5, 10, 15, 30, 60];
 
 /** Tracks sharing a `group` share a row and a y-scale, so they can be compared directly. */
@@ -202,7 +203,7 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
             <span key={p.name} className={i % 2 ? styles.bandAlt : ''} style={{ left: x(p.startS), width: x(p.endS - p.startS) }} />
           ))}
         </div>
-        <SignalSketch tracks={overview} laneHeight={11} gap={3} />
+        <SignalSketch tracks={overview} laneHeight={20} gap={5} />
         {scrollable && (
           <span
             className={styles.window}
