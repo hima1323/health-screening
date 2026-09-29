@@ -12,7 +12,13 @@
   border-radius: 12px;
   background: var(--glass-tile);
   border: 1px solid var(--glass-edge);
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.overview:active {
+  cursor: grabbing;
 }
 
 .overviewInner {
@@ -38,7 +44,6 @@
   border: 1.5px solid var(--ink-2);
   background: rgba(59, 50, 56, 0.06);
   pointer-events: none;
-  transition: left 0.08s linear;
 }
 
 .overviewKeys {
@@ -48,19 +53,59 @@
   gap: 4px 12px;
 }
 
-.hint {
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
+}
+
+.hint {
+  margin-right: 6px;
   font-size: 10.5px;
   color: var(--ink-3);
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tool:hover:not(:disabled) {
+  background: var(--glass-solid);
+  color: var(--ink);
+}
+
+.tool:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ── detail: scrolls sideways at a fixed time scale ────────────── */
 .scroller {
   overflow-x: auto;
+  outline: none;
   overflow-y: hidden;
   border-radius: 12px;
   scrollbar-width: thin;
   scrollbar-color: rgba(59, 50, 56, 0.3) transparent;
+}
+
+.scroller:focus-visible {
+  box-shadow: 0 0 0 2px rgba(201, 122, 112, 0.45);
 }
 
 .scroller::-webkit-scrollbar {
@@ -81,6 +126,15 @@
   padding-top: 22px;
   cursor: crosshair;
   touch-action: pan-x pan-y;
+  user-select: none;
+}
+
+.pannable {
+  cursor: grab;
+}
+
+.dragging {
+  cursor: grabbing;
 }
 
 .bands {

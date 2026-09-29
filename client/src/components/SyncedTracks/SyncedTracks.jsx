@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Minus, Plus, Maximize2 } from 'lucide-react';
 import SignalSketch, { envelope, robustRange, TONES } from '../SignalSketch';
 import styles from './SyncedTracks.module.css';
 
-// 60 px per second keeps individual pulse beats and ECG complexes legible
-const PX_PER_S = 60;
+// zoom steps in px per second; 60 keeps individual pulse beats and ECG complexes legible
+const ZOOMS = [15, 30, 60, 120, 240];
+const DEFAULT_ZOOM = 60;
 const H = 64;
 const TICK_STEPS = [1, 2, 5, 10, 15, 30, 60];
 
@@ -49,8 +51,12 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
   const [viewWidth, setViewWidth] = useState(0);
   const [view, setView] = useState({ from: 0, to: 1 }); // visible fraction of the recording
   const [cursor, setCursor] = useState(null); // seconds
+  const [pxPerS, setPxPerS] = useState(DEFAULT_ZOOM); // null = fit the whole recording
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef(null); // { x, left, moved } while the mouse is held on the graph
+  const keepCentre = useRef(null); // the time to hold centred across a zoom
 
-  const width = Math.max(viewWidth, Math.round(durationS * PX_PER_S));
+  const width = pxPerS === null ? viewWidth : Math.max(viewWidth, Math.round(durationS * pxPerS));
   const rows = useMemo(() => groupTracks(tracks), [tracks]);
   const paths = useMemo(
     () => rows.map((row) => row.tracks.map((t) => pathFor(t, width, durationS, row.min, row.max))),
@@ -76,17 +82,68 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
     return () => observer.disconnect();
   }, [syncView]);
 
+  const centreTime = () => {
+    const el = scroller.current;
+    return ((el.scrollLeft + el.clientWidth / 2) / el.scrollWidth) * durationS;
+  };
+
+  const zoom = (next) => {
+    keepCentre.current = centreTime();
+    setPxPerS(next);
+  };
+  const fitsWhole = durationS * (pxPerS ?? 0) <= viewWidth;
+  const zoomIn = () => zoom(ZOOMS.find((z) => z > (pxPerS ?? viewWidth / durationS)) ?? ZOOMS[ZOOMS.length - 1]);
+  const zoomOut = () => {
+    const next = [...ZOOMS].reverse().find((z) => z < (pxPerS ?? 0));
+    zoom(next === undefined || durationS * next <= viewWidth ? null : next);
+  };
+
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (keepCentre.current === null || !el) return;
+    el.scrollLeft = (keepCentre.current / durationS) * el.scrollWidth - el.clientWidth / 2;
+    keepCentre.current = null;
+    syncView();
+  }, [width, durationS, syncView]);
+
+  /** Mouse drag pans the graph; touch keeps the browser's own swipe. */
+  const press = (event) => {
+    move(event);
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    drag.current = { x: event.clientX, left: scroller.current.scrollLeft, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const release = () => {
+    drag.current = null;
+    setDragging(false);
+  };
+
   const move = (event) => {
+    if (drag.current) {
+      const dx = event.clientX - drag.current.x;
+      if (Math.abs(dx) > 3 && !drag.current.moved) {
+        drag.current.moved = true;
+        setDragging(true);
+      }
+      if (drag.current.moved) scroller.current.scrollLeft = drag.current.left - dx;
+    }
     const box = surface.current.getBoundingClientRect();
     setCursor(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)) * durationS);
   };
 
-  /** Clicking the overview centres the detail on that moment. */
-  const jump = (event) => {
+  /** Pressing the overview centres the detail there; dragging keeps it following. */
+  const steer = (event) => {
     const box = event.currentTarget.getBoundingClientRect();
-    const f = (event.clientX - box.left) / box.width;
+    const f = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
     const el = scroller.current;
-    el.scrollTo({ left: f * el.scrollWidth - el.clientWidth / 2, behavior: 'smooth' });
+    el.scrollLeft = f * el.scrollWidth - el.clientWidth / 2;
+  };
+  const steerStart = (event) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    steer(event);
+  };
+  const steerMove = (event) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) steer(event);
   };
 
   const at = (track) => {
@@ -101,8 +158,8 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.overview} title="Whole recording — click to jump there">
-        <div className={styles.overviewInner} onClick={jump}>
+      <div className={styles.overview} title="Whole recording — press or drag to move there">
+        <div className={styles.overviewInner} onPointerDown={steerStart} onPointerMove={steerMove}>
         <div className={styles.overviewPhases} aria-hidden="true">
           {phases.map((p, i) => (
             <span key={p.name} className={i % 2 ? styles.bandAlt : ''} style={{ left: x(p.startS), width: x(p.endS - p.startS) }} />
@@ -125,17 +182,42 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
             {t.label}
           </span>
         ))}
-        {scrollable && <span className={styles.hint}>Scroll the graph sideways, or click the overview to jump</span>}
+        <span className={styles.toolbar}>
+          {scrollable && <span className={styles.hint}>Drag the graph or the box above to move</span>}
+          <button type="button" className={styles.tool} onClick={zoomOut} disabled={pxPerS === null} aria-label="Zoom out">
+            <Minus size={14} />
+          </button>
+          <button type="button" className={styles.tool} onClick={zoomIn} disabled={pxPerS === ZOOMS[ZOOMS.length - 1]} aria-label="Zoom in">
+            <Plus size={14} />
+          </button>
+          <button
+            type="button"
+            className={`${styles.tool} ${styles.fit}`}
+            onClick={() => zoom(null)}
+            disabled={pxPerS === null || fitsWhole}
+            aria-label="Show the whole recording"
+          >
+            <Maximize2 size={13} /> Fit
+          </button>
+        </span>
       </div>
 
-      <div className={styles.scroller} ref={scroller} onScroll={syncView}>
+      <div
+        className={styles.scroller}
+        ref={scroller}
+        onScroll={syncView}
+        tabIndex={0}
+        aria-label="Signal graph — arrow keys move through the recording"
+      >
         <div
-          className={styles.surface}
+          className={`${styles.surface} ${scrollable ? styles.pannable : ''} ${dragging ? styles.dragging : ''}`.trim()}
           ref={surface}
           style={{ width }}
           onPointerMove={move}
-          onPointerDown={move}
-          onPointerLeave={() => setCursor(null)}
+          onPointerDown={press}
+          onPointerUp={release}
+          onPointerCancel={release}
+          onPointerLeave={() => !drag.current && setCursor(null)}
         >
           <div className={styles.bands} aria-hidden="true">
             {phases.map((p, i) => (
@@ -179,7 +261,8 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
 
           <div className={styles.axis} aria-hidden="true">
             {ticks.map((t) => (
-              <span key={t} style={{ left: x(t) }}>
+              // the label on the right edge is right-aligned so it doesn't overhang the graph
+              <span key={t} style={{ left: x(t), transform: t / durationS > 0.97 ? 'translateX(-100%)' : undefined }}>
                 {t} s
               </span>
             ))}
