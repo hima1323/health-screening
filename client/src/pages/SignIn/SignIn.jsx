@@ -6,6 +6,7 @@ import useAuth from '../../hooks/useAuth';
 import useResource from '../../hooks/useResource';
 import Layout from '../../components/Layout';
 import GoogleButton from '../../components/GoogleButton';
+import InfoSheet from '../../components/InfoSheet';
 import { Button, Card, IconBadge } from '../../components/ui';
 import CredentialsForm from './CredentialsForm';
 import styles from './SignIn.module.css';
@@ -101,29 +102,43 @@ export default function SignIn() {
 
           <CredentialsForm mode={mode} busy={busy} error={error} onSubmit={submit} />
 
-          <Button variant="link" onClick={() => navigate('/welcome')}>
+          <div className="phone-only">
+            <InfoSheet icon={Lock} label="How your account is kept" hint="Hashed passwords, no shared data">
+              <AccountNotes />
+            </InfoSheet>
+          </div>
+
+          <Button variant="link" className={styles.back} onClick={() => navigate('/welcome')}>
             <ArrowLeft size={15} aria-hidden="true" /> Back to the introduction
           </Button>
         </Card>
 
-        <Card className={styles.aside} accent="sage">
+        <Card className={`wide-only ${styles.aside}`} accent="sage">
           <div className={styles.heading}>
             <IconBadge>
               <Lock size={17} strokeWidth={1.6} />
             </IconBadge>
             <p className="label tight">How your account is kept</p>
           </div>
-          <ul className={styles.notes}>
-            <li>Sign in with Google and we receive your name, email and picture — nothing else from your account.</li>
-            <li>Choose an email and password instead and the password is hashed with bcrypt, never stored in plain text.</li>
-            <li>The session is a signed token in this browser, and only your own record can be read with it.</li>
-            <li>Health details and past reports stay against your record until you delete them.</li>
-          </ul>
-          <p className="muted small">
-            Google is only ever asked who you are — Aura Screen requests no access to your mail, files or calendar.
-          </p>
+          <AccountNotes />
         </Card>
       </div>
     </Layout>
+  );
+}
+
+function AccountNotes() {
+  return (
+    <>
+      <ul className={styles.notes}>
+        <li>Sign in with Google and we receive your name, email and picture — nothing else from your account.</li>
+        <li>Choose an email and password instead and the password is hashed with bcrypt, never stored in plain text.</li>
+        <li>The session is a signed token in this browser, and only your own record can be read with it.</li>
+        <li>Health details and past reports stay against your record until you delete them.</li>
+      </ul>
+      <p className="muted small">
+        Google is only ever asked who you are — Aura Screen requests no access to your mail, files or calendar.
+      </p>
+    </>
   );
 }

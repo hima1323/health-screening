@@ -30,38 +30,43 @@ export default function QrScanner({ station = 'Station 2', onScanned, onCancel }
     <Card className={styles.card}>
       <p className="label center tight">{station}</p>
 
-      <div className={`${styles.viewfinder} ${state === 'found' ? styles.locked : ''}`.trim()}>
-        <video ref={videoRef} className={styles.video} playsInline muted aria-label="Camera preview" />
-        <canvas ref={canvasRef} className={styles.canvas} />
+      <div className={styles.body}>
+        <div className={`${styles.viewfinder} ${state === 'found' ? styles.locked : ''}`.trim()}>
+          <video ref={videoRef} className={styles.video} playsInline muted aria-label="Camera preview" />
+          <canvas ref={canvasRef} className={styles.canvas} />
 
-        <span className={`${styles.corner} ${styles.cornerTl}`} />
-        <span className={`${styles.corner} ${styles.cornerTr}`} />
-        <span className={`${styles.corner} ${styles.cornerBl}`} />
-        <span className={`${styles.corner} ${styles.cornerBr}`} />
+          <span className={`${styles.corner} ${styles.cornerTl}`} />
+          <span className={`${styles.corner} ${styles.cornerTr}`} />
+          <span className={`${styles.corner} ${styles.cornerBl}`} />
+          <span className={`${styles.corner} ${styles.cornerBr}`} />
 
-        {isScanning && <span className={styles.laser} />}
-        {state === 'found' && (
-          <span className={styles.result} aria-hidden="true">
-            <Check size={40} strokeWidth={1.6} />
-          </span>
-        )}
-        {cameraFailed && (
-          <span className={styles.result} aria-hidden="true">
-            <CameraOff size={40} strokeWidth={1.3} />
-          </span>
-        )}
+          {isScanning && <span className={styles.laser} />}
+          {state === 'found' && (
+            <span className={styles.result} aria-hidden="true">
+              <Check size={40} strokeWidth={1.6} />
+            </span>
+          )}
+          {cameraFailed && (
+            <span className={styles.result} aria-hidden="true">
+              <CameraOff size={40} strokeWidth={1.3} />
+            </span>
+          )}
+        </div>
+
+        <p className={styles.headline}>
+          <ScanLine size={16} strokeWidth={1.8} aria-hidden="true" />
+          {HEADLINE[state]}
+        </p>
+        <p className="muted center">{body}</p>
       </div>
 
-      <p className={styles.headline}>
-        <ScanLine size={16} strokeWidth={1.8} aria-hidden="true" />
-        {HEADLINE[state]}
-      </p>
-      <p className="muted center">{body}</p>
-
-      {cameraFailed && <Button onClick={skip}>Continue without camera</Button>}
-      <Button variant="link" onClick={onCancel}>
-        Cancel
-      </Button>
+      {/* actions sit at the bottom of the screen, within thumb reach */}
+      <div className={styles.actions}>
+        {cameraFailed && <Button onClick={skip}>Continue without camera</Button>}
+        <Button variant="link" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
     </Card>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { Wind, X } from 'lucide-react';
+import { HeartPulse, Wind, X } from 'lucide-react';
 import { getActiveScan } from '../../api';
 import useResource from '../../hooks/useResource';
 import useCountdown from '../../hooks/useCountdown';
 import { Card, Button, StatTile, StatusPill, Spinner, ErrorState } from '../ui';
 import AuraOrb from '../AuraOrb';
+import InfoSheet from '../InfoSheet';
 import styles from './ActiveScanPanel.module.css';
 
 const SIGNAL_TONE = {
@@ -78,28 +79,38 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
         )}
       </Card>
 
-      <Card>
-        <p className="label">Signal quality</p>
-        <div className="grid-two">
-          {signals.map((signal) => (
-            <StatTile key={signal.key} className={styles.signal}>
-              <span className={styles.signalDot} style={{ background: SIGNAL_TONE[signal.key] }} aria-hidden="true" />
-              <div>
-                <StatTile.Label>{signal.label}</StatTile.Label>
-                <p className={styles.signalValue}>{signal.value}</p>
-              </div>
-            </StatTile>
-          ))}
-        </div>
-      </Card>
-
-      {ecgFallback && (
-        <Card className={styles.fallback}>
-          <p>
-            <strong>{ecgFallback.title}</strong> — {ecgFallback.description}
-          </p>
-          <StatusPill dot={false}>{ecgFallback.badge}</StatusPill>
+      {/* live-capture detail — once capture is done it no longer applies */}
+      {!isDone && (
+        <Card>
+          <p className={`label ${styles.signalsLabel}`}>Signal quality</p>
+          <div className={styles.signals}>
+            {signals.map((signal) => (
+              <StatTile key={signal.key} className={styles.signal}>
+                <span className={styles.signalDot} style={{ background: SIGNAL_TONE[signal.key] }} aria-hidden="true" />
+                <div>
+                  <StatTile.Label>{signal.label}</StatTile.Label>
+                  <p className={styles.signalValue}>{signal.value}</p>
+                </div>
+              </StatTile>
+            ))}
+          </div>
         </Card>
+      )}
+
+      {ecgFallback && !isDone && (
+        <>
+          <Card className={`wide-only ${styles.fallback}`}>
+            <p>
+              <strong>{ecgFallback.title}</strong> — {ecgFallback.description}
+            </p>
+            <StatusPill dot={false}>{ecgFallback.badge}</StatusPill>
+          </Card>
+          <div className={`phone-only ${styles.fallbackRow}`}>
+            <InfoSheet icon={HeartPulse} label={ecgFallback.title} hint={ecgFallback.badge}>
+              <p>{ecgFallback.description}</p>
+            </InfoSheet>
+          </div>
+        </>
       )}
 
       {!isDone && (

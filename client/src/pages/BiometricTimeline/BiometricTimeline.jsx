@@ -83,7 +83,7 @@ export default function BiometricTimeline() {
         </Card>
       )}
 
-      <Card>
+      <Card className={styles.trend}>
         <div>
           <h3>30-day trend</h3>
           <p className={`label tight ${styles.trendCaption}`}>Equilibrium field · heart rate</p>

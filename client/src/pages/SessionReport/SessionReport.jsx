@@ -47,7 +47,7 @@ export default function SessionReport() {
         </Card>
       )}
 
-      <Card accent="amber">
+      <Card accent="amber" className={styles.heart}>
         <CardRow>
           <h3>Heart rate</h3>
           <StatusPill dot={false}>{heartRate.status}</StatusPill>

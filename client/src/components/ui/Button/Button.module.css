@@ -15,11 +15,21 @@
   cursor: pointer;
   box-shadow: 0 12px 28px rgba(59, 50, 56, 0.28);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(59, 50, 56, 0.34);
+/* touchscreens keep :hover stuck after a tap, so the lift is mouse-only */
+@media (hover: hover) {
+  .primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(59, 50, 56, 0.34);
+  }
+}
+
+.primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 8px 20px rgba(59, 50, 56, 0.26);
 }
 
 .link {

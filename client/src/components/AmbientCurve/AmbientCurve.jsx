@@ -39,16 +39,17 @@ export default function AmbientCurve({ curve }) {
         </g>
         <path d={buildPath(baselines, min, max)} className={styles.baseline} />
         <path d={buildPath(pulses, min, max)} className={styles.line} />
+        {/* The chart stretches to fill its card, so points are zero-length
+            strokes with round caps: unlike a <circle>, they stay round under
+            any stretch. */}
         {curve.map((point, index) => {
           const isToday = index === curve.length - 1;
+          const d = `M${index * step} ${yFor(point.pulse)}h0`;
           return (
-            <circle
-              key={point.label}
-              cx={index * step}
-              cy={yFor(point.pulse)}
-              r={isToday ? 6 : 4}
-              className={isToday ? styles.today : styles.point}
-            />
+            <g key={point.label} className={isToday ? styles.today : styles.point}>
+              <path d={d} className={styles.pointRing} />
+              <path d={d} className={styles.pointFill} />
+            </g>
           );
         })}
       </svg>

@@ -1,10 +1,15 @@
+/* grows with its card (the card decides how much room there is) */
 .curve {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
   margin-top: 12px;
 }
 
 .svg {
+  flex: 1 0 140px;
   width: 100%;
-  height: 140px;
+  min-height: 140px;
   border-radius: var(--radius-tile);
   background: var(--glass-tile);
   border: 1px solid var(--glass-edge);
@@ -12,6 +17,14 @@
 
 .grid {
   stroke: rgba(255, 255, 255, 0.8);
+}
+
+.grid,
+.baseline,
+.line,
+.pointRing,
+.pointFill {
+  vector-effect: non-scaling-stroke;
 }
 
 .baseline {
@@ -29,14 +42,30 @@
   stroke-linecap: round;
 }
 
-.point {
-  fill: #fff;
-  stroke: #5d7c90;
-  stroke-width: 2;
+.pointRing,
+.pointFill {
+  fill: none;
+  stroke-linecap: round;
 }
 
-.today {
-  fill: var(--rose);
+.pointRing {
+  stroke: #5d7c90;
+  stroke-width: 10;
+}
+
+.pointFill {
+  stroke: #fff;
+  stroke-width: 6;
+}
+
+.today .pointRing {
+  stroke: var(--rose);
+  stroke-width: 13;
+}
+
+.today .pointFill {
+  stroke: var(--rose);
+  stroke-width: 13;
 }
 
 .labels {

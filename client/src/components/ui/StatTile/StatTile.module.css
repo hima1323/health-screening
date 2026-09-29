@@ -40,15 +40,20 @@
 
 .row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, …) lets a long label shrink its tile instead of widening the row */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
   margin-top: 14px;
 }
 
-@media (max-width: 620px) {
+@container device (max-width: 620px) {
   .tile {
-    padding: 10px 11px;
+    padding: 10px 8px;
     border-radius: 16px;
+  }
+
+  .label {
+    letter-spacing: 0.05em;
   }
 
   .row {

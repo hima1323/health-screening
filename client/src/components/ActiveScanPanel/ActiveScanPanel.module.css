@@ -28,13 +28,22 @@
   color: var(--ink-3);
 }
 
+/* takes the spare height so the capture screen always fills the device */
 .focus {
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-evenly;
   text-align: center;
   gap: 12px;
   padding: 24px 20px;
+}
+
+.signals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .guidance {
@@ -103,14 +112,36 @@
   align-self: center;
 }
 
-@media (max-width: 620px) {
+@container device (max-width: 620px) {
+  /* four short bars on one row rather than a two-row tracker */
   .steps {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px 10px;
+    gap: 6px;
+  }
+
+  .stepLabel {
+    overflow: hidden;
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .focus {
-    padding: 20px 16px;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .guidance {
+    margin-top: 4px;
+    padding: 12px;
+  }
+
+  .signals {
+    gap: 7px;
+  }
+
+  .signal {
+    padding: 9px 10px;
   }
 
   .fallback {
@@ -118,8 +149,19 @@
   }
 }
 
-@media (max-width: 380px) {
-  .steps {
-    grid-template-columns: 1fr;
+/* short phones: keep the countdown, instruction and signals; drop the extras */
+@container device (max-width: 620px) and (max-height: 740px) {
+  .guidance :global(.muted),
+  .signalsLabel {
+    display: none;
+  }
+
+  /* the optional-ECG notice is informational only */
+  .fallbackRow {
+    display: none !important;
+  }
+
+  .signal {
+    padding: 7px 9px;
   }
 }

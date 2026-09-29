@@ -6,7 +6,7 @@
 .question {
   margin-bottom: 4px;
   font-family: var(--font-display);
-  font-size: clamp(26px, 3.4vw, 34px);
+  font-size: clamp(26px, 3.4cqw, 34px);
   font-weight: 400;
   line-height: 1.15;
 }
@@ -23,14 +23,30 @@
   -webkit-backdrop-filter: blur(14px);
 }
 
+/* the grid takes whatever height is left, so the page ends flush with the screen */
+.hubGrid {
+  flex: 1 0 auto;
+}
+
 .auraCard {
-  align-self: start;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-evenly;
   text-align: center;
   gap: 12px;
   padding: 24px 20px;
+}
+
+/* the last card soaks up the spare height beside the aura card */
+.consent {
+  flex: 1 0 auto;
+}
+
+.sheets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .note {
@@ -58,14 +74,48 @@
   color: var(--ink);
 }
 
-@media (max-width: 900px) {
+@container device (max-width: 620px) {
+  .question {
+    font-size: 24px;
+    margin-bottom: 0;
+  }
+
+  /* one column: the aura card grows, the rest keeps its natural height */
+  .hubGrid {
+    display: flex;
+    flex-direction: column;
+  }
+
   .auraCard {
-    align-self: stretch;
+    flex: 1 0 auto;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .side {
+    gap: 10px;
+  }
+
+  .side > :first-child {
+    padding: 14px 16px;
   }
 }
 
-@media (max-width: 620px) {
-  .auraCard {
-    padding: 20px 16px;
+/* short phones (SE-class): shed the least essential lines before anything scrolls */
+@container device (max-width: 620px) and (max-height: 740px) {
+  .question {
+    display: none;
+  }
+
+  .greeting {
+    font-size: 14px;
+  }
+
+  .lastTiles {
+    display: none;
+  }
+
+  .note {
+    display: none;
   }
 }

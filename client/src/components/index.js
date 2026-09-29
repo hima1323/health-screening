@@ -4,6 +4,8 @@ export { default as AuraOrb } from './AuraOrb';
 export { default as QrScanner } from './QrScanner';
 export { default as ActiveScanPanel } from './ActiveScanPanel';
 export { default as AmbientCurve } from './AmbientCurve';
+export { default as DeviceFrame } from './DeviceFrame';
+export { default as InfoSheet } from './InfoSheet';
 export { default as ModalityLane } from './ModalityLane';
 export { default as FusionPanel } from './FusionPanel';
 export { default as PipelineTrace } from './PipelineTrace';

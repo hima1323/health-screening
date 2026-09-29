@@ -1,8 +1,8 @@
 .stage {
   --mx: 0;
   --my: 0;
-  /* the orb never outgrows a narrow viewport */
-  --orb-size: min(var(--orb-max, 184px), 62vw);
+  /* the orb never outgrows the screen — narrow or short */
+  --orb-size: min(var(--orb-max, 184px), 62cqw, 20cqh);
   position: relative;
   display: flex;
   flex-direction: column;

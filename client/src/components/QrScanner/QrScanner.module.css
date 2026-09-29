@@ -1,4 +1,6 @@
+/* fills the screen: viewfinder centred in the free space, actions at the bottom */
 .card {
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -7,12 +9,32 @@
   padding: 24px 20px;
 }
 
+.body {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 360px;
+}
+
 .viewfinder {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: min(260px, 72vw);
+  /* as big as the screen allows — a bigger target is easier to line up */
+  width: min(420px, 78cqw, 44cqh);
   aspect-ratio: 1;
   margin: 6px 0;
   overflow: hidden;
@@ -127,7 +149,7 @@
   font-weight: 600;
 }
 
-@media (max-width: 620px) {
+@container device (max-width: 620px) {
   .card {
     padding: 20px 16px;
   }

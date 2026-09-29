@@ -93,3 +93,17 @@ select.control {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px;
 }
+
+@container device (max-width: 620px) {
+  .control {
+    min-height: 48px;
+  }
+}
+
+/* iOS zooms the page into any input under 16px on focus — a real device is
+   the only place that happens, so this follows the hardware, not the frame */
+@media (pointer: coarse) {
+  .control {
+    font-size: 16px;
+  }
+}

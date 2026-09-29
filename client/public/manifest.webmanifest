@@ -1,0 +1,19 @@
+{
+  "name": "Aura Screen",
+  "short_name": "Aura Screen",
+  "description": "Contactless biometric screening — scan, report, and vitals timeline.",
+  "start_url": "/?device=full",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#cfdde5",
+  "theme_color": "#e7cbcb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

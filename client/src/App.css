@@ -1,24 +1,9 @@
 /*
- * App-level styles, loaded once by App.jsx: the page frame plus the typography
- * and layout helpers every screen shares.
+ * App-level styles, loaded once by App.jsx: typography and layout helpers every
+ * screen shares. The page frame itself is DeviceFrame, and breakpoints are
+ * `@container device` queries so they follow the phone / kiosk screen rather
+ * than the browser window.
  */
-#root {
-  position: relative;
-  max-width: var(--page-max);
-  margin: 0 auto;
-  padding: 30px 24px 72px;
-}
-
-@media (max-width: 900px) {
-  #root {
-    padding: 24px 16px 60px;
-  }
-}
-@media (max-width: 620px) {
-  #root {
-    padding: 18px 12px 48px;
-  }
-}
 
 /* type */
 .numeral {
@@ -92,8 +77,24 @@
   gap: var(--gap);
 }
 
-@media (max-width: 900px) {
+@container device (max-width: 700px) {
   .grid-two {
     grid-template-columns: 1fr;
+  }
+}
+
+/* phone screens swap long secondary cards for compact sheet triggers; the
+   hide is !important so a component's own `display` can't undo it */
+.phone-only {
+  display: none !important;
+}
+
+@container device (max-width: 620px) {
+  .phone-only {
+    display: revert !important;
+  }
+
+  .wide-only {
+    display: none !important;
   }
 }

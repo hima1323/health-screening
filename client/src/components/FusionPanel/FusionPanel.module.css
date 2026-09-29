@@ -114,7 +114,7 @@
   color: var(--ink-3);
 }
 
-@media (max-width: 620px) {
+@container device (max-width: 620px) {
   .scores {
     grid-template-columns: 1fr;
   }
