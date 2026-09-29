@@ -7,5 +7,6 @@ export const getActiveScan = (sessionId) => request(`/sessions/${sessionId}/acti
 export const getReport = (sessionId) => request(`/sessions/${sessionId}/report`);
 export const getStudySessions = () => request('/study-sessions');
 export const getStudySession = (key) => request(`/study-sessions/${key}`);
+export const studySessionFramesUrl = (key) => `/api/study-sessions/${key}/frames`;
 
 export * from './auth';

@@ -8,6 +8,7 @@ export { default as InfoSheet } from './InfoSheet';
 export { default as FusionPanel } from './FusionPanel';
 export { default as PipelineTrace } from './PipelineTrace';
 export { default as SyncedTracks } from './SyncedTracks';
+export { default as ThermalViewer } from './ThermalViewer';
 export { default as PhaseTable } from './PhaseTable';
 export { default as SessionCard } from './SessionCard';
 export { default as SignalSketch, envelope } from './SignalSketch';

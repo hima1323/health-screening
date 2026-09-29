@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const Patient = require('../models/Patient');
 const Station = require('../models/Station');
@@ -106,6 +107,16 @@ router.get('/study-sessions/:key', async (req, res) => {
   const session = await StudySession.findOne({ sessionKey: req.params.key });
   if (!session) return res.status(404).json({ error: 'Session not found' });
   res.json({ session });
+});
+
+// GET /api/study-sessions/:key/frames — the raw thermogram, fetched once by the viewer
+router.get('/study-sessions/:key/frames', async (req, res) => {
+  const session = await StudySession.findOne({ sessionKey: req.params.key }).select('frames').lean();
+  if (!session?.frames) return res.status(404).json({ error: 'This session has no thermal frames' });
+  // basename keeps the lookup inside the sessions folder whatever the stored name says
+  const file = path.join(__dirname, '..', 'data', 'sessions', path.basename(session.frames.file));
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.type('application/octet-stream').sendFile(file);
 });
 
 module.exports = router;

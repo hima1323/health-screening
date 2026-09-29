@@ -46,7 +46,7 @@ const fmt = (v, unit) =>
  * scrolls sideways at a fixed time scale so waveforms stay readable however long
  * the session is. One crosshair reads every channel at the same instant.
  */
-export default function SyncedTracks({ tracks, phases, durationS }) {
+export default function SyncedTracks({ tracks, phases, durationS, time = null, onScrub }) {
   const scroller = useRef(null);
   const surface = useRef(null);
   const [viewWidth, setViewWidth] = useState(0);
@@ -166,7 +166,9 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
       if (drag.current.moved) scroller.current.scrollLeft = drag.current.left - dx;
     }
     const box = surface.current.getBoundingClientRect();
-    setCursor(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)) * durationS);
+    const seconds = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)) * durationS;
+    setCursor(seconds);
+    onScrub?.(seconds);
   };
 
   /** Pressing the overview centres the detail there; dragging keeps it following. */
@@ -184,11 +186,13 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) steer(event);
   };
 
+  // what the readout shows: where the pointer is, or else the shared playhead
+  const shown = cursor ?? time;
   const at = (track) => {
-    if (cursor === null) return null;
-    return track.values[Math.min(track.values.length - 1, Math.round(cursor * track.fs))];
+    if (shown === null) return null;
+    return track.values[Math.min(track.values.length - 1, Math.round(shown * track.fs))];
   };
-  const phaseAt = cursor === null ? null : phases.find((p) => cursor >= p.startS && cursor <= p.endS);
+  const phaseAt = shown === null ? null : phases.find((p) => shown >= p.startS && shown <= p.endS);
   const x = (s) => `${(s / durationS) * 100}%`;
   const step = TICK_STEPS.find((s) => s * (width / durationS) >= 90) ?? 60;
   const ticks = Array.from({ length: Math.floor(durationS / step) + 1 }, (_, i) => i * step);
@@ -295,6 +299,9 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
             </div>
           ))}
 
+          {time !== null && cursor === null && (
+            <span className={`${styles.crosshair} ${styles.playhead}`} style={{ left: x(time) }} aria-hidden="true" />
+          )}
           {cursor !== null && <span className={styles.crosshair} style={{ left: x(cursor) }} aria-hidden="true" />}
 
           <div className={styles.axis} aria-hidden="true">
@@ -309,12 +316,12 @@ export default function SyncedTracks({ tracks, phases, durationS }) {
       </div>
 
       <div className={styles.readout} aria-live="polite">
-        {cursor === null ? (
+        {shown === null ? (
           <p className="muted small">Move across the graph to read every channel at the same instant.</p>
         ) : (
           <>
             <p className={styles.readoutHead}>
-              {cursor.toFixed(1)} s{phaseAt && ` · ${phaseAt.name}`}
+              {shown.toFixed(1)} s{phaseAt && ` · ${phaseAt.name}`}
             </p>
             <div className={styles.readoutGrid}>
               {tracks.map((t) => (

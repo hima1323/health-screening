@@ -14,10 +14,12 @@ Every stage is timed, so the pipeline the dashboard draws is the one that ran.
 
     python analysis/build_sessions.py && (cd server && npm run sessions)
 """
+import base64
 import csv
 import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -327,15 +329,22 @@ def build_mcd():
     return sessions
 
 
-def fetch(path):
+def fetch(path, raw=False):
+    """A file from Hans's export, cached locally. JSON is parsed unless `raw`."""
     local = os.path.join(CACHE, path.replace("/", "_"))
     if not os.path.exists(local):
         os.makedirs(CACHE, exist_ok=True)
-        # Hans's repo is private, so go through the authenticated GitHub CLI
-        raw = subprocess.run(["gh", "api", "-H", "Accept: application/vnd.github.raw", f"{HANS}/{path}"],
-                             check=True, capture_output=True).stdout
+        # Hans's repo is private, so go through the authenticated GitHub CLI. The blob API
+        # returns base64, which survives binary files — raw output through gh is decoded as
+        # text and mangles every byte above 127.
+        gh = lambda *args: subprocess.run(["gh", "api", *args], check=True, capture_output=True, text=True).stdout
+        sha = gh(f"{HANS}/{path}", "--jq", ".sha").strip()
+        repo = HANS.split("/contents/")[0]
+        data = base64.b64decode(gh(f"{repo}/git/blobs/{sha}", "--jq", ".content"))
         with open(local, "wb") as f:
-            f.write(raw)
+            f.write(data)
+    if raw:
+        return local
     with open(local) as f:
         return json.load(f)
 
@@ -477,6 +486,14 @@ def build_thermal():
     watch = Stopwatch()
     with watch("load"):
         d = fetch("thermal/S01.json")
+        frames_src = fetch(f"thermal/{d['frames']['file']}", raw=True)
+    meta = d["frames"]
+    frames_name = "thermal-s01.frames.bin"
+    expected = meta["count"] * meta["width"] * meta["height"]
+    if os.path.getsize(frames_src) != expected:
+        raise ValueError(f"{frames_src}: {os.path.getsize(frames_src)} bytes, expected {expected}")
+    os.makedirs(OUT, exist_ok=True)
+    shutil.copyfile(frames_src, os.path.join(OUT, frames_name))
     phases = [{"name": p["name"], "startS": r(p["startS"]), "endS": r(p["endS"]), "discontinuous": False}
               for p in d["phases"]]
     fs = d["series"]["rateHz"]
@@ -512,6 +529,13 @@ def build_thermal():
         "durationS": d["durationS"],
         "modalities": [{"key": "thermal", "label": "Thermal", "detail": f"{d['device']['model']}, {d['device']['sensor']}"}],
         "phases": phases,
+        # the thermogram itself: one uint8 per pixel, linear from tempMinC to tempMaxC
+        "frames": {"file": frames_name, "width": meta["width"], "height": meta["height"],
+                   "count": meta["count"], "fps": meta["fps"],
+                   "tempMinC": meta["tempMinC"], "tempMaxC": meta["tempMaxC"],
+                   "displayMinC": 22, "displayMaxC": 36},
+        "rois": [{"key": roi["key"], "label": roi["label"], "box": roi["box"], "valid": roi["valid"],
+                  "track": f"t-{roi['key']}"} for roi in d["rois"]],
         "tracks": [{"key": f"t-{roi['key']}", "group": "thermal", "label": roi["label"], "unit": "°C", "fs": fs,
                     "values": series(roi_series[roi["key"]], 2)} for roi in rois],
         "metricDefs": [{"key": roi["key"], "label": roi["label"], "unit": "°C", "digits": 2} for roi in rois],
@@ -554,7 +578,7 @@ def main():
 
     for name in os.listdir(OUT):
         if name.endswith(".json"):
-            os.remove(os.path.join(OUT, name))
+            os.remove(os.path.join(OUT, name))  # frame files are rewritten by their builder
     for s in sessions:
         with open(os.path.join(OUT, f"{s['id']}.json"), "w") as f:
             json.dump(s, f, separators=(",", ":"), ensure_ascii=False)

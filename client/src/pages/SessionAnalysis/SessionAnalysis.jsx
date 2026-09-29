@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { getStudySession } from '../../api';
 import useResource from '../../hooks/useResource';
 import Layout from '../../components/Layout';
 import SyncedTracks from '../../components/SyncedTracks';
+import ThermalViewer from '../../components/ThermalViewer';
 import PhaseTable from '../../components/PhaseTable';
 import FusionPanel from '../../components/FusionPanel';
 import PipelineTrace from '../../components/PipelineTrace';
@@ -19,6 +21,8 @@ import styles from './SessionAnalysis.module.css';
 export default function SessionAnalysis() {
   const { key } = useParams();
   const { data, error } = useResource(() => getStudySession(key), [key]);
+  // one clock shared by the thermal viewer and the signal graph
+  const [time, setTime] = useState(null);
 
   if (error) return <ErrorState message={error} />;
   if (!data) return <Spinner />;
@@ -55,7 +59,24 @@ export default function SessionAnalysis() {
           ))}
         </div>
 
-        <SyncedTracks tracks={s.tracks} phases={s.phases} durationS={s.durationS} />
+        {s.frames && (
+          <ThermalViewer
+            sessionKey={s.sessionKey}
+            frames={s.frames}
+            rois={s.rois}
+            tracks={s.tracks}
+            time={time}
+            onTime={setTime}
+          />
+        )}
+
+        <SyncedTracks
+          tracks={s.tracks}
+          phases={s.phases}
+          durationS={s.durationS}
+          time={s.frames ? time : null}
+          onScrub={s.frames ? setTime : undefined}
+        />
         <p className="muted small">{s.quality.message}</p>
       </Card>
 
