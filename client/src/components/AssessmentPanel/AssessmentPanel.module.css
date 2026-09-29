@@ -45,7 +45,8 @@
   border-color: rgba(110, 155, 136, 0.35);
 }
 
-.routine {
+.routine,
+.rescan {
   color: #7a5820;
   background: rgba(196, 149, 79, 0.16);
   border-color: rgba(196, 149, 79, 0.38);
@@ -68,11 +69,6 @@
   border-color: rgba(59, 50, 56, 0.12);
 }
 
-.pair {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
 
 .block {
   display: flex;

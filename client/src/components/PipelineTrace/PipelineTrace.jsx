@@ -2,7 +2,7 @@ import { Check, TriangleAlert, Minus } from 'lucide-react';
 import styles from './PipelineTrace.module.css';
 
 const STATUS_ICON = { ok: Check, degraded: TriangleAlert, skipped: Minus };
-const MODALITY_NAME = { rppg: 'Camera', ppg: 'Contact PPG', clinical: 'Clinical', thermal: 'Thermal', ecg: 'ECG', all: 'All channels' };
+const MODALITY_NAME = { rppg: 'rPPG', ppg: 'Contact PPG', clinical: 'Clinical', thermal: 'Thermal', ecg: 'ECG', emg: 'EMG', all: 'All channels' };
 
 /**
  * The preprocessing chain a raw frame travels before it reaches fusion.

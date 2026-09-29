@@ -100,6 +100,11 @@
   background: rgba(126, 150, 166, 0.2);
 }
 
+.tag_emg {
+  color: #5f5591;
+  background: rgba(138, 127, 181, 0.2);
+}
+
 .tag_clinical {
   color: #4f6b5c;
   background: rgba(110, 155, 136, 0.18);

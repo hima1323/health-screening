@@ -1,13 +1,10 @@
-import { Stethoscope, Target, HeartPulse } from 'lucide-react';
+import { Stethoscope, HeartPulse } from 'lucide-react';
 import { IconBadge } from '../ui';
 import styles from './AssessmentPanel.module.css';
 
-/**
- * The conclusion a patient actually needs: which signal the readings are
- * judged against, what they add up to, and whether to see a doctor.
- */
+/** The conclusion a patient actually needs: what the readings add up to, and whether to see a doctor. */
 export default function AssessmentPanel({ assessment }) {
-  const { groundTruth, condition, findings = [], advice, disclaimer } = assessment;
+  const { condition, findings = [], advice, disclaimer } = assessment;
 
   return (
     <div className={styles.panel}>
@@ -20,28 +17,14 @@ export default function AssessmentPanel({ assessment }) {
         </div>
       </div>
 
-      <div className={styles.pair}>
-        <div className={styles.block}>
-          <div className={styles.blockHead}>
-            <IconBadge>
-              <Target size={16} strokeWidth={1.7} />
-            </IconBadge>
-            <p className="label tight">Ground truth</p>
-          </div>
-          <p className={styles.headline}>{groundTruth.signal}</p>
-          <p className="muted small">{groundTruth.detail}</p>
-          <p className="muted">{groundTruth.rationale}</p>
+      <div className={styles.block}>
+        <div className={styles.blockHead}>
+          <IconBadge tone="rose">
+            <HeartPulse size={16} strokeWidth={1.7} />
+          </IconBadge>
+          <p className="label tight">Condition</p>
         </div>
-
-        <div className={styles.block}>
-          <div className={styles.blockHead}>
-            <IconBadge tone="rose">
-              <HeartPulse size={16} strokeWidth={1.7} />
-            </IconBadge>
-            <p className="label tight">Condition</p>
-          </div>
-          <p className={styles.headline}>{condition}</p>
-        </div>
+        <p className={styles.headline}>{condition}</p>
       </div>
 
       <ul className={styles.findings}>

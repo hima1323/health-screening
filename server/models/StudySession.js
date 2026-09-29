@@ -84,13 +84,12 @@ const studySessionSchema = new mongoose.Schema(
       parts: { type: [fusionPartSchema], default: [] },
       note: String,
     },
-    // screening conclusion: the reference signal, the condition, and whether to see a doctor
+    // screening conclusion: the condition and whether to see a doctor
     assessment: {
-      groundTruth: { signal: String, detail: String, rationale: String },
       condition: String,
       findings: [{ _id: false, label: String, detail: String, tone: { type: String, enum: ['ok', 'warn', 'bad', 'info'] } }],
       advice: {
-        level: { type: String, enum: ['ok', 'routine', 'soon', 'urgent', 'na'] },
+        level: { type: String, enum: ['ok', 'rescan', 'routine', 'soon', 'urgent', 'na'] },
         answer: String,
         text: String,
       },

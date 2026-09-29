@@ -90,7 +90,8 @@
   background: rgba(110, 155, 136, 0.14);
 }
 
-.routine {
+.routine,
+.rescan {
   color: #8a6526;
   background: rgba(196, 149, 79, 0.16);
 }
