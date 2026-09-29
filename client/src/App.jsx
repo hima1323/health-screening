@@ -10,6 +10,7 @@ import Onboarding from './pages/Onboarding';
 import ScanHub from './pages/ScanHub';
 import SessionReport from './pages/SessionReport';
 import BiometricTimeline from './pages/BiometricTimeline';
+import SessionAnalysis from './pages/SessionAnalysis';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/" element={<ScanHub />} />
             <Route path="/report" element={<SessionReport />} />
             <Route path="/timeline" element={<BiometricTimeline />} />
+            <Route path="/timeline/:key" element={<SessionAnalysis />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

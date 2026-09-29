@@ -100,6 +100,11 @@
   background: rgba(126, 150, 166, 0.2);
 }
 
+.tag_clinical {
+  color: #4f6b5c;
+  background: rgba(110, 155, 136, 0.18);
+}
+
 .tag_all {
   color: var(--ink-2);
   background: rgba(59, 50, 56, 0.1);

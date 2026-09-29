@@ -1,0 +1,43 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--ink);
+  background: var(--glass-solid);
+}
+
+.modalities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 10px 0 4px;
+}
+
+.modality {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.modality strong {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.source a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-2);
+}

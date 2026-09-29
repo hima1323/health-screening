@@ -6,6 +6,7 @@ const Report = require('../models/Report');
 const VitalTimeline = require('../models/VitalTimeline');
 const ScreeningLog = require('../models/ScreeningLog');
 const User = require('../models/User');
+const StudySession = require('../models/StudySession');
 const { bearerFrom, readToken } = require('../lib/token');
 
 const router = express.Router();
@@ -79,6 +80,21 @@ router.get('/patients/:id/timeline', async (req, res) => {
   ]);
   if (!timeline) return res.status(404).json({ error: 'Timeline not found' });
   res.json({ timeline, logs });
+});
+
+// GET /api/study-sessions — the past sessions list, without the heavy signal arrays
+router.get('/study-sessions', async (req, res) => {
+  const sessions = await StudySession.find()
+    .select('-tracks -metrics -pipeline -metricDefs')
+    .sort({ 'source.dataset': 1, sessionKey: 1 });
+  res.json({ sessions });
+});
+
+// GET /api/study-sessions/:key — one session with its signals and analysis
+router.get('/study-sessions/:key', async (req, res) => {
+  const session = await StudySession.findOne({ sessionKey: req.params.key });
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  res.json({ session });
 });
 
 module.exports = router;

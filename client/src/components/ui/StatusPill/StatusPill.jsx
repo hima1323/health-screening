@@ -14,6 +14,9 @@ const TONE_BY_STATUS = {
   'slightly elevated': 'warn',
   'mild fever': 'warn',
   flagged: 'crit',
+  watch: 'warn',
+  fair: 'warn',
+  poor: 'crit',
 };
 
 /** A status chip whose colour is carried by the dot rather than a tinted box. */

@@ -6,5 +6,7 @@ export const getScanHub = (patientId) => request(`/patients/${patientId}/scan-hu
 export const getActiveScan = (sessionId) => request(`/sessions/${sessionId}/active-scan`);
 export const getReport = (sessionId) => request(`/sessions/${sessionId}/report`);
 export const getTimeline = (patientId) => request(`/patients/${patientId}/timeline`);
+export const getStudySessions = () => request('/study-sessions');
+export const getStudySession = (key) => request(`/study-sessions/${key}`);
 
 export * from './auth';

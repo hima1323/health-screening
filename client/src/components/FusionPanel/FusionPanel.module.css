@@ -23,12 +23,12 @@
 
 .scores {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
 }
 
 .score {
-  padding: 13px 14px;
+  padding: 12px 13px;
   border-radius: var(--radius-tile);
   background: var(--glass-tile);
   border: 1px solid var(--glass-edge);
@@ -38,88 +38,70 @@
 
 .big {
   font-size: 30px;
+  margin-bottom: 4px;
+}
+
+.of {
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+.stat {
   margin-bottom: 5px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
-/* the weight each channel carries, as one continuous bar */
-.stack {
+.parts {
   display: flex;
-  gap: 3px;
-  height: 12px;
-}
-
-.segment {
-  border-radius: var(--radius-pill);
-}
-
-.rppg {
-  background: var(--rose);
-}
-
-.thermal {
-  background: var(--amber);
-}
-
-.ecg {
-  background: var(--steel);
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
   list-style: none;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
 }
 
-.chip {
+.parts li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 13px;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  background: var(--glass-tile);
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  gap: 10px;
+  padding: 9px 13px;
+  border-bottom: 1px solid rgba(59, 50, 56, 0.07);
 }
 
-.chip:hover,
-.chipOn {
-  background: var(--glass-solid);
-  border-color: var(--glass-edge);
+.parts li:last-child {
+  border-bottom: none;
 }
 
-.swatch {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex: none;
-}
-
-.chipName {
-  font-size: 11.5px;
+.partLabel {
+  flex: 1;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink);
 }
 
-.chipWeight {
+.reading {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.points {
+  flex: none;
+  min-width: 28px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(110, 155, 136, 0.16);
+  color: var(--sage);
   font-size: 11px;
   font-weight: 700;
-  color: var(--ink-2);
+  text-align: center;
 }
 
-.chipReading {
-  font-size: 10.5px;
-  color: var(--ink-3);
-}
-
-@container device (max-width: 620px) {
-  .scores {
-    grid-template-columns: 1fr;
-  }
-
-  .big {
-    font-size: 26px;
-  }
+.hot {
+  background: rgba(201, 122, 112, 0.18);
+  color: var(--rose-deep);
 }

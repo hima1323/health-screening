@@ -2,17 +2,16 @@ import { GitMerge } from 'lucide-react';
 import { StatusPill, IconBadge } from '../ui';
 import styles from './FusionPanel.module.css';
 
-const NAMES = { rppg: 'Camera pulse', thermal: 'Thermal', ecg: 'Contact ECG' };
-
 /**
- * What the channels say once combined.
+ * What the channels say together.
  *
- * Late fusion: each channel is scored on its own, then the scores are averaged
- * with weights set by signal quality. The bar shows how much of the verdict each
- * channel is responsible for — the point being that no single channel decides.
+ * Every session describes its own fusion — NEWS2 for the clinical sittings,
+ * an arousal vote for the drive — so this renders whatever parts it is given:
+ * each input, its reading, and the points it contributed.
  */
-export default function FusionPanel({ fusion, onSelect, selected }) {
-  const { index, verdict, confidence, agreement, method, contributions, note } = fusion;
+export default function FusionPanel({ fusion }) {
+  const { title, method, score, scoreMax, band, verdict, stats = [], parts = [], note } = fusion;
+  const scored = score !== null && score !== undefined;
 
   return (
     <div className={styles.panel}>
@@ -21,7 +20,7 @@ export default function FusionPanel({ fusion, onSelect, selected }) {
           <GitMerge size={17} strokeWidth={1.7} />
         </IconBadge>
         <div className={styles.headText}>
-          <p className="label tight">Fused assessment</p>
+          <p className="label tight">{title}</p>
           <p className={styles.method}>{method}</p>
         </div>
         <StatusPill>{verdict}</StatusPill>
@@ -29,43 +28,30 @@ export default function FusionPanel({ fusion, onSelect, selected }) {
 
       <div className={styles.scores}>
         <div className={styles.score}>
-          <p className={`numeral ${styles.big}`}>{index}</p>
-          <p className="label tight">Screening index</p>
+          <p className={`numeral ${styles.big}`}>
+            {scored ? score : '—'}
+            {scored && scoreMax && <span className={styles.of}> / {scoreMax}</span>}
+          </p>
+          <p className="label tight">{band}</p>
         </div>
-        <div className={styles.score}>
-          <p className={`numeral ${styles.big}`}>{Math.round(confidence * 100)}%</p>
-          <p className="label tight">Confidence</p>
-        </div>
-        <div className={styles.score}>
-          <p className={`numeral ${styles.big}`}>{Math.round(agreement * 100)}%</p>
-          <p className="label tight">Channel agreement</p>
-        </div>
-      </div>
-
-      <div className={styles.stack} role="img" aria-label="Contribution of each channel to the fused result">
-        {contributions.map((part) => (
-          <span
-            key={part.key}
-            className={`${styles.segment} ${styles[part.key]}`}
-            style={{ width: `${part.weight * 100}%` }}
-            title={`${NAMES[part.key]} · ${Math.round(part.weight * 100)}%`}
-          />
+        {stats.map((s) => (
+          <div key={s.label} className={styles.score} title={s.hint}>
+            <p className={styles.stat}>{s.value}</p>
+            <p className="label tight">{s.label}</p>
+          </div>
         ))}
       </div>
 
-      <ul className={styles.legend}>
-        {contributions.map((part) => (
-          <li key={part.key}>
-            <button
-              type="button"
-              className={`${styles.chip} ${selected === part.key ? styles.chipOn : ''}`.trim()}
-              onClick={() => onSelect?.(part.key)}
-            >
-              <span className={`${styles.swatch} ${styles[part.key]}`} aria-hidden="true" />
-              <span className={styles.chipName}>{NAMES[part.key]}</span>
-              <span className={styles.chipWeight}>{Math.round(part.weight * 100)}%</span>
-              <span className={styles.chipReading}>{part.reading}</span>
-            </button>
+      <ul className={styles.parts}>
+        {parts.map((p) => (
+          <li key={p.key}>
+            <span className={styles.partLabel}>{p.label}</span>
+            <span className={styles.reading}>{p.reading}</span>
+            {p.points !== null && p.points !== undefined && (
+              <span className={`${styles.points} ${p.points > 0 ? styles.hot : ''}`.trim()}>
+                {p.points > 0 ? `+${p.points}` : '0'}
+              </span>
+            )}
           </li>
         ))}
       </ul>

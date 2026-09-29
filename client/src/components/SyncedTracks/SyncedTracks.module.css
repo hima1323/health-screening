@@ -1,0 +1,156 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 22px;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.bands {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 10px;
+  background: rgba(255, 250, 249, 0.28);
+}
+
+.bandAlt {
+  background: rgba(201, 122, 112, 0.1);
+}
+
+.bandLabel {
+  position: absolute;
+  top: 3px;
+  left: 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* the seam between two separately recorded phases */
+.break {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  border-left: 1.5px dashed rgba(59, 50, 56, 0.35);
+}
+
+.row {
+  position: relative;
+  padding: 4px 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 58px;
+}
+
+.line {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.key {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.key i {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.crosshair {
+  position: absolute;
+  top: 18px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.axis {
+  position: relative;
+  height: 14px;
+}
+
+.axis span {
+  position: absolute;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  font-size: 9.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.axis span:first-child {
+  transform: none;
+}
+
+.axis span:last-child {
+  transform: translateX(-100%);
+}
+
+.readout {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.readoutHead {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.readoutGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.readoutGrid em {
+  font-style: normal;
+  color: var(--ink-3);
+  margin-right: 3px;
+}

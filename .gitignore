@@ -15,3 +15,6 @@ rppg1/checkpoints_mcd/
 *.mov
 __pycache__/
 .DS_Store
+
+# cached source downloads for analysis/build_sessions.py
+analysis/sources/

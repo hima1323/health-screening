@@ -2,7 +2,7 @@ import { Check, TriangleAlert, Minus } from 'lucide-react';
 import styles from './PipelineTrace.module.css';
 
 const STATUS_ICON = { ok: Check, degraded: TriangleAlert, skipped: Minus };
-const MODALITY_NAME = { rppg: 'Camera', thermal: 'Thermal', ecg: 'ECG', all: 'All channels' };
+const MODALITY_NAME = { rppg: 'Camera', ppg: 'Contact PPG', clinical: 'Clinical', thermal: 'Thermal', ecg: 'ECG', all: 'All channels' };
 
 /**
  * The preprocessing chain a raw frame travels before it reaches fusion.
@@ -40,14 +40,14 @@ export default function PipelineTrace({ stages, highlight }) {
                 <p className={styles.detail}>{stage.detail}</p>
               </div>
 
-              <span className={styles.ms}>{stage.ms} ms</span>
+              <span className={styles.ms}>{stage.ms === null || stage.ms === undefined ? 'offline' : `${stage.ms} ms`}</span>
             </li>
           );
         })}
       </ol>
 
       <p className="muted small">
-        {stages.length} stages · {total} ms per capture window
+        {stages.length} stages · {Math.round(total)} ms measured
       </p>
     </div>
   );
