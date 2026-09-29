@@ -45,12 +45,21 @@ function initialDevice() {
   return stored in DEVICES ? stored : 'phone';
 }
 
+// below this the text in a shrunken frame stops being readable
+const MIN_SCALE = 0.85;
+
+/**
+ * How far to shrink the frame to fit the window. Fitting a tall frame into a
+ * short window would shrink everything, so past MIN_SCALE only the width is
+ * fitted and the page scrolls instead.
+ */
 function fitScale(device) {
   const spec = DEVICES[device];
   if (!spec.width) return 1;
   const sx = (window.innerWidth - STAGE_PAD_X - 2 * spec.bezel) / spec.width;
   const sy = (window.innerHeight - STAGE_PAD_Y - 2 * spec.bezel) / spec.height;
-  return Math.min(1, sx, sy);
+  const fit = Math.min(1, sx, sy);
+  return fit >= MIN_SCALE ? fit : Math.min(1, sx);
 }
 
 export default function DeviceFrame({ children }) {
@@ -80,13 +89,15 @@ export default function DeviceFrame({ children }) {
     }
   };
 
-  const spec = DEVICES[device];
-  const framed = device !== 'full';
+  // a window too narrow for the chosen frame gets the app at full size instead
+  const shown = device !== 'full' && scale < MIN_SCALE ? 'full' : device;
+  const spec = DEVICES[shown];
+  const framed = shown !== 'full';
   // full screen on a desktop still needs a way back to the frame
   const showSwitcher = framed || !prefersFullScreen();
 
   return (
-    <div className={styles.stage} data-device={device}>
+    <div className={styles.stage} data-device={shown}>
       {showSwitcher && (
         <div className={styles.switcher} role="group" aria-label="Preview device">
           {Object.entries(DEVICES).map(([key, d]) => (
