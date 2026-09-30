@@ -7,16 +7,18 @@ const seconds = (s) => (s >= 60 ? `${Math.floor(s / 60)}:${String(Math.round(s %
 
 /** One past session: who, what was recorded, a sketch of all of it, and whether to see a doctor. */
 export default function SessionCard({ session }) {
-  const { sessionKey, label, subject, durationS, modalities, preview = [], assessment } = session;
+  const { sessionKey, label, subject, durationS, modalities, preview = [], assessment, recordedAt } = session;
   const who = [subject.age && `${subject.age} y`, subject.sex].filter(Boolean).join(' · ');
   const advice = assessment?.advice;
+  
+  const dateStr = recordedAt ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(recordedAt)) : `Subject ${subject.id}`;
 
   return (
     <Link to={`/timeline/${sessionKey}`} className={styles.card}>
       <div className={styles.top}>
         <div className={styles.titles}>
           <p className={styles.label}>
-            Subject {subject.id}
+            {dateStr}
             {who && <span className={styles.who}> · {who}</span>}
           </p>
           <p className={styles.meta}>
