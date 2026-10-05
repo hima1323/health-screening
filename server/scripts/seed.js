@@ -103,19 +103,19 @@ async function seed() {
       peak: 118,
       variability: 'Good',
       note:
-        'Faster than usual for you at rest. Often caused by stress, fever or recent activity. Normal range 72–96 bpm.',
+        'Faster than usual for you at rest — often stress, fever or recent activity. A nurse will recheck it.',
       normalRange: '72–96 bpm',
     },
     bodyTemp: {
       value: 38.4,
       status: 'Mild fever',
-      note: '+1.2 °C above your baseline. Staff will confirm with a second device. Normal 36.1–37.5 °C.',
+      note: 'A mild fever, 1.2 °C above your usual. Staff will confirm with a second thermometer.',
       normalRange: '36.1–37.5 °C',
     },
     respiration: {
       value: 18,
       status: 'Optimal',
-      note: 'Even rhythmic flow, within the expected range for your age. Normal 12–20 /min.',
+      note: 'Steady, even breathing — nothing to do.',
       normalRange: '12–20 /min',
     },
     shareCode: '894-DXK',

@@ -5,39 +5,46 @@
   gap: 8px;
 }
 
-/* the headline card takes any spare height, so a kiosk screen ends flush */
-.heart {
+/* takes any spare height, so a kiosk screen ends flush */
+.results {
   flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
 }
 
-.heartLayout {
-  flex: 1 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-top: 14px;
-  flex-wrap: wrap;
+.resultList {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.heartStats {
-  flex: 1;
-  min-width: 240px;
+.result {
+  padding: 16px 0;
 }
 
-.ecg {
-  width: 70px;
-  height: 18px;
-  margin-top: 6px;
-  color: var(--rose);
-  opacity: 0.75;
+.result + .result {
+  border-top: 1px solid var(--glass-edge);
+}
+
+.result:last-child {
+  padding-bottom: 0;
+}
+
+.resultName {
+  font-weight: 600;
+}
+
+/* one plain-language line: what it measures, normal range, where yours falls, what it means */
+.plain {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 62ch;
 }
 
 .bigStat {
   margin-top: 10px;
   font-family: var(--font-display);
-  font-size: 42px;
+  font-size: 38px;
   font-weight: 300;
   line-height: 1;
   font-variant-numeric: lining-nums;
@@ -51,30 +58,32 @@
   color: var(--ink-3);
 }
 
-.statLabel {
-  margin-top: 6px;
-}
-
-.centeredTile {
-  text-align: center;
-}
-
-@container device (max-width: 700px) {
-  .heartLayout {
-    justify-content: center;
-    gap: 16px;
-  }
-
-  /* a full-width basis, so the stats drop below the orb instead of squeezing
-     beside it (`flex: 1` alone resets the basis to 0 and ignores width) */
-  .heartStats {
-    flex: 1 1 100%;
-    min-width: 0;
-  }
-}
-
 @container device (max-width: 620px) {
   .bigStat {
     font-size: 34px;
   }
+}
+
+/* ---- share sheet ---- */
+.shareCode {
+  margin: 16px 0;
+  padding: 14px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--ink);
+  user-select: all;
+}
+
+.shareActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-bottom: 8px;
 }
