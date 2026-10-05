@@ -1,0 +1,153 @@
+{
+  "_about": "Hand-written reasoning for each study session: how the conclusion follows from the numbers, step by step, in plain words. Written by reading each session's results; load-sessions.js attaches it by session id. Update it by hand if the analysis changes.",
+
+  "mcd-1020": {
+    "conclusion": "Nothing abnormal. Your heart and temperature were normal at rest, and the changes after exercise were the expected ones.",
+    "steps": [
+      {
+        "look": "Heart rate at rest",
+        "found": "83 beats a minute. The normal adult range at rest is 50–100.",
+        "so": "Normal. It sits in the upper half of the range, which is common in young adults."
+      },
+      {
+        "look": "Body temperature",
+        "found": "36.7 °C estimated core temperature. Fever starts at 38.0 °C.",
+        "so": "Normal, no sign of fever."
+      },
+      {
+        "look": "What happened after exercise",
+        "found": "Heart rate rose by 17 to 100 beats a minute. The beat-to-beat variation fell from 28 to 9 ms, and muscle tension rose from 0.28 to 0.46.",
+        "so": "This is how a healthy body responds to effort: the heart speeds up and becomes more regular, and muscles stay a little tense. It is not a problem."
+      },
+      {
+        "look": "Can the camera reading be trusted?",
+        "found": "The camera measured 73 at rest while the heart sensor measured 83 — 10 beats apart. After exercise they were 23 apart. The camera signal was weak (2.3 dB).",
+        "so": "The camera was not accurate for you in this sitting, so the heart sensor's number was used instead. This is why the station has a backup sensor."
+      },
+      {
+        "look": "Putting it together",
+        "found": "Both main readings — heart rate and temperature — are inside their normal ranges. The only issue was with the camera, not with you.",
+        "so": "No need to see a doctor. Note: the heart, temperature and muscle readings in this prototype are simulated from your recorded vitals."
+      }
+    ]
+  },
+
+  "mcd-1149": {
+    "conclusion": "Nothing abnormal at rest. Your heart rate did not rise after exercise, most likely because the exercise was light — one sitting is not enough to say more.",
+    "steps": [
+      {
+        "look": "Heart rate at rest",
+        "found": "75 beats a minute. The normal adult range at rest is 50–100.",
+        "so": "Normal."
+      },
+      {
+        "look": "Body temperature",
+        "found": "36.5 °C estimated core temperature. Fever starts at 38.0 °C.",
+        "so": "Normal, no sign of fever."
+      },
+      {
+        "look": "What happened after exercise",
+        "found": "Heart rate stayed at 75 — no rise at all. Usually it goes up after effort.",
+        "so": "On its own this looks unusual, so we checked the other signals before deciding what it means."
+      },
+      {
+        "look": "Did the body respond in other ways?",
+        "found": "Yes. The beat-to-beat variation fell by half (26 → 13 ms) and muscle tension doubled (0.25 → 0.54).",
+        "so": "The body did react to the exercise. A steady heart rate with these changes fits a light bout of exercise better than a heart problem."
+      },
+      {
+        "look": "Can the camera reading be trusted?",
+        "found": "The camera was within 4 beats of the heart sensor at rest, with a clear signal.",
+        "so": "Yes — the camera alone would have given the right answer."
+      },
+      {
+        "look": "Putting it together",
+        "found": "All resting readings are normal. The flat heart rate after exercise has a likely harmless explanation, but this is one short recording.",
+        "so": "No need to see a doctor for this result. If you notice you get breathless or tired easily with effort, mention it at your next routine check-up. Note: the heart, temperature and muscle readings in this prototype are simulated from your recorded vitals."
+      }
+    ]
+  },
+
+  "mcd-1217": {
+    "conclusion": "Nothing abnormal. Your heart rate and temperature were both normal, and the camera reading agreed with the heart sensor.",
+    "steps": [
+      {
+        "look": "Heart rate at rest",
+        "found": "69 beats a minute. The normal adult range at rest is 50–100.",
+        "so": "Normal, near the middle of the range."
+      },
+      {
+        "look": "Body temperature",
+        "found": "36.5 °C estimated core temperature. Fever starts at 38.0 °C.",
+        "so": "Normal, no sign of fever."
+      },
+      {
+        "look": "Beat-to-beat variation",
+        "found": "32 ms at rest. Below 20 ms is considered low.",
+        "so": "Healthy — your heart adjusts normally from beat to beat."
+      },
+      {
+        "look": "Can the camera reading be trusted?",
+        "found": "The camera measured 63, the heart sensor 69 — 6 beats apart, with a strong, clear signal (12.3 dB).",
+        "so": "Yes. The contactless reading was good enough on its own."
+      },
+      {
+        "look": "Putting it together",
+        "found": "Every reading is inside its normal range and the two heart measurements agree.",
+        "so": "No need to see a doctor. Note: the heart, temperature and muscle readings in this prototype are simulated from your recorded vitals."
+      }
+    ]
+  },
+
+  "drivedb-drive05": {
+    "conclusion": "Nothing abnormal. The signals were flagged because they changed a lot while driving, but those changes are the body's normal reaction to city traffic.",
+    "steps": [
+      {
+        "look": "Heart rate at rest",
+        "found": "66 beats a minute. The normal adult range at rest is 50–100.",
+        "so": "Normal."
+      },
+      {
+        "look": "Beat-to-beat variation at rest",
+        "found": "63 ms. Below 20 ms is considered low.",
+        "so": "Healthy and relaxed."
+      },
+      {
+        "look": "Why were all three signals flagged?",
+        "found": "While driving in the city, heart rate rose to 90 (+24), beat-to-beat variation halved (63 → 31 ms) and muscle tension rose about 25 times.",
+        "so": "The flags mean 'this changed a lot from rest', not 'this is unhealthy'. All three moved in the same direction at the same time."
+      },
+      {
+        "look": "What explains the change?",
+        "found": "A faster heart, less beat-to-beat variation and tense muscles together are the classic pattern of short-term stress. The person was driving through city traffic.",
+        "so": "The changes are explained by the activity. Even while driving, heart rate (90) stayed under 100."
+      },
+      {
+        "look": "Putting it together",
+        "found": "The resting readings are normal, and the driving readings show a normal stress response.",
+        "so": "No need to see a doctor. This recording shows how the body reacts to stress, not a health problem."
+      }
+    ]
+  },
+
+  "thermal-s01": {
+    "conclusion": "No health conclusion can be drawn from this recording. It shows what drinking something cold does to face temperatures.",
+    "steps": [
+      {
+        "look": "What was recorded",
+        "found": "Only a thermal camera, before, during and after drinking a cold drink. There is no heart sensor, and the temperatures were rebuilt from the colours of the thermal image.",
+        "so": "We can compare regions of the face with each other, but the exact temperatures are not reliable enough for a medical reading."
+      },
+      {
+        "look": "What changed while drinking",
+        "found": "The mouth cooled by 1.35 °C, the eyes by 0.64 °C and the forehead by 0.49 °C, and the nose warmed by 0.65 °C. Afterwards the mouth returned almost to where it started (33.9 °C vs 34.0 °C).",
+        "so": "The cold drink cooled the mouth most. The change went away afterwards, as expected."
+      },
+      {
+        "look": "Putting it together",
+        "found": "The pattern is explained by the drink, not by the person's health, and there are no reliable vital signs to check.",
+        "so": "Not assessable. This session is here to show how the thermal camera sees changes on the face."
+      }
+    ]
+  }
+}

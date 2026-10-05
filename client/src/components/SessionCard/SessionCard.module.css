@@ -32,6 +32,10 @@
 }
 
 .label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -76,9 +80,17 @@
   color: #7a5820;
 }
 
-.who {
-  font-weight: 500;
-  color: var(--ink-3);
+/* the session's id, quoted when a patient talks to staff about it */
+.sessionId {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
 }
 
 .advice {

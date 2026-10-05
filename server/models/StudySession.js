@@ -123,6 +123,17 @@ const studySessionSchema = new mongoose.Schema(
       disclaimer: String,
     },
     pipeline: { type: [pipelineStageSchema], default: [] },
+    // why the conclusion follows from the numbers, step by step (data/reasoning.json)
+    reasoning: {
+      type: new mongoose.Schema(
+        {
+          conclusion: String,
+          steps: [{ _id: false, look: String, found: String, so: String }],
+        },
+        { _id: false }
+      ),
+      default: undefined,
+    },
   },
   { timestamps: true }
 );

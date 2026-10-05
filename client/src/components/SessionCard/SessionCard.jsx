@@ -5,21 +5,18 @@ import styles from './SessionCard.module.css';
 
 const seconds = (s) => (s >= 60 ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}` : `${Math.round(s)} s`);
 
-/** One past session: who, what was recorded, a sketch of all of it, and whether to see a doctor. */
+/** One past session: when, its id, what was recorded, a sketch of all of it, and whether to see a doctor. */
 export default function SessionCard({ session }) {
-  const { sessionKey, label, subject, durationS, modalities, preview = [], assessment, recordedAt } = session;
-  const who = [subject.age && `${subject.age} y`, subject.sex].filter(Boolean).join(' · ');
+  const { sessionKey, label, durationS, modalities, preview = [], assessment, recordedOn } = session;
   const advice = assessment?.advice;
-  
-  const dateStr = recordedAt ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(recordedAt)) : `Subject ${subject.id}`;
 
   return (
     <Link to={`/timeline/${sessionKey}`} className={styles.card}>
       <div className={styles.top}>
         <div className={styles.titles}>
           <p className={styles.label}>
-            {dateStr}
-            {who && <span className={styles.who}> · {who}</span>}
+            {formatDate(recordedOn)}
+            <span className={styles.sessionId}>{sessionId(sessionKey)}</span>
           </p>
           <p className={styles.meta}>
             {label} · {seconds(durationS)}
@@ -51,4 +48,15 @@ export default function SessionCard({ session }) {
       )}
     </Link>
   );
+}
+
+/** "2023-11-13" → "13 Nov 2023". */
+export function formatDate(isoDate) {
+  if (!isoDate) return 'Date not recorded';
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(isoDate));
+}
+
+/** The id a session is known by: "mcd-1020" → "MCD-1020". */
+export function sessionId(key) {
+  return key.toUpperCase();
 }

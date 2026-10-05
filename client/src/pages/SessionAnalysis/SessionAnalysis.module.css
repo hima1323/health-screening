@@ -56,3 +56,120 @@
 .simulatedModality strong {
   color: #7a5820;
 }
+
+/* ---- reasoning ---- */
+.conclusion {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.howLabel {
+  margin-top: 18px;
+}
+
+/* numbered steps joined by a thin line, so the chain reads top to bottom */
+.steps {
+  margin: 10px 0 14px;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step {
+  position: relative;
+  padding: 0 0 16px 36px;
+  counter-increment: step;
+}
+
+.step::before {
+  content: counter(step);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 28px;
+  bottom: 4px;
+  left: 11.5px;
+  width: 1px;
+  background: var(--glass-edge);
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+.stepLook {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.stepFound {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.stepSo {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+/* ---- full analysis, collapsed by default ---- */
+.full > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fullToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.fullToggle:hover {
+  color: var(--ink);
+  background: var(--glass-solid);
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.full[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.full[open] > .fullToggle {
+  margin-bottom: var(--gap);
+}
