@@ -11,6 +11,7 @@ import ScanHub from './pages/ScanHub';
 import SessionReport from './pages/SessionReport';
 import BiometricTimeline from './pages/BiometricTimeline';
 import SessionAnalysis from './pages/SessionAnalysis';
+import Kiosk from './pages/Kiosk';
 
 export default function App() {
   return (
@@ -26,6 +27,9 @@ export default function App() {
 
           {/* reachable while onboarding and afterwards, to attach more reports */}
           <Route path="/onboarding" element={<Onboarding />} />
+
+          {/* the station's own screen — shows the signed QR code, needs no account */}
+          <Route path="/kiosk" element={<Kiosk />} />
 
           {/* the screening app itself */}
           <Route element={<RequireAccount />}>

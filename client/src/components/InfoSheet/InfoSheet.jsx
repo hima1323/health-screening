@@ -10,14 +10,6 @@ import styles from './InfoSheet.module.css';
  */
 export default function InfoSheet({ icon: Icon, label, hint, title, children }) {
   const [open, setOpen] = useState(false);
-  const titleId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => e.key === 'Escape' && setOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
 
   return (
     <>
@@ -35,27 +27,44 @@ export default function InfoSheet({ icon: Icon, label, hint, title, children }) 
       </button>
 
       {open && (
-        <div className={styles.backdrop} onClick={() => setOpen(false)}>
-          <div
-            className={styles.sheet}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className={styles.grabber} aria-hidden="true" />
-            <div className={styles.head}>
-              <h3 id={titleId} className={styles.title}>
-                {title ?? label}
-              </h3>
-              <button type="button" className={styles.close} onClick={() => setOpen(false)} aria-label="Close">
-                <X size={16} />
-              </button>
-            </div>
-            <div className={styles.body}>{children}</div>
-          </div>
-        </div>
+        <Sheet title={title ?? label} onClose={() => setOpen(false)}>
+          {children}
+        </Sheet>
       )}
     </>
+  );
+}
+
+/** The bottom sheet itself, for screens that open it on their own (e.g. an error). */
+export function Sheet({ title, onClose, role = 'dialog', children }) {
+  const titleId = useId();
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className={styles.backdrop} onClick={onClose}>
+      <div
+        className={styles.sheet}
+        role={role}
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className={styles.grabber} aria-hidden="true" />
+        <div className={styles.head}>
+          <h3 id={titleId} className={styles.title}>
+            {title}
+          </h3>
+          <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
+            <X size={16} />
+          </button>
+        </div>
+        <div className={styles.body}>{children}</div>
+      </div>
+    </div>
   );
 }

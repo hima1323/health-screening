@@ -7,7 +7,9 @@ const Report = require('../models/Report');
 const ScreeningLog = require('../models/ScreeningLog');
 const User = require('../models/User');
 const StudySession = require('../models/StudySession');
+const QRCode = require('qrcode');
 const { bearerFrom, readToken } = require('../lib/token');
+const { issueStationCode, readStationCode } = require('../lib/stationCode');
 
 const router = express.Router();
 
@@ -70,6 +72,25 @@ router.get('/sessions/:sessionId/report', async (req, res) => {
   );
   if (!report) return res.status(404).json({ error: 'Report not found' });
   res.json(report);
+});
+
+// GET /api/stations/:stationId/code — the signed QR the kiosk displays; it refetches before expiresAt
+router.get('/stations/:stationId/code', async (req, res) => {
+  const station = await Station.findOne({ stationId: req.params.stationId }).select('stationId').lean();
+  if (!station) return res.status(404).json({ error: 'Station not found' });
+  const { code, expiresAt } = issueStationCode(station.stationId);
+  const svg = await QRCode.toString(code, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
+  res.set('Cache-Control', 'no-store');
+  res.json({ stationId: station.stationId, code, expiresAt, svg });
+});
+
+// POST /api/stations/verify — is a scanned QR one of our kiosk codes? { code } → { stationId }
+router.post('/stations/verify', async (req, res) => {
+  const { stationId, error } = readStationCode(req.body?.code);
+  if (error) return res.status(400).json({ error });
+  const station = await Station.exists({ stationId });
+  if (!station) return res.status(400).json({ error: 'This station is no longer in service.' });
+  res.json({ stationId });
 });
 
 // GET /api/study-sessions — the past sessions list, with an overview sketch of each track

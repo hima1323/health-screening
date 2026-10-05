@@ -160,3 +160,59 @@
     animation: none;
   }
 }
+
+/* ---- camera error dialog ---- */
+.why {
+  color: var(--ink);
+}
+
+.fixLabel {
+  margin-top: 14px;
+}
+
+.fix {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+.fix li + li {
+  margin-top: 4px;
+}
+
+.errorCode {
+  margin-top: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.dialogActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-top: 18px;
+}
+
+/* a QR code was read but it is not one of ours */
+.rejection {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 360px;
+  padding: 10px 14px;
+  border-radius: var(--radius-tile);
+  background: rgba(201, 122, 112, 0.14);
+  border: 1px solid rgba(201, 122, 112, 0.35);
+  color: var(--rose-deep);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.rejection svg {
+  flex: none;
+  margin-top: 1px;
+}
