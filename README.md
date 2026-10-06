@@ -41,6 +41,72 @@ This project designs and builds that patient-facing side.
 | Signal analysis | Python, NumPy; rPPG with POS/CHROM and a PhysFormer model in PyTorch (`rppg1/`) |
 | Tooling | Git and GitHub, oxlint |
 
+## Workflow
+
+### Patient journey
+
+```mermaid
+flowchart LR
+    A[Welcome<br/>3-step intro] --> B[Sign in<br/>email or Google]
+    B --> C[Onboarding<br/>profile + past reports]
+    C --> D[Scan Hub]
+    K[Kiosk screen<br/>shows signed QR] -. patient scans QR .-> D
+    D --> E[Active scan<br/>camera + thermal]
+    E --> F[Session report]
+    F --> G[Biometric timeline]
+    G --> H[Session analysis<br/>step-by-step]
+    F -- share code --> I[Doctor portal]
+```
+
+### System architecture
+
+```mermaid
+flowchart LR
+    subgraph Kiosk station
+        CAM[Camera / thermal / ECG / EMG]
+        KS[Kiosk page<br/>rotating QR]
+    end
+    subgraph Client [React client · Vite]
+        P[Patient app]
+        DR[Doctor portal]
+    end
+    subgraph Server [Express API]
+        AUTH["/api/auth<br/>JWT + Google"]
+        API["/api<br/>scan hub, sessions, reports"]
+        DOC["/api/doctor<br/>shared reports"]
+    end
+    DB[(MongoDB)]
+    PY[Python analysis<br/>rPPG POS/CHROM, PhysFormer]
+
+    KS -- QR --> P
+    P --> AUTH & API
+    DR --> DOC
+    AUTH & API & DOC --> DB
+    CAM --> PY -- session JSON --> DB
+```
+
+### Starting a scan
+
+```mermaid
+sequenceDiagram
+    participant K as Kiosk
+    participant S as Server
+    participant P as Patient phone
+    K->>S: GET /api/stations/:id/code
+    S-->>K: signed, short-lived code
+    K->>K: show code as QR
+    P->>P: scan QR with camera (jsQR)
+    P->>S: POST /api/stations/verify
+    S-->>P: valid → scan starts
+    S-->>P: results → session report
+```
+
+## Screens
+
+| Welcome | Sign in | Kiosk | Doctor sign-in |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/screenshots/welcome.png" width="200"> | <img src="docs/screenshots/signin.png" width="200"> | <img src="docs/screenshots/kiosk.png" width="200"> | <img src="docs/screenshots/doctor-login.png" width="200"> |
+
 ## Structure
 
 ```
