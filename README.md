@@ -5,6 +5,42 @@ QR-triggered scan, and the report and timeline that come out of it. React +
 Vite on the front, Express + Mongoose on the back — every screen reads its data
 from MongoDB, nothing is hardcoded in the client.
 
+## Problem statement
+
+Routine health checks need a clinic visit, a trained operator and contact
+sensors, so most people only get screened when something is already wrong.
+A self-service kiosk can measure vitals without touching the patient: a camera
+reads the pulse from the face (rPPG) and a thermal camera reads skin
+temperature. The measurements are only useful if a patient with no medical
+training can start a scan, understand the results and track them over time.
+This project designs and builds that patient-facing side.
+
+## Objectives
+
+- Let a patient start a kiosk scan from their phone by scanning a QR code,
+  with no operator present.
+- Present each session's results (heart rate, temperature, ECG, EMG) in plain
+  language, with a step-by-step explanation of how each value was measured.
+- Show a timeline of past sessions so patients can see trends.
+- Let patients share a report with their doctor.
+- Apply HCI methods throughout: build (Lab 6), user testing (Lab 7), and
+  improvements based on the test findings (Lab 8).
+
+## Team members
+
+| Name | Roll number | Role |
+|------|-------------|------|
+| TODO | TODO | TODO |
+
+## Technologies used
+
+| Layer | Tools |
+|-------|-------|
+| Frontend | React 19, Vite, React Router, CSS Modules, lucide-react, jsQR (QR scanning) |
+| Backend | Node.js, Express 5, MongoDB with Mongoose, JWT auth, Google sign-in, Multer (uploads) |
+| Signal analysis | Python, NumPy; rPPG with POS/CHROM and a PhysFormer model in PyTorch (`rppg1/`) |
+| Tooling | Git and GitHub, oxlint |
+
 ## Structure
 
 ```
