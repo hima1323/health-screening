@@ -103,9 +103,43 @@ sequenceDiagram
 
 ## Screens
 
-| Welcome | Sign in | Kiosk | Doctor sign-in |
+Captured from the running app, in the order a patient meets them.
+
+### 1. Introduction and account
+
+| Welcome · 1 of 3 | Welcome · 2 of 3 | Welcome · 3 of 3 | Create account |
 |:-:|:-:|:-:|:-:|
-| <img src="docs/screenshots/welcome.png" width="200"> | <img src="docs/screenshots/signin.png" width="200"> | <img src="docs/screenshots/kiosk.png" width="200"> | <img src="docs/screenshots/doctor-login.png" width="200"> |
+| <img src="docs/screenshots/welcome.png" width="200"> | <img src="docs/screenshots/welcome-2.png" width="200"> | <img src="docs/screenshots/welcome-3.png" width="200"> | <img src="docs/screenshots/signin.png" width="200"> |
+
+### 2. Onboarding
+
+| Your details + consent | Past reports (optional) | Scan Hub | How it works |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/screenshots/onboarding-details.png" width="200"> | <img src="docs/screenshots/onboarding-reports.png" width="200"> | <img src="docs/screenshots/scan-hub.png" width="200"> | <img src="docs/screenshots/how-it-works.png" width="200"> |
+
+### 3. Contactless scan
+
+| Kiosk shows a QR | Phone scans it | Active scan | ECG fallback | Capture complete |
+|:-:|:-:|:-:|:-:|:-:|
+| <img src="docs/screenshots/kiosk.png" width="160"> | <img src="docs/screenshots/qr-scanner.png" width="160"> | <img src="docs/screenshots/active-scan.png" width="160"> | <img src="docs/screenshots/ecg-fallback.png" width="160"> | <img src="docs/screenshots/scan-complete.png" width="160"> |
+
+### 4. Results and sharing
+
+| Session report | Report, continued | Share with doctor |
+|:-:|:-:|:-:|
+| <img src="docs/screenshots/session-report.png" width="200"> | <img src="docs/screenshots/session-report-2.png" width="200"> | <img src="docs/screenshots/share-with-doctor.png" width="200"> |
+
+### 5. Timeline and step-by-step analysis
+
+| Past sessions | What this session shows | Steps 3–5 | Full analysis: thermal | Full analysis: signals |
+|:-:|:-:|:-:|:-:|:-:|
+| <img src="docs/screenshots/timeline.png" width="160"> | <img src="docs/screenshots/session-analysis.png" width="160"> | <img src="docs/screenshots/session-analysis-2.png" width="160"> | <img src="docs/screenshots/session-analysis-3.png" width="160"> | <img src="docs/screenshots/session-analysis-4.png" width="160"> |
+
+### 6. Doctor portal
+
+<img src="docs/screenshots/doctor-login.png" width="640">
+
+A doctor signs in separately and sees only the reports patients have shared with them, by share code.
 
 ## Structure
 
