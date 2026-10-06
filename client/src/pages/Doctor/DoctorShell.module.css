@@ -1,0 +1,278 @@
+/* sidebar + main, filling the screen; the glass and type are the patient app's own */
+.shell {
+  flex: 1 0 auto;
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.glass {
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* ---- sidebar ---- */
+.sidebar {
+  composes: glass;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: calc(100dvh - 54px);
+  padding: 22px 16px 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen);
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.brandSub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--ink);
+  background: var(--glass-tile);
+}
+
+.navActive,
+.navActive:hover {
+  color: var(--on-ink);
+  background: var(--ink);
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding: 10px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profileText {
+  flex: 1;
+  min-width: 0;
+}
+
+.profileName,
+.profileSub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.profileName {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.profileSub {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.signOut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.signOut:hover {
+  background: var(--glass-solid);
+  color: var(--ink);
+}
+
+/* ---- top bar ---- */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search {
+  composes: glass;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 260px;
+  max-width: 460px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-3);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+}
+
+.search:focus-within {
+  border-color: var(--ink-3);
+}
+
+.date {
+  composes: glass;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* beats the full-width primary button: here it sits inline at the end of the bar */
+.topbar .addButton {
+  width: auto;
+  min-height: 44px;
+  padding: 0 20px;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.loadError,
+.formError {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rose-deep);
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* ---- narrower screens: the sidebar becomes a top strip ---- */
+@container device (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .nav {
+    flex-direction: row;
+  }
+
+  .profile {
+    margin: 0 0 0 auto;
+  }
+
+  .date {
+    margin-left: 0;
+  }
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Stethoscope, Clock, HeartPulse, Thermometer, Wind, ShieldCheck, ArrowRight, Copy, Check, Share2 } from 'lucide-react';
+import { Stethoscope, Clock, ShieldCheck, ArrowRight, Copy, Check, Share2 } from 'lucide-react';
 import { getReport } from '../../api';
 import usePrimary from '../../hooks/usePrimary';
 import useResource from '../../hooks/useResource';
@@ -15,23 +15,17 @@ import {
   Spinner,
   ErrorState,
 } from '../../components/ui';
+import { rangePosition } from '../../utils/range';
+import { RESULTS } from '../../utils/results';
 import styles from './SessionReport.module.css';
-
-/** The key results, in the order a patient reads them, with what each one measures. */
-const RESULTS = [
-  { key: 'heartRate', label: 'Heart rate', unit: 'bpm', icon: HeartPulse, tone: 'rose', measures: 'How many times your heart beats in a minute.' },
-  { key: 'bodyTemp', label: 'Body temperature', unit: '°C', icon: Thermometer, tone: 'amber', measures: 'How warm your body is inside.' },
-  { key: 'respiration', label: 'Breathing rate', unit: '/min', icon: Wind, tone: undefined, measures: 'How many breaths you take in a minute.' },
-];
 
 /** "Normal is 72–96 bpm — yours is above it." Falls back to the range alone if it can't be read. */
 function rangeLine({ value, normalRange }, unit) {
   if (!normalRange) return '';
-  const match = normalRange.match(/([\d.]+)\s*[–-]\s*([\d.]+)/);
-  if (!match) return `Normal is ${normalRange}.`;
-  const [low, high] = [Number(match[1]), Number(match[2])];
-  const where = value > high ? 'above it' : value < low ? 'below it' : 'within it';
-  return `Normal is ${low}–${high} ${unit} — yours is ${where}.`;
+  const range = rangePosition(value, normalRange);
+  if (!range) return `Normal is ${normalRange}.`;
+  const where = { above: 'above it', below: 'below it', within: 'within it' }[range.position];
+  return `Normal is ${range.low}–${range.high} ${unit} — yours is ${where}.`;
 }
 
 /** The results of a completed screening session. */

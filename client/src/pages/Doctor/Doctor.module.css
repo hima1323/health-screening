@@ -1,0 +1,291 @@
+/* ---- page heading, inside the doctor shell ---- */
+.pageHead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.formError {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rose-deep);
+}
+
+.listHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.empty {
+  margin-top: 10px;
+}
+
+.list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--glass-edge);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+}
+
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+}
+
+.rowLink:hover {
+  background: var(--glass-tile);
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rowAge {
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.chevron {
+  flex: none;
+  color: var(--ink-3);
+}
+
+/* a coloured bar so urgency reads before any text */
+.level {
+  flex: none;
+  align-self: stretch;
+  width: 4px;
+  border-radius: 2px;
+}
+
+.attention {
+  background: var(--rose);
+}
+
+.review {
+  background: var(--amber);
+}
+
+.stable {
+  background: var(--calm);
+}
+
+/* ---- one report ---- */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--ink);
+  background: var(--glass-solid);
+}
+
+.verdict {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.nurse {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--glass-edge);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 10px 8px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--glass-edge);
+}
+
+.table thead th {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.reading {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.unit {
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.position {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.position.above,
+.position.below {
+  color: var(--rose-deep);
+}
+
+.position.within {
+  color: var(--calm);
+}
+
+.history {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+}
+
+.historyItem + .historyItem {
+  border-top: 1px solid var(--glass-edge);
+}
+
+.historyVitals {
+  font-size: 13px;
+}
+
+/* ---- sign-in ---- */
+.loginCard {
+  width: 100%;
+  max-width: 440px;
+  align-self: center;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0 12px;
+}
+
+/* ---- patients, each with their shared reports ---- */
+.patient {
+  padding: 12px 0;
+}
+
+.patientHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.reports {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.reports .row {
+  padding: 8px 6px;
+}
+
+.reportName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.google {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 14px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--glass-edge);
+}

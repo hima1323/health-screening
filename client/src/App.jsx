@@ -12,6 +12,7 @@ import SessionReport from './pages/SessionReport';
 import BiometricTimeline from './pages/BiometricTimeline';
 import SessionAnalysis from './pages/SessionAnalysis';
 import Kiosk from './pages/Kiosk';
+import { DoctorLogin, DoctorOverview, DoctorPatient, DoctorPatients, DoctorReport, RequireDoctor } from './pages/Doctor';
 
 export default function App() {
   return (
@@ -30,6 +31,15 @@ export default function App() {
 
           {/* the station's own screen — shows the signed QR code, needs no account */}
           <Route path="/kiosk" element={<Kiosk />} />
+
+          {/* the clinician side — its own sign-in; a doctor sees only reports patients shared with them */}
+          <Route path="/doctor/login" element={<DoctorLogin />} />
+          <Route element={<RequireDoctor />}>
+            <Route path="/doctor" element={<DoctorOverview />} />
+            <Route path="/doctor/patients" element={<DoctorPatients />} />
+            <Route path="/doctor/patients/:patientId" element={<DoctorPatient />} />
+            <Route path="/doctor/reports/:code" element={<DoctorReport />} />
+          </Route>
 
           {/* the screening app itself */}
           <Route element={<RequireAccount />}>

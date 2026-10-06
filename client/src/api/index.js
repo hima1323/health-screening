@@ -11,4 +11,6 @@ export const getStationCode = (stationId) => request(`/stations/${stationId}/cod
 export const verifyStationCode = (code) => post('/stations/verify', { code });
 export const studySessionFramesUrl = (key) => `/api/study-sessions/${key}/frames`;
 
+
 export * from './auth';
+export * from './doctor';

@@ -1,0 +1,387 @@
+.heading {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+/* ---- the four numbers ---- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px;
+}
+
+.statTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.statLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink-2);
+}
+
+.statValue {
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+.statEnds {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.statEnds strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.ticks {
+  display: flex;
+  gap: 2px;
+  height: 34px;
+}
+
+.tick {
+  flex: 1;
+  border-radius: 2px;
+}
+
+.rose {
+  background: var(--rose);
+}
+
+.amber {
+  background: var(--amber);
+}
+
+.calm {
+  background: var(--calm);
+}
+
+.faint {
+  background: rgba(109, 143, 173, 0.35);
+}
+
+.empty {
+  background: rgba(59, 50, 56, 0.1);
+}
+
+/* ---- the panels: chart and table on the left, the queue down the right ---- */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-areas:
+    'chart queue'
+    'recent queue';
+  gap: var(--gap);
+}
+
+.chartCard {
+  grid-area: chart;
+}
+
+.queueCard {
+  grid-area: queue;
+  align-self: start;
+}
+
+.recentCard {
+  grid-area: recent;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.segment {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.segmentActive {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+/* ---- latest readings chart ---- */
+.chart {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  height: 250px;
+  padding-top: 26px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 120px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.plot {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  border-bottom: 1px solid var(--glass-edge);
+}
+
+/* the patient's normal range, behind their bar */
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 8px;
+  background: repeating-linear-gradient(-45deg, rgba(109, 143, 173, 0.18) 0 6px, rgba(109, 143, 173, 0.08) 6px 12px);
+  border: 1px dashed rgba(109, 143, 173, 0.45);
+}
+
+.bar {
+  position: absolute;
+  bottom: 0;
+  left: 22%;
+  right: 22%;
+  border-radius: 10px 10px 3px 3px;
+  background: var(--calm);
+  transition: height 0.4s ease;
+}
+
+.barOut {
+  background: var(--rose);
+}
+
+.column:hover .bar {
+  filter: brightness(0.92);
+}
+
+.barValue {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.barValue small {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.barName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* ---- attention queue ---- */
+.allClear {
+  color: var(--calm);
+}
+
+.queue {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queue li + li {
+  margin-top: 8px;
+}
+
+.queueItem {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  color: inherit;
+  text-decoration: none;
+}
+
+.queueItem:hover {
+  background: var(--glass-solid);
+}
+
+.level {
+  flex: none;
+  width: 4px;
+  border-radius: 2px;
+}
+
+.attention {
+  background: var(--rose);
+}
+
+.review {
+  background: var(--amber);
+}
+
+.queueText {
+  flex: 1;
+  min-width: 0;
+}
+
+.queueName {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.queueName span {
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.queueMeta {
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.chevron {
+  align-self: center;
+  flex: none;
+  color: var(--ink-3);
+}
+
+/* ---- recently shared ---- */
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.more:hover {
+  color: var(--ink);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-edge);
+  white-space: nowrap;
+}
+
+.table thead th {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.table tbody th a {
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.table tbody th a:hover {
+  text-decoration: underline;
+}
+
+/* ---- narrower screens ---- */
+@container device (max-width: 1180px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container device (max-width: 980px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'queue'
+      'chart'
+      'recent';
+  }
+}
+
+@container device (max-width: 560px) {
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -6,7 +6,19 @@ const ScreeningSession = require('../models/ScreeningSession');
 const Report = require('../models/Report');
 const ScreeningLog = require('../models/ScreeningLog');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
+const ReportShare = require('../models/ReportShare');
 const loadSessions = require('./load-sessions');
+
+// the demo clinician. Sign in at /doctor/login with Google: set DEMO_DOCTOR_EMAIL in .env to
+// your own Google address so the clinic "knows" you. The password works with the default email.
+const DEMO_DOCTOR = {
+  name: 'Dr. Priya Nair',
+  email: process.env.DEMO_DOCTOR_EMAIL || 'doctor@aura.test',
+  password: 'aura-5e9394ee',
+  specialty: 'General medicine',
+  clinic: 'Central Diagnostic Centre',
+};
 
 async function seed() {
   await connectDB();
@@ -17,6 +29,8 @@ async function seed() {
     ScreeningSession.deleteMany({}),
     Report.deleteMany({}),
     ScreeningLog.deleteMany({}),
+    Doctor.deleteMany({}),
+    ReportShare.deleteMany({}),
   ]);
 
   const patient = await Patient.create({
@@ -89,6 +103,7 @@ async function seed() {
   await Report.create({
     sessionId: 'S-8841',
     patientId: patient._id,
+    recordedAt: new Date('2026-09-08T14:32:00'),
     nurseCheck: {
       queueId: 'A-14',
       message:
@@ -149,6 +164,78 @@ async function seed() {
       occurredAt: new Date('2026-08-12T14:15:00'),
     },
   ]);
+
+  // two more patients who shared a report, so the doctor dashboard has a list to triage
+  const others = await Patient.create([
+    { name: 'Arjun Mehta', age: 41 },
+    { name: 'Sara Thomas', age: 29 },
+  ]);
+  await Report.create([
+    {
+      sessionId: 'S-8836',
+      patientId: others[0]._id,
+      recordedAt: new Date('2026-10-03T10:05:00'),
+      heartRate: { value: 71, status: 'Normal', note: 'Steady and within range.', normalRange: '60–100 bpm' },
+      bodyTemp: { value: 36.8, status: 'Normal', note: 'No sign of fever.', normalRange: '36.1–37.5 °C' },
+      respiration: { value: 15, status: 'Optimal', note: 'Even, relaxed breathing.', normalRange: '12–20 /min' },
+      shareCode: '512-KMR',
+    },
+    {
+      sessionId: 'S-8839',
+      patientId: others[1]._id,
+      recordedAt: new Date('2026-10-04T16:40:00'),
+      heartRate: { value: 98, status: 'Watch', note: 'Upper edge of normal — recheck after rest.', normalRange: '60–100 bpm' },
+      bodyTemp: { value: 37.6, status: 'Watch', note: 'Just above normal — no fever yet.', normalRange: '36.1–37.5 °C' },
+      respiration: { value: 19, status: 'Optimal', note: 'Within the normal range.', normalRange: '12–20 /min' },
+      shareCode: '307-TQA',
+    },
+  ]);
+  await ScreeningLog.create([
+    {
+      patientId: others[0]._id,
+      type: 'Contactless scan',
+      dateLabel: '3 Oct · Routine check',
+      location: 'Central Diagnostic Centre · Station 2',
+      heartRate: 71,
+      temp: 36.8,
+      status: 'Cleared',
+      occurredAt: new Date('2026-10-03T10:05:00'),
+    },
+    {
+      patientId: others[1]._id,
+      type: 'Contactless scan',
+      dateLabel: '4 Oct · Walk-in',
+      location: 'Main lobby sensor',
+      heartRate: 98,
+      temp: 37.6,
+      status: 'Watch',
+      clinicianDirective: 'Borderline temperature. Rescan in 24 hours or sooner if symptoms appear.',
+      occurredAt: new Date('2026-10-04T16:40:00'),
+    },
+  ]);
+
+  // Ramesh's report from his August routine check, shared with the doctor back then
+  const earlier = await Report.create({
+    sessionId: 'S-8790',
+    patientId: patient._id,
+    recordedAt: new Date('2026-08-12T14:15:00'),
+    heartRate: { value: 72, status: 'Normal', note: 'Steady and within range.', normalRange: '60–100 bpm' },
+    bodyTemp: { value: 36.6, status: 'Normal', note: 'No sign of fever.', normalRange: '36.1–37.5 °C' },
+    respiration: { value: 16, status: 'Optimal', note: 'Even, relaxed breathing.', normalRange: '12–20 /min' },
+    shareCode: '611-RPL',
+  });
+
+  // the doctor already has Ramesh (both reports) and Arjun; Sara's code is left to add live
+  const { password, ...doctorFields } = DEMO_DOCTOR;
+  const doctor = new Doctor(doctorFields);
+  await doctor.setPassword(password);
+  await doctor.save();
+  const reports = await Report.find({ shareCode: { $in: ['894-DXK', '512-KMR'] } });
+  await ReportShare.create([
+    { doctorId: doctor._id, reportId: earlier._id, patientId: patient._id, sharedAt: new Date('2026-08-12T15:00:00') },
+    ...reports.map((r) => ({ doctorId: doctor._id, reportId: r._id, patientId: r.patientId })),
+  ]);
+  console.log(`Demo doctor: ${DEMO_DOCTOR.email} — Google sign-in, or the password in scripts/seed.js`);
 
   // accounts survive a reset — point them at the new demo patient so nobody is signed out
   const relinked = await User.updateMany({ patientId: { $ne: null } }, { patientId: patient._id });

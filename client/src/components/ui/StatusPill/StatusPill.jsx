@@ -17,6 +17,8 @@ const TONE_BY_STATUS = {
   watch: 'warn',
   fair: 'warn',
   poor: 'crit',
+  'needs attention': 'crit',
+  review: 'warn',
 };
 
 /** A status chip whose colour is carried by the dot rather than a tinted box. */

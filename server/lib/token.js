@@ -9,10 +9,27 @@ const TTL = process.env.JWT_TTL || '30d';
 
 exports.issueToken = (user) => jwt.sign({ sub: user._id.toString() }, SECRET, { expiresIn: TTL });
 
-/** Returns the user id carried by the token, or null when it is missing or expired. */
+/** Returns the patient's user id carried by the token, or null when it is missing, expired or not a patient token. */
 exports.readToken = (token) => {
   try {
-    return jwt.verify(token, SECRET).sub;
+    const payload = jwt.verify(token, SECRET);
+    return payload.aud ? null : payload.sub; // doctor tokens carry an audience; they never open the patient side
+  } catch {
+    return null;
+  }
+};
+
+// doctors sign in separately: their tokens name an audience, so neither kind stands in for the other
+const DOCTOR_AUDIENCE = 'aura-doctor';
+const DOCTOR_TTL = process.env.DOCTOR_JWT_TTL || '12h';
+
+exports.issueDoctorToken = (doctor) =>
+  jwt.sign({ sub: doctor._id.toString() }, SECRET, { audience: DOCTOR_AUDIENCE, expiresIn: DOCTOR_TTL });
+
+/** The doctor id in a doctor token, or null. */
+exports.readDoctorToken = (token) => {
+  try {
+    return jwt.verify(token, SECRET, { audience: DOCTOR_AUDIENCE }).sub;
   } catch {
     return null;
   }

@@ -89,12 +89,14 @@ export default function DeviceFrame({ children }) {
     }
   };
 
+  // the doctor side is a desktop dashboard, never framed as a phone
+  const desktopOnly = pathname.startsWith('/doctor');
   // a window too narrow for the chosen frame gets the app at full size instead
-  const shown = device !== 'full' && scale < MIN_SCALE ? 'full' : device;
+  const shown = desktopOnly || (device !== 'full' && scale < MIN_SCALE) ? 'full' : device;
   const spec = DEVICES[shown];
   const framed = shown !== 'full';
   // full screen on a desktop still needs a way back to the frame
-  const showSwitcher = framed || !prefersFullScreen();
+  const showSwitcher = !desktopOnly && (framed || !prefersFullScreen());
 
   return (
     <div className={styles.stage} data-device={shown}>

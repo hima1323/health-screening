@@ -1,0 +1,234 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--ink);
+  background: var(--glass-solid);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.who {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.nurse {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nurseTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+/* ---- latest readings ---- */
+.latest {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+}
+
+.tileTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ink-3);
+}
+
+.tileLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.tileValue {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 300;
+  line-height: 1.1;
+  font-variant-numeric: lining-nums;
+}
+
+.tileValue small {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.out,
+.out small {
+  color: var(--rose-deep);
+}
+
+/* ---- trend table and reports side by side ---- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--gap);
+  align-items: start;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-edge);
+  white-space: nowrap;
+}
+
+.table thead th {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.table td {
+  font-weight: 700;
+}
+
+.table td small {
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--glass-edge);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.row:hover {
+  background: var(--glass-tile);
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.chevron {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.historyItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+}
+
+.vitals {
+  font-size: 13px;
+}
+
+@container device (max-width: 1100px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container device (max-width: 640px) {
+  .latest {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

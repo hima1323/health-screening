@@ -19,8 +19,8 @@ export const setToken = (token) => {
   }
 };
 
-async function send(path, { method = 'GET', body } = {}) {
-  const token = getToken();
+/** `token` overrides the patient's sign-in token — the doctor side passes its own. */
+export async function send(path, { method = 'GET', body, token = getToken() } = {}) {
   const isForm = body instanceof FormData;
 
   const response = await fetch(`${BASE_URL}${path}`, {

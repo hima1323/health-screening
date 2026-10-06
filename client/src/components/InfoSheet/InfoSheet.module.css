@@ -149,3 +149,22 @@
     animation: none;
   }
 }
+
+/* on a wide screen (the doctor dashboard, the kiosk) a bottom sheet becomes a centred dialog */
+@container device (min-width: 900px) {
+  .backdrop {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sheet {
+    width: min(480px, 100% - 48px);
+    padding-bottom: 24px;
+    border-radius: 28px;
+    animation-name: fade;
+  }
+
+  .grabber {
+    display: none;
+  }
+}

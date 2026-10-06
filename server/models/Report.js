@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const reportSchema = new mongoose.Schema({
   sessionId: { type: String, required: true, unique: true },
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true },
+  recordedAt: Date,
   nurseCheck: {
     queueId: String,
     message: String,
