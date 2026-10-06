@@ -28,9 +28,10 @@ This project designs and builds that patient-facing side.
 
 ## Team members
 
-| Name | Roll number | Role |
-|------|-------------|------|
-| TODO | TODO | TODO |
+| Name | Roll number |
+|------|-------------|
+| Himanshu | 2024AIB1007 |
+| Hans | 2024AIB1011 |
 
 ## Technologies used
 
