@@ -45,61 +45,15 @@ This project designs and builds that patient-facing side.
 
 ### Patient journey
 
-```mermaid
-flowchart LR
-    A[Welcome<br/>3-step intro] --> B[Sign in<br/>email or Google]
-    B --> C[Onboarding<br/>profile + past reports]
-    C --> D[Scan Hub]
-    K[Kiosk screen<br/>shows signed QR] -. patient scans QR .-> D
-    D --> E[Active scan<br/>camera + thermal]
-    E --> F[Session report]
-    F --> G[Biometric timeline]
-    G --> H[Session analysis<br/>step-by-step]
-    F -- share code --> I[Doctor portal]
-```
+<img src="docs/diagrams/patient-journey.png" alt="Patient journey" width="420">
 
 ### System architecture
 
-```mermaid
-flowchart LR
-    subgraph Kiosk station
-        CAM[Camera / thermal / ECG / EMG]
-        KS[Kiosk page<br/>rotating QR]
-    end
-    subgraph Client [React client · Vite]
-        P[Patient app]
-        DR[Doctor portal]
-    end
-    subgraph Server [Express API]
-        AUTH["/api/auth<br/>JWT + Google"]
-        API["/api<br/>scan hub, sessions, reports"]
-        DOC["/api/doctor<br/>shared reports"]
-    end
-    DB[(MongoDB)]
-    PY[Python analysis<br/>rPPG POS/CHROM, PhysFormer]
-
-    KS -- QR --> P
-    P --> AUTH & API
-    DR --> DOC
-    AUTH & API & DOC --> DB
-    CAM --> PY -- session JSON --> DB
-```
+<img src="docs/diagrams/architecture.png" alt="System architecture" width="760">
 
 ### Starting a scan
 
-```mermaid
-sequenceDiagram
-    participant K as Kiosk
-    participant S as Server
-    participant P as Patient phone
-    K->>S: GET /api/stations/:id/code
-    S-->>K: signed, short-lived code
-    K->>K: show code as QR
-    P->>P: scan QR with camera (jsQR)
-    P->>S: POST /api/stations/verify
-    S-->>P: valid → scan starts
-    S-->>P: results → session report
-```
+<img src="docs/diagrams/scan-sequence.png" alt="Starting a scan" width="620">
 
 ## Screens
 

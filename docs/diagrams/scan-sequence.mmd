@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant K as Kiosk
+    participant S as Server
+    participant P as Patient phone
+    K->>S: GET /api/stations/:id/code
+    S-->>K: signed, short-lived code
+    K->>K: show code as QR
+    P->>P: scan QR with camera (jsQR)
+    P->>S: POST /api/stations/verify
+    S-->>P: valid → scan starts
+    S-->>P: results → session report

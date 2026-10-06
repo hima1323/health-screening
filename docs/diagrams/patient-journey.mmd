@@ -1,0 +1,10 @@
+flowchart TD
+    A[Welcome<br/>3-step intro] --> B[Sign in<br/>email or Google]
+    B --> C[Onboarding<br/>profile + past reports]
+    C --> D[Scan Hub]
+    K[Kiosk screen<br/>shows signed QR] -. patient scans QR .-> D
+    D --> E[Active scan<br/>camera + thermal]
+    E --> F[Session report]
+    F --> G[Biometric timeline]
+    G --> H[Session analysis<br/>step-by-step]
+    F -- share code --> I[Doctor portal]
