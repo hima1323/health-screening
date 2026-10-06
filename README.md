@@ -95,6 +95,65 @@ Captured from the running app, in the order a patient meets them.
 
 A doctor signs in separately and sees only the reports patients have shared with them, by share code.
 
+## Version control
+
+The project is tracked with Git and hosted on GitHub:
+**https://github.com/hima1323/health-screening** (public).
+
+### Branches
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Stable code. This is what the GitHub page and the README show. |
+| `merge/device-frame` | Working branch for the phone/kiosk device frame and later features. Merged into `main` through pull request #1. |
+
+New work goes on a branch. It reaches `main` through a pull request, so every change to `main` can be reviewed and traced:
+
+```bash
+git switch -c feature/<name>          # start a branch
+git add <files> && git commit         # one logical change per commit
+git push -u origin feature/<name>     # publish it
+gh pr create --base main              # open a pull request into main
+```
+
+<img src="docs/screenshots/github-pull-request.png" alt="Pull request #1 merging merge/device-frame into main" width="760">
+
+### Commit conventions
+
+- One logical change per commit, so any commit can be reverted on its own.
+- The subject line says what the change does for the user, in the imperative
+  ("Explain camera errors and accept only our kiosk's QR codes"), not which
+  files changed.
+- Code, docs and screenshots are committed. Secrets, build output and large
+  data are not. `.gitignore` excludes `.env`, `node_modules/`, `dist/`,
+  uploaded patient reports (`server/uploads/`), the rPPG datasets and model
+  weights (`rppg1/data/`, `rppg1/checkpoints_mcd/`), screen recordings and
+  voice notes.
+
+<img src="docs/screenshots/github-commits.png" alt="Commit history on GitHub" width="760">
+
+### History
+
+| Date | What changed | Commits |
+|------|--------------|---------|
+| 8 Sep 2026 | Initial patient app: React client, Express API, MongoDB models | `9923f1e`, `1d42a08` |
+| 22 Sep 2026 | Patient accounts, onboarding and Google sign-in | `af8de42` |
+| 29 Sep 2026 | Multimodal timeline dashboard, phone/kiosk device frame, PhysFormer rPPG project, past-session analysis with zoomable signal graphs, thermal frames | `9af4291` … `8efb1a1` (16 commits) |
+| 30 Sep 2026 | Fewer sample reports, dates on session cards | `0b00956` |
+| 5 Oct 2026 | Clearer camera errors, only the kiosk's own QR codes accepted, shorter session report with working sharing, step-by-step explanation of each past session | `a1dce8d`, `ed9dcd7`, `21886b9` |
+| 6 Oct 2026 | Doctor portal for shared reports; README with problem statement, objectives, workflow diagrams and screenshots | `5bb5c98`, `71b1edb` … `d8e71a4` |
+
+Run `git log --oneline` for the full list.
+
+### Getting the code
+
+```bash
+git clone https://github.com/hima1323/health-screening.git
+cd health-screening
+```
+
+Then follow [Run it](#run-it) below.
+
 ## Structure
 
 ```
