@@ -140,6 +140,9 @@
 }
 
 .readingLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 700;
   color: var(--ink-2);
@@ -187,7 +190,114 @@
   color: var(--ink-2);
 }
 
+.readingTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
 .range {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.extras > div,
+.conditions > div {
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.extras dt,
+.conditions dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.extras dd {
+  margin: 1px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.extras dd small {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.measures {
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--ink-3);
+}
+
+/* ---- scan session ---- */
+.scanHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.conditions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.conditions dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.conditions dd {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.ecg {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-edge);
+}
+
+.ecgTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ecgTitle span {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.secure {
+  justify-content: center;
+  font-size: 11.5px;
   color: var(--ink-3);
 }
 

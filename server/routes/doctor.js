@@ -4,6 +4,7 @@ const Doctor = require('../models/Doctor');
 const Report = require('../models/Report');
 const ReportShare = require('../models/ReportShare');
 const ScreeningLog = require('../models/ScreeningLog');
+const ScreeningSession = require('../models/ScreeningSession');
 const requireDoctor = require('../middleware/requireDoctor');
 const { issueDoctorToken } = require('../lib/token');
 const google = require('../lib/google');
@@ -111,17 +112,21 @@ router.get('/reports/:shareCode', async (req, res) => {
   if (!report) return res.status(404).json({ error: 'No report matches that code. Check it with the patient.' });
 
   const patient = report.patientId;
-  const [share, history] = await Promise.all([
+  const [share, history, scan] = await Promise.all([
     ReportShare.findOneAndUpdate(
       { doctorId: req.doctor._id, reportId: report._id },
       { $set: { lastOpenedAt: new Date() }, $setOnInsert: { patientId: patient._id } },
       { upsert: true, new: true }
     ).lean(),
     ScreeningLog.find({ patientId: patient._id }).select('-patientId -__v').sort({ occurredAt: -1 }).lean(),
+    // how the capture went at the station: the same session the patient's report came from
+    ScreeningSession.findOne({ sessionId: report.sessionId, patientId: patient._id })
+      .select('stationId status steps environment ecgFallback')
+      .lean(),
   ]);
 
   const { patientId, ...rest } = report;
-  res.json({ report: { ...rest, sharedAt: share.sharedAt }, patient, history });
+  res.json({ report: { ...rest, sharedAt: share.sharedAt }, patient, history, scan });
 });
 
 module.exports = router;
