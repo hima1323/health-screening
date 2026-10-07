@@ -96,6 +96,14 @@ Captured from the running app, in the order a patient meets them.
 
 A doctor signs in separately and sees only the reports patients have shared with them, by share code.
 
+| Worklist | Patient | Shared report |
+|:-:|:-:|:-:|
+| <img src="docs/screenshots/doctor-worklist.png" width="280"> | <img src="docs/screenshots/doctor-patient.png" width="280"> | <img src="docs/screenshots/doctor-report.png" width="280"> |
+
+- **Worklist**: patients most urgent first, filterable by triage. Each reading is a dot on its normal-range track, so out-of-range values stand out before any number is read.
+- **Patient**: each measure's trend across shared reports, and one timeline of reports and screenings.
+- **Shared report**: the verdict in words first, then every reading on its range, the nurse check and screening history.
+
 ## Version control
 
 The project is tracked with Git and hosted on GitHub:

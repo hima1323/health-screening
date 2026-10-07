@@ -4,7 +4,8 @@ import { formatDate } from '../../components/SessionCard';
 import { Card, StatusPill, Spinner } from '../../components/ui';
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
-import { initials, matchesSearch } from './doctor';
+import RangeTrack from './RangeTrack';
+import { initials, matchesSearch, triageReason } from './doctor';
 import styles from './DoctorPatients.module.css';
 
 /** Every patient who shared a report with this doctor, as cards, most urgent first. A card opens the patient. */
@@ -73,20 +74,15 @@ function PatientCard({ entry: { patient, reports, latest } }) {
                 {r.value}
                 <small> {unit}</small>
               </dd>
+              <dd className={styles.track}>
+                <RangeTrack value={r.value} normalRange={r.normalRange} unit={unit} />
+              </dd>
             </div>
           );
         })}
       </dl>
 
-      <p className={styles.reason}>
-        {[
-          latest.nurseCheck?.queueId && 'Nurse check requested',
-          latest.triage.outOfRange.length > 0 &&
-            `${latest.triage.outOfRange.map((r) => r.label.toLowerCase()).join(' and ')} out of range`,
-        ]
-          .filter(Boolean)
-          .join(' · ') || 'All latest readings in range'}
-      </p>
+      <p className={styles.reason}>{triageReason(latest)}</p>
 
       <div className={styles.cardFoot}>
         <span>

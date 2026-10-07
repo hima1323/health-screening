@@ -1,0 +1,280 @@
+.attention {
+  --tone: var(--rose-deep);
+  --tone-on-ink: #f0b5aa;
+}
+
+.review {
+  --tone: var(--amber);
+  --tone-on-ink: #f0cf98;
+}
+
+.stable {
+  --tone: var(--calm);
+  --tone-on-ink: #b9d0e4;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--ink);
+  background: var(--glass-solid);
+}
+
+/* ---- the verdict, in words, on ink ---- */
+.verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 32px;
+  padding: 28px;
+  border-radius: var(--radius-card);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.verdictMain {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tone-on-ink);
+}
+
+.headline {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.verdictSub {
+  margin-top: 10px;
+  font-size: 14px;
+  color: rgba(246, 238, 233, 0.78);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 14px 28px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.facts dt {
+  color: rgba(246, 238, 233, 0.7);
+}
+
+.facts dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.code {
+  letter-spacing: 0.1em;
+}
+
+/* ---- readings beside the nurse check and history ---- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: var(--gap);
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 22px 24px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.readings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reading {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 2fr);
+  gap: 14px 28px;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.reading + .reading {
+  border-top: 1px solid var(--glass-edge);
+}
+
+.readingLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.value {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+.value small {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.position {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--calm);
+}
+
+.out,
+.value.out small {
+  color: var(--rose-deep);
+}
+
+.readingDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.note {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.range {
+  color: var(--ink-3);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.nurse {
+  padding: 22px;
+  border-radius: var(--radius-tile);
+  background: #f7dcd6;
+  border: 1px solid #e8b7ad;
+}
+
+.nurseTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7e3a33;
+}
+
+.nurseBody {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5e4a4c;
+}
+
+.nurseWhen {
+  margin-top: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #5e4a4c;
+}
+
+.history {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history > li {
+  padding: 12px 0;
+}
+
+.history > li + li {
+  border-top: 1px solid var(--glass-edge);
+}
+
+.historyHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.historyHead span {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.historyMeta {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+@container device (max-width: 1000px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container device (max-width: 640px) {
+  .reading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .headline {
+    font-size: 32px;
+  }
+}

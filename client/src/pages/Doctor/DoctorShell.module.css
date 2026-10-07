@@ -65,6 +65,28 @@
   color: var(--ink-3);
 }
 
+.addButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--on-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.addButton:hover {
+  transform: translateY(-1px);
+}
+
 .nav {
   display: flex;
   flex-direction: column;
@@ -92,8 +114,28 @@
 
 .navActive,
 .navActive:hover {
-  color: var(--on-ink);
-  background: var(--ink);
+  color: var(--ink);
+  background: rgba(59, 50, 56, 0.08);
+  font-weight: 700;
+}
+
+.badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.badgeUrgent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: var(--rose-deep);
+  color: #fff;
 }
 
 .profile {
@@ -221,12 +263,6 @@
   white-space: nowrap;
 }
 
-/* beats the full-width primary button: here it sits inline at the end of the bar */
-.topbar .addButton {
-  width: auto;
-  min-height: 44px;
-  padding: 0 20px;
-}
 
 .page {
   display: flex;
@@ -235,17 +271,13 @@
   min-width: 0;
 }
 
-.loadError,
-.formError {
+.loadError {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--rose-deep);
 }
 
 .addForm {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   margin-top: 14px;
 }
 
@@ -266,6 +298,10 @@
 
   .nav {
     flex-direction: row;
+  }
+
+  .navLink {
+    gap: 8px;
   }
 
   .profile {

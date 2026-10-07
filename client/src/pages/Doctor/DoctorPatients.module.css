@@ -53,7 +53,7 @@
 }
 
 .attention::before {
-  background: var(--rose);
+  background: var(--rose-deep);
 }
 
 .review::before {
@@ -137,6 +137,10 @@
   font-size: 10px;
   font-weight: 500;
   color: var(--ink-3);
+}
+
+.reading dd.track {
+  margin-top: 8px;
 }
 
 .reading dd.out {

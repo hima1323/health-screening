@@ -1,320 +1,325 @@
-.heading {
-  font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 400;
-  line-height: 1.1;
+/* triage tones, shared by the filter dots, row bars and feed dots */
+.all {
+  --tone: var(--ink);
 }
 
-/* ---- the four numbers ---- */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--gap);
+.attention {
+  --tone: var(--rose-deep);
 }
 
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 18px;
+.review {
+  --tone: var(--amber);
 }
 
-.statTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+.stable {
+  --tone: var(--calm);
 }
 
-.statLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
-}
-
-.statIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--glass-solid);
-  border: 1px solid var(--glass-edge);
-  color: var(--ink-2);
-}
-
-.statValue {
-  margin-bottom: 8px;
-  font-family: var(--font-display);
-  font-size: 38px;
-  font-weight: 300;
-  line-height: 1;
-  font-variant-numeric: lining-nums;
-}
-
-.statEnds {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 10.5px;
-  color: var(--ink-3);
-}
-
-.statEnds strong {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink-2);
-}
-
-.ticks {
-  display: flex;
-  gap: 2px;
-  height: 34px;
-}
-
-.tick {
-  flex: 1;
-  border-radius: 2px;
-}
-
-.rose {
-  background: var(--rose);
-}
-
-.amber {
-  background: var(--amber);
-}
-
-.calm {
-  background: var(--calm);
-}
-
-.faint {
-  background: rgba(109, 143, 173, 0.35);
-}
-
-.empty {
-  background: rgba(59, 50, 56, 0.1);
-}
-
-/* ---- the panels: chart and table on the left, the queue down the right ---- */
-.grid {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  grid-template-areas:
-    'chart queue'
-    'recent queue';
-  gap: var(--gap);
-}
-
-.chartCard {
-  grid-area: chart;
-}
-
-.queueCard {
-  grid-area: queue;
-  align-self: start;
-}
-
-.recentCard {
-  grid-area: recent;
-}
-
-.cardHead {
+/* ---- greeting and filters ---- */
+.intro {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 10px 16px;
-  margin-bottom: 14px;
+  gap: 14px 24px;
+  padding: 4px 4px 0;
 }
 
-.segmented {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: var(--radius-pill);
-  background: var(--glass-tile);
-  border: 1px solid var(--glass-edge);
+.heading {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1.05;
 }
 
-.segment {
-  min-height: 32px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  font: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
+.summary {
+  margin-top: 6px;
+  font-size: 14px;
   color: var(--ink-2);
-  cursor: pointer;
 }
 
-.segmentActive {
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-solid);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.filter strong {
+  font-size: 13px;
+}
+
+.filter:hover {
+  background: var(--glass-top);
+}
+
+.filterOn,
+.filterOn:hover {
   background: var(--ink);
+  border-color: var(--ink);
   color: var(--on-ink);
 }
 
-/* ---- latest readings chart ---- */
-.chart {
+.filterDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+
+.filterOn .all {
+  --tone: var(--on-ink);
+}
+
+/* ---- the worklist beside a side column ---- */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  gap: var(--gap);
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 22px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-sheen), var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.worklist {
+  padding-bottom: 10px;
+}
+
+.panelHead {
   display: flex;
-  align-items: stretch;
-  gap: 18px;
-  height: 250px;
-  padding-top: 26px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-bottom: 8px;
 }
 
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  max-width: 120px;
-  color: inherit;
-  text-decoration: none;
-}
-
-.plot {
-  position: relative;
-  flex: 1;
-  width: 100%;
-  border-bottom: 1px solid var(--glass-edge);
-}
-
-/* the patient's normal range, behind their bar */
-.band {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-radius: 8px;
-  background: repeating-linear-gradient(-45deg, rgba(109, 143, 173, 0.18) 0 6px, rgba(109, 143, 173, 0.08) 6px 12px);
-  border: 1px dashed rgba(109, 143, 173, 0.45);
-}
-
-.bar {
-  position: absolute;
-  bottom: 0;
-  left: 22%;
-  right: 22%;
-  border-radius: 10px 10px 3px 3px;
-  background: var(--calm);
-  transition: height 0.4s ease;
-}
-
-.barOut {
-  background: var(--rose);
-}
-
-.column:hover .bar {
-  filter: brightness(0.92);
-}
-
-.barValue {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.barValue small {
-  font-size: 10px;
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: 25px;
   font-weight: 500;
+  line-height: 1.2;
+}
+
+.panelNote {
+  font-size: 12px;
   color: var(--ink-3);
 }
 
-.barName {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
+.empty {
+  padding: 24px 4px;
 }
 
-/* ---- attention queue ---- */
-.allClear {
-  color: var(--calm);
+.tableWrap {
+  overflow-x: auto;
 }
 
-.queue {
+.table {
+  min-width: 700px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.1fr) minmax(140px, 1fr) repeat(3, 96px) 18px;
+  gap: 14px;
+  align-items: center;
+}
+
+.rowHead {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--glass-edge);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.rows {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.queue li + li {
-  margin-top: 8px;
+.rows > li + li {
+  border-top: 1px solid var(--glass-edge);
 }
 
-.queueItem {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
-  padding: 12px;
+/* the whole row opens the patient; a bar down the left carries the urgency */
+.item {
+  position: relative;
+  padding: 16px 12px 16px 18px;
   border-radius: var(--radius-tile);
-  background: var(--glass-tile);
-  border: 1px solid var(--glass-edge);
   color: inherit;
   text-decoration: none;
+  transition: background 0.2s ease;
 }
 
-.queueItem:hover {
-  background: var(--glass-solid);
-}
-
-.level {
-  flex: none;
+.item::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 14px;
+  bottom: 14px;
   width: 4px;
   border-radius: 2px;
+  background: var(--tone);
 }
 
-.attention {
-  background: var(--rose);
+.item:hover {
+  background: var(--glass-tile);
 }
 
-.review {
-  background: var(--amber);
+.item:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
-.queueText {
-  flex: 1;
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
 }
 
-.queueName {
-  font-size: 13.5px;
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  font-size: 13px;
   font-weight: 700;
+  color: var(--ink-2);
 }
 
-.queueName span {
+.whoText,
+.why {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.level {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.reason {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.vital {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vitalValue {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.vitalValue small {
+  font-size: 10.5px;
   font-weight: 500;
   color: var(--ink-3);
 }
 
-.queueMeta {
-  margin-top: 4px;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--ink-3);
+/* the column heads name the measure; screen readers hear it with the value */
+.vitalLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.out {
+  color: var(--rose-deep);
 }
 
 .chevron {
-  align-self: center;
-  flex: none;
   color: var(--ink-3);
 }
 
-/* ---- recently shared ---- */
+/* ---- side column ---- */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.addCard {
+  padding: 22px;
+  border-radius: var(--radius-card);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.addHint {
+  margin: 6px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(246, 238, 233, 0.78);
+}
+
 .more {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink-2);
   text-decoration: none;
 }
@@ -323,65 +328,110 @@
   color: var(--ink);
 }
 
-.tableWrap {
-  overflow-x: auto;
+.feed {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
+.feed > li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
 }
 
-.table th,
-.table td {
-  padding: 10px 8px;
-  text-align: left;
-  border-bottom: 1px solid var(--glass-edge);
-  white-space: nowrap;
+.feedDot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--tone);
 }
 
-.table thead th {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.table tbody tr:last-child > * {
-  border-bottom: none;
-}
-
-.table tbody th a {
-  font-weight: 700;
-  color: var(--ink);
+.feedLink {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: inherit;
   text-decoration: none;
 }
 
-.table tbody th a:hover {
+.feedLink:hover .feedName {
   text-decoration: underline;
 }
 
-/* ---- narrower screens ---- */
-@container device (max-width: 1180px) {
-  .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.feedName {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.feedName span {
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.feedSummary {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.feedWhen {
+  margin-top: 1px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+/* ---- narrower screens: the side column drops under the worklist ---- */
+@container device (max-width: 1240px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    align-items: start;
   }
 }
 
-@container device (max-width: 980px) {
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'queue'
-      'chart'
-      'recent';
+/* phones: each row becomes a card — who and why on top, the three readings in a row beneath */
+@container device (max-width: 720px) {
+  .table {
+    min-width: 0;
+  }
+
+  .rowHead,
+  .chevron {
+    display: none;
+  }
+
+  .item {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .who,
+  .why {
+    grid-column: 1 / -1;
+  }
+
+  .vitalLabel {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    display: block;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--ink-3);
   }
 }
 
 @container device (max-width: 560px) {
-  .stats {
-    grid-template-columns: minmax(0, 1fr);
+  .heading {
+    font-size: 32px;
   }
 }

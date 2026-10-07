@@ -1,21 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Leaf, LayoutDashboard, Users, Search, CalendarDays, FilePlus2, LogOut, KeyRound } from 'lucide-react';
-import { getDoctorPatients, getDoctorReport } from '../../api';
+import { NavLink, Outlet } from 'react-router-dom';
+import { Leaf, ListChecks, Users, Search, CalendarDays, Plus, LogOut } from 'lucide-react';
+import { getDoctorPatients } from '../../api';
 import StillWaterScene from '../../components/StillWaterScene';
 import { Sheet } from '../../components/InfoSheet';
-import { Button, Field } from '../../components/ui';
-import { buildPatients, initials, normaliseCode } from './doctor';
+import AddReportForm from './AddReportForm';
+import { buildPatients, initials, levelCounts } from './doctor';
 import styles from './DoctorShell.module.css';
 
-const NAV = [
-  { to: '/doctor', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/doctor/patients', label: 'Patients', icon: Users },
-];
-
 /**
- * The doctor's desktop frame: a sidebar (where to go, who is signed in), a top bar
- * (search, today, add a report) and the page. The patient list loads once here and
+ * The doctor's desktop frame: a sidebar (add a report, where to go, who is signed in),
+ * a top bar (search, today) and the page. The patient list loads once here and
  * reaches every page through the outlet context, with `reload` after a new code is added.
  */
 export default function DoctorShell({ doctor, signOut }) {
@@ -33,6 +28,12 @@ export default function DoctorShell({ doctor, signOut }) {
   useEffect(reload, [reload]);
 
   const patients = raw && buildPatients(raw);
+  const counts = patients && levelCounts(patients);
+  // the worklist badge counts who is waiting on the doctor; patients shows everyone
+  const nav = [
+    { to: '/doctor', label: 'Worklist', icon: ListChecks, end: true, badge: counts && counts.attention + counts.review, urgent: true },
+    { to: '/doctor/patients', label: 'Patients', icon: Users, badge: counts?.all },
+  ];
   const today = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 
   return (
@@ -50,11 +51,16 @@ export default function DoctorShell({ doctor, signOut }) {
           </div>
         </div>
 
+        <button type="button" className={styles.addButton} onClick={() => setAdding(true)} aria-haspopup="dialog">
+          <Plus size={16} strokeWidth={2} aria-hidden="true" /> Add shared report
+        </button>
+
         <nav className={styles.nav} aria-label="Doctor pages">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {nav.map(({ to, label, icon: Icon, end, badge, urgent }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`.trim()}>
               <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
               {label}
+              {badge > 0 && <span className={`${styles.badge} ${urgent ? styles.badgeUrgent : ''}`.trim()}>{badge}</span>}
             </NavLink>
           ))}
         </nav>
@@ -83,18 +89,15 @@ export default function DoctorShell({ doctor, signOut }) {
             <Search size={15} aria-hidden="true" />
             <input
               type="search"
-              placeholder="Search patients or sessions"
+              placeholder="Search patients, sessions or codes"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              aria-label="Search patients or sessions"
+              aria-label="Search patients, sessions or codes"
             />
           </label>
           <span className={styles.date}>
             <CalendarDays size={15} aria-hidden="true" /> {today}
           </span>
-          <Button className={styles.addButton} onClick={() => setAdding(true)} aria-haspopup="dialog">
-            <FilePlus2 size={15} aria-hidden="true" /> Add shared report
-          </Button>
         </header>
 
         <main className={styles.page}>
@@ -113,55 +116,18 @@ export default function DoctorShell({ doctor, signOut }) {
   );
 }
 
-/** A patient's code opens their report — and from then on it is in the doctor's list. */
+/** The sidebar's add button opens this; the code form is the same one the worklist shows inline. */
 function AddReport({ onClose, onAdded }) {
-  const navigate = useNavigate();
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-
-  async function open(e) {
-    e.preventDefault();
-    const shareCode = normaliseCode(code);
-    if (!shareCode) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await getDoctorReport(shareCode);
-      onAdded();
-      onClose();
-      navigate(`/doctor/reports/${shareCode}`);
-    } catch (err) {
-      setError(err.message);
-      setBusy(false);
-    }
-  }
-
+  const added = () => {
+    onAdded();
+    onClose();
+  };
   return (
     <Sheet title="Add a shared report" onClose={onClose}>
       <p>Ask the patient for the code on their Aura Screen results.</p>
-      <form className={styles.addForm} onSubmit={open}>
-        <Field
-          label="Share code"
-          placeholder="e.g. 894-DXK"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          maxLength={16}
-          autoFocus
-          aria-invalid={Boolean(error)}
-        />
-        {error && (
-          <p className={styles.formError} role="alert">
-            {error}
-          </p>
-        )}
-        <Button type="submit" disabled={busy || !code.trim()}>
-          <KeyRound size={15} aria-hidden="true" /> {busy ? 'Opening…' : 'Open report'}
-        </Button>
-      </form>
+      <div className={styles.addForm}>
+        <AddReportForm onAdded={added} autoFocus />
+      </div>
     </Sheet>
   );
 }

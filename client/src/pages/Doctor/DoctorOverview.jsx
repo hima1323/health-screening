@@ -1,284 +1,196 @@
 import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { Users, FileText, Siren, Activity, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Inbox } from 'lucide-react';
 import { formatDate } from '../../components/SessionCard';
-import { Card, StatusPill, Spinner } from '../../components/ui';
-import { rangePosition } from '../../utils/range';
+import { Spinner } from '../../components/ui';
 import { RESULTS } from '../../utils/results';
-import { matchesSearch, overviewStats } from './doctor';
+import AddReportForm from './AddReportForm';
+import RangeTrack from './RangeTrack';
+import { initials, levelCounts, matchesSearch, triageReason } from './doctor';
 import styles from './DoctorOverview.module.css';
 
-/** The doctor's overview: four numbers, the latest readings against their ranges, who needs them, and what came in. */
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'attention', label: 'Needs attention' },
+  { key: 'review', label: 'Review' },
+  { key: 'stable', label: 'Stable' },
+];
+
+/** The doctor's worklist: who needs them most, each latest reading against its range, and what just came in. */
 export default function DoctorOverview() {
-  const { patients, search } = useOutletContext();
+  const { doctor, patients, search, reload } = useOutletContext();
+  const [filter, setFilter] = useState('all');
   if (!patients) return <Spinner />;
 
-  const shown = patients.filter((p) => matchesSearch(p, search));
-  const stats = overviewStats(patients);
+  const counts = levelCounts(patients);
+  const shown = patients.filter((p) => matchesSearch(p, search) && (filter === 'all' || p.latest.triage.level === filter));
 
   return (
     <>
-      <h1 className={styles.heading}>Overview</h1>
-
-      <section className={styles.stats} aria-label="Summary">
-        <StatCard
-          label="Patients"
-          icon={Users}
-          value={stats.patients.total}
-          segments={[
-            { label: 'Needs attention', value: stats.patients.attention, tone: 'rose' },
-            { label: 'Review', value: stats.patients.review, tone: 'amber' },
-            { label: 'Stable', value: stats.patients.stable, tone: 'calm' },
-          ]}
-        />
-        <StatCard
-          label="Shared reports"
-          icon={FileText}
-          value={stats.reports.total}
-          segments={[
-            { label: 'Last 30 days', value: stats.reports.recent, tone: 'calm' },
-            { label: 'Earlier', value: stats.reports.earlier, tone: 'faint' },
-          ]}
-        />
-        <StatCard
-          label="Need attention"
-          icon={Siren}
-          value={stats.attention.total}
-          segments={[
-            { label: 'Nurse check', value: stats.attention.nurseChecks, tone: 'rose' },
-            { label: 'Out of range', value: stats.attention.other, tone: 'amber' },
-          ]}
-        />
-        <StatCard
-          label="Latest readings"
-          icon={Activity}
-          value={stats.readings.total}
-          segments={[
-            { label: 'Out of range', value: stats.readings.outOfRange, tone: 'rose' },
-            { label: 'In range', value: stats.readings.inRange, tone: 'calm' },
-          ]}
-        />
-      </section>
-
-      <section className={styles.grid}>
-        <Card className={styles.chartCard}>
-          <ReadingsChart patients={shown} />
-        </Card>
-        <Card className={styles.queueCard}>
-          <AttentionQueue patients={shown} />
-        </Card>
-        <Card className={styles.recentCard}>
-          <RecentReports patients={shown} />
-        </Card>
-      </section>
-    </>
-  );
-}
-
-const TICKS = 36;
-
-/** A headline number with a tick strip that splits it into its parts. */
-function StatCard({ label, icon: Icon, value, segments }) {
-  const total = segments.reduce((n, s) => n + s.value, 0);
-  // each tick takes the colour of the segment its midpoint falls in
-  const ticks = Array.from({ length: TICKS }, (_, i) => {
-    if (!total) return 'empty';
-    let at = ((i + 0.5) / TICKS) * total;
-    return segments.find((s) => (at -= s.value) < 0)?.tone ?? 'empty';
-  });
-  const first = segments[0];
-  const last = segments[segments.length - 1];
-
-  return (
-    <Card className={styles.stat}>
-      <div className={styles.statTop}>
-        <p className={styles.statLabel}>{label}</p>
-        <span className={styles.statIcon} aria-hidden="true">
-          <Icon size={16} strokeWidth={1.7} />
-        </span>
-      </div>
-      <p className={styles.statValue}>{value}</p>
-      <div className={styles.statEnds}>
-        <span>{first.label}</span>
-        <span>{last.label}</span>
-      </div>
-      <div className={styles.ticks} role="img" aria-label={segments.map((s) => `${s.label} ${s.value}`).join(', ')}>
-        {ticks.map((tone, i) => (
-          <span key={i} className={`${styles.tick} ${styles[tone]}`} />
-        ))}
-      </div>
-      <div className={styles.statEnds}>
-        <strong>{first.value}</strong>
-        <strong>{last.value}</strong>
-      </div>
-    </Card>
-  );
-}
-
-/** Each patient's latest reading as a bar, over the shaded band of their normal range. */
-function ReadingsChart({ patients }) {
-  const [measure, setMeasure] = useState(RESULTS[0].key);
-  const def = RESULTS.find((r) => r.key === measure);
-
-  const bars = patients
-    .map(({ patient, latest }) => {
-      const r = latest[measure];
-      if (!r) return null;
-      return { id: patient._id, name: patient.name.split(' ')[0], code: latest.shareCode, value: r.value, range: rangePosition(r.value, r.normalRange) };
-    })
-    .filter(Boolean);
-
-  // a shared scale padded around every value and range edge, so bands and bars compare fairly
-  const edges = bars.flatMap((b) => [b.value, b.range?.low, b.range?.high]).filter((v) => v != null);
-  const lo = Math.min(...edges);
-  const hi = Math.max(...edges);
-  const pad = (hi - lo) * 0.25 || 1;
-  const min = lo - pad;
-  const max = hi + pad;
-  const pct = (v) => `${((v - min) / (max - min)) * 100}%`;
-
-  return (
-    <>
-      <div className={styles.cardHead}>
+      <section className={styles.intro}>
         <div>
-          <h3>Latest readings</h3>
-          <p className="muted small">Each patient&rsquo;s most recent report · shaded band is their normal range</p>
+          <h1 className={styles.heading}>
+            {greeting()}, Dr. {doctor.name.replace(/^Dr\.?\s*/i, '').split(/\s+/).pop()}
+          </h1>
+          <p className={styles.summary}>{summary(counts, patients)}</p>
         </div>
-        <div className={styles.segmented} role="tablist" aria-label="Measure">
-          {RESULTS.map((r) => (
+        <div className={styles.filters} role="group" aria-label="Filter by triage">
+          {FILTERS.map(({ key, label }) => (
             <button
-              key={r.key}
+              key={key}
               type="button"
-              role="tab"
-              aria-selected={r.key === measure}
-              className={`${styles.segment} ${r.key === measure ? styles.segmentActive : ''}`.trim()}
-              onClick={() => setMeasure(r.key)}
+              aria-pressed={filter === key}
+              className={`${styles.filter} ${filter === key ? styles.filterOn : ''}`.trim()}
+              onClick={() => setFilter(key)}
             >
-              {r.label}
+              <span className={`${styles.filterDot} ${styles[key]}`} aria-hidden="true" />
+              {label}
+              <strong>{counts[key]}</strong>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {bars.length === 0 ? (
-        <p className="muted">No readings to show.</p>
-      ) : (
-        <div className={styles.chart}>
-          {bars.map((b) => {
-            const out = b.range && b.range.position !== 'within';
-            return (
-              <Link key={b.id} to={`/doctor/reports/${b.code}`} className={styles.column} aria-label={`${b.name}: ${b.value} ${def.unit}`}>
-                <div className={styles.plot}>
-                  {b.range && <span className={styles.band} style={{ bottom: pct(b.range.low), top: `calc(100% - ${pct(b.range.high)})` }} />}
-                  <span className={`${styles.bar} ${out ? styles.barOut : ''}`.trim()} style={{ height: pct(b.value) }}>
-                    <span className={styles.barValue}>
-                      {b.value}
-                      <small> {def.unit}</small>
-                    </span>
-                  </span>
-                </div>
-                <span className={styles.barName}>{b.name}</span>
-              </Link>
-            );
-          })}
+      <section className={styles.grid}>
+        <div className={`${styles.panel} ${styles.worklist}`}>
+          <div className={styles.panelHead}>
+            <h2 className={styles.panelTitle}>Worklist</h2>
+            <p className={styles.panelNote}>Most urgent first · each track shows the latest reading against its normal band</p>
+          </div>
+          <Worklist patients={shown} empty={patients.length === 0 ? 'none' : 'filtered'} />
         </div>
-      )}
+
+        <div className={styles.side}>
+          <section className={styles.addCard}>
+            <h2 className={styles.panelTitle}>Add a shared report</h2>
+            <p className={styles.addHint}>Ask the patient for the code on their Aura Screen results.</p>
+            <AddReportForm onAdded={reload} tone="dark" />
+          </section>
+
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>Recently shared</h2>
+              <Link to="/doctor/patients" className={styles.more}>
+                All patients <ChevronRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
+            <RecentReports patients={patients.filter((p) => matchesSearch(p, search))} />
+          </section>
+        </div>
+      </section>
     </>
   );
 }
 
-/** Who to look at first: everyone whose latest report is not stable, most urgent first. */
-function AttentionQueue({ patients }) {
-  const queue = patients.filter((p) => p.latest.triage.level !== 'stable');
+function greeting(hour = new Date().getHours()) {
+  return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+/** "Two patients need you today. One has a nurse check waiting." */
+function summary(counts, patients) {
+  if (patients.length === 0) return 'No shared reports yet. Add one when a patient gives you their code.';
+  const waiting = counts.attention + counts.review;
+  const nurse = patients.filter((p) => p.latest.nurseCheck?.queueId).length;
+  const first =
+    waiting === 0
+      ? 'Every patient’s latest report is stable.'
+      : `${waiting} patient${waiting === 1 ? ' needs' : 's need'} you.`;
+  return nurse ? `${first} ${nurse} ha${nurse === 1 ? 's a nurse check' : 've nurse checks'} waiting.` : first;
+}
+
+/** One row per patient: urgency, why, and each latest reading on its range track. */
+function Worklist({ patients, empty }) {
+  if (patients.length === 0) {
+    return (
+      <p className={`muted icon-line ${styles.empty}`}>
+        <Inbox size={15} aria-hidden="true" />
+        {empty === 'none' ? 'No patients yet. Add a shared report to start.' : 'No patients in this group.'}
+      </p>
+    );
+  }
+
   return (
-    <>
-      <div className={styles.cardHead}>
-        <h3>Needs your attention</h3>
-      </div>
-      {queue.length === 0 ? (
-        <p className={`muted icon-line ${styles.allClear}`}>
-          <CheckCircle2 size={15} aria-hidden="true" /> Every patient&rsquo;s latest report is stable.
-        </p>
-      ) : (
-        <ul className={styles.queue}>
-          {queue.map(({ patient, latest }) => (
+    <div className={styles.tableWrap}>
+      <div className={styles.table}>
+        <div className={`${styles.row} ${styles.rowHead}`} aria-hidden="true">
+          <span>Patient</span>
+          <span>Why</span>
+          {RESULTS.map((r) => (
+            <span key={r.key}>{r.label}</span>
+          ))}
+          <span />
+        </div>
+        <ul className={styles.rows}>
+          {patients.map(({ patient, latest }) => (
             <li key={patient._id}>
-              <Link to={`/doctor/reports/${latest.shareCode}`} className={styles.queueItem}>
-                <span className={`${styles.level} ${styles[latest.triage.level]}`} aria-hidden="true" />
-                <div className={styles.queueText}>
-                  <p className={styles.queueName}>
-                    {patient.name} <span>· {patient.age} y</span>
-                  </p>
-                  <p className="muted small">
-                    {[
-                      latest.nurseCheck?.queueId && 'Nurse check requested',
-                      latest.triage.outOfRange.length > 0 &&
-                        `${latest.triage.outOfRange.map((r) => r.label.toLowerCase()).join(' and ')} out of range`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ') || 'Marked for review'}
-                  </p>
-                  <p className={styles.queueMeta}>
-                    Session {latest.sessionId} · {formatDate(latest.recordedAt)}
-                  </p>
-                </div>
-                <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+              <Link to={`/doctor/patients/${patient._id}`} className={`${styles.row} ${styles.item} ${styles[latest.triage.level]}`}>
+                <span className={styles.who}>
+                  <span className={styles.avatar} aria-hidden="true">
+                    {initials(patient.name)}
+                  </span>
+                  <span className={styles.whoText}>
+                    <span className={styles.name}>{patient.name}</span>
+                    <span className={styles.meta}>
+                      {patient.age} y · {latest.sessionId} · {formatDate(latest.recordedAt)}
+                    </span>
+                  </span>
+                </span>
+                <span className={styles.why}>
+                  <span className={styles.level}>{latest.triage.label}</span>
+                  <span className={styles.reason}>{triageReason(latest)}</span>
+                </span>
+                {RESULTS.map(({ key, label, unit }) => {
+                  const r = latest[key];
+                  const out = latest.triage.outOfRange.some((o) => o.key === key);
+                  return (
+                    <span key={key} className={styles.vital}>
+                      {r ? (
+                        <>
+                          <span className={`${styles.vitalValue} ${out ? styles.out : ''}`.trim()}>
+                            <span className={styles.vitalLabel}>{label} </span>
+                            {r.value} <small>{unit}</small>
+                          </span>
+                          <RangeTrack value={r.value} normalRange={r.normalRange} unit={unit} />
+                        </>
+                      ) : (
+                        <span className={styles.vitalValue}>—</span>
+                      )}
+                    </span>
+                  );
+                })}
+                <ChevronRight size={18} className={styles.chevron} aria-hidden="true" />
               </Link>
             </li>
           ))}
         </ul>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
 
-/** The most recently shared reports across all patients. */
+/** The most recently shared reports across all patients, as a short feed. */
 function RecentReports({ patients }) {
   const rows = patients
     .flatMap(({ patient, reports }) => reports.map((r) => ({ patient, r })))
     .sort((a, b) => new Date(b.r.sharedAt) - new Date(a.r.sharedAt))
-    .slice(0, 8);
+    .slice(0, 6);
+
+  if (rows.length === 0) return <p className="muted small">Nothing shared yet.</p>;
 
   return (
-    <>
-      <div className={styles.cardHead}>
-        <h3>Recently shared</h3>
-        <Link to="/doctor/patients" className={styles.more}>
-          All patients <ChevronRight size={14} aria-hidden="true" />
-        </Link>
-      </div>
-      {rows.length === 0 ? (
-        <p className="muted">No reports yet. Use “Add shared report” when a patient gives you their code.</p>
-      ) : (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">Patient</th>
-                <th scope="col">Session</th>
-                <th scope="col">Recorded</th>
-                <th scope="col">Shared</th>
-                <th scope="col">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ patient, r }) => (
-                <tr key={r.shareCode}>
-                  <th scope="row">
-                    <Link to={`/doctor/reports/${r.shareCode}`}>{patient.name}</Link>
-                  </th>
-                  <td>{r.sessionId}</td>
-                  <td>{formatDate(r.recordedAt)}</td>
-                  <td>{formatDate(r.sharedAt)}</td>
-                  <td>
-                    <StatusPill dot={false}>{r.triage.label}</StatusPill>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </>
+    <ol className={styles.feed}>
+      {rows.map(({ patient, r }) => (
+        <li key={r.shareCode}>
+          <span className={`${styles.feedDot} ${styles[r.triage.level]}`} aria-hidden="true" />
+          <Link to={`/doctor/reports/${r.shareCode}`} className={styles.feedLink}>
+            <span className={styles.feedName}>
+              {patient.name} <span>· {r.sessionId}</span>
+            </span>
+            <span className={styles.feedSummary}>{triageReason(r)}</span>
+            <span className={styles.feedWhen}>Shared {formatDate(r.sharedAt)}</span>
+          </Link>
+        </li>
+      ))}
+    </ol>
   );
 }
