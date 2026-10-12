@@ -19,6 +19,7 @@ from load_adabase import subject_id
 from train import RES
 
 TOP = 6
+KEY = ["study", "phase", "level", "win_start"]  # unique per window, except a repeated baseline (subject 0023)
 # name -> (description, unit, expected direction under high cognitive load in the literature: +1, -1, None = mixed)
 FEATURES = {
     "ecg_hr": ("heart rate", "bpm", +1), "ecg_rmssd": ("RMSSD heart-rate variability", "ms", -1),
@@ -71,7 +72,7 @@ def build_fusion(sid, top_per_agent=3):
     oof = oof[oof.subject == sid]
     b = joblib.load(RES / "models" / "fusion" / f"{sid}.joblib")
     feat = zscore(pd.read_parquet(FEAT / f"{sid}.parquet"), b["ref"] or "stimulus") \
-        .set_index(["study", "phase", "level", "win_start"])
+        .drop_duplicates(KEY).set_index(KEY)
     weights = b["meta"]["coef"]
     recs = []
     for r in oof.to_dict("records"):
@@ -105,7 +106,7 @@ def build(sid):
     bundle = joblib.load(RES / "models" / "binary" / f"{sid}.joblib")
     rules = bundle["rules"]
     feat = zscore(pd.read_parquet(FEAT / f"{sid}.parquet"), bundle["ref"] or "stimulus") \
-        .set_index(["study", "phase", "level", "win_start"])
+        .drop_duplicates(KEY).set_index(KEY)
     shap_cols = [c for c in oof.columns if c.startswith("shap_")]
     recs = []
     for r in oof.itertuples(index=False):

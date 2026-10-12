@@ -103,13 +103,27 @@ def must_abstain(rec):
                                                for f in rec["top_features"])
 
 
-def ask_llm(model, messages):
-    """model 'qwen2.5:3b-instruct' -> Ollama; 'mlx:<label>' -> local MLX server (label only names the run).
-    Raises OSError if the server is unreachable; malformed JSON comes back as {} and fails verification."""
+def schema(rec):
+    """JSON schema for Ollama structured output: decoding is constrained to these keys and types. Without it the
+    3B model dropped `statement` in 76% of outputs, omitted `abstain` and wrote numbers as strings ("3.22 mm")."""
+    item = {"type": "object", "required": ["statement"] + (["modality"] if is_fusion(rec) else ["feature"]),
+            "properties": {"modality": {"type": "string"}, "probability_high": {"type": "number"},
+                           "feature": {"type": "string"}, "value": {"type": "number"}, "z": {"type": "number"},
+                           "statement": {"type": "string"}}}
+    return {"type": "object", "required": ["conclusion", "confidence", "evidence", "conflicts", "abstain"],
+            "properties": {"conclusion": {"type": "string", "enum": ["high", "low"]}, "confidence": {"type": "number"},
+                           "evidence": {"type": "array", "items": item}, "conflicts": {"type": "array", "items": item},
+                           "abstain": {"type": "boolean"}}}
+
+
+def ask_llm(model, messages, fmt="json"):
+    """model 'qwen2.5:3b-instruct' -> Ollama (fmt = "json" or a JSON schema); 'mlx:<label>' -> local MLX server
+    (label only names the run; no schema support there). Raises OSError if the server is unreachable; malformed
+    JSON comes back as {} and fails verification."""
     if model.startswith("mlx:"):
         url, body = MLX, {"messages": messages, "temperature": 0, "max_tokens": 700}
     else:
-        url, body = OLLAMA, {"model": model, "messages": messages, "format": "json", "stream": False,
+        url, body = OLLAMA, {"model": model, "messages": messages, "format": fmt, "stream": False,
                              "options": {"temperature": 0, "seed": 0}}
     req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=300) as r:
@@ -212,7 +226,7 @@ def explain(rec, model):
     try:
         msgs = [{"role": "system", "content": system(rec)},
                 {"role": "user", "content": prompt(rec, support, conflict)}]
-        gen, out = "llm:" + model, ask_llm(model, msgs)
+        gen, out = "llm:" + model, ask_llm(model, msgs, schema(rec))
     except OSError:  # Ollama not running / not installed
         gen, out, msgs = "template", template(rec, support, conflict), None
     first_out, first = out, verify(out, rec)
@@ -221,7 +235,7 @@ def explain(rec, model):
         msgs += [{"role": "assistant", "content": json.dumps(out)},
                  {"role": "user", "content": "Rejected by the verifier: " + "; ".join(errs) + ". Fix and resend."}]
         try:
-            out, attempts = ask_llm(model, msgs), 2
+            out, attempts = ask_llm(model, msgs, schema(rec)), 2
             errs = verify(out, rec)
         except OSError:
             pass

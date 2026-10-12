@@ -8,10 +8,12 @@ cd "$(dirname "$0")"
 PY=.venv/bin/python
 log() { echo "=== $* $(date +%H:%M)"; }
 
+if [ -z "$SKIP_TRAIN" ]; then  # SKIP_TRAIN=1 resumes from the evidence stage with the saved models
 log "train binary (Optuna)";  $PY src/train.py --task binary --tune
 log "train 3class";           $PY src/train.py --task 3class
 log "train tlx";              $PY src/train.py --task tlx
 log "modality agents + fusion"; $PY src/fusion.py
+fi
 log "evidence";               $PY src/evidence.py --all; $PY src/evidence.py --all --fusion
 N=${N:-10}  # windows per subject explained here; N=0 explains all (slow on CPU: ~2300 LLM calls)
 log "explanations (Ollama, $N windows/subject)"
