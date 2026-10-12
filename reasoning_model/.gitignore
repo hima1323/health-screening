@@ -3,5 +3,3 @@ data/adabase/
 __pycache__/
 data/features/
 results/*
-!results/*.csv
-!results/*.png

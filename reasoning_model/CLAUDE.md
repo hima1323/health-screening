@@ -45,19 +45,27 @@ src/reasoner.py       # rules + LLM (Ollama qwen2.5:3b-instruct) + verifier -> r
 src/evaluate.py       # metrics, ablations, calibration, faithfulness, reasoner stats -> results/*.csv, *.png
 src/test_reasoner.py  # verifier self-check
 ```
-1. **Labels.** n-back binary: low = baseline 2 / 1-back, high = 2-back / 3-back; 3-class 1/2/3-back; raw NASA-TLX as
+1. **Labels.** n-back binary: low = 1-back, high = 2-back / 3-back (baseline 2 is the normalisation reference;
+   with `--ref rest` it is also a low sample, as in the original brief); 3-class 1/2/3-back; raw NASA-TLX as
    a continuous target. **k-drive held out entirely** (level 1 low, 2-3 high) as the cross-task test set.
-2. **Windows.** 30 s, 50% overlap, inside each run. Z-score against the subject's baseline 1 of the same task.
+2. **Windows.** 30 s, 50% overlap, inside each run. Z-scores are added at load time (`features.zscore`): centre on
+   baseline 2 (same stimulus, no task), scale by the subject's SD over all windows of that task. The black-screen
+   baseline 1 gave pupil z ~ +5 (luminance) and |z| > 10 for EMG/rare AUs. `--ref rest` keeps the brief's version.
+   k-drive baseline 2 was not extracted for the 30 subjects, so k-drive is centred on baseline 1.
 3. **Features.** ECG HR/RMSSD/SDNN/pNN50 (no LF/HF: 30 s too short); PPG rate/amplitude/PTT; EDA tonic/SCR count/amp;
    RSP rate/depth/variability; EMG RMS; SKT mean/slope; pupil mean/slope, blink rate, fixation duration; AU activation rates.
    Quality per modality; a modality is masked when its quality < 0.5.
 4. **Never use as inputs:** reaction time, accuracy, NASA-TLX or any label, accelerometer.
 5. **Predictor.** LightGBM (num_leaves=15, lr=0.03, <=500 trees, early stopping, min_child_samples=20,
-   feature_fraction=0.7, balanced classes), LOSO, isotonic calibration on held-out training subjects, 30% modality dropout.
+   feature_fraction=0.7, balanced classes), LOSO, 30% modality dropout. Inside each fold a 5-fold subject-wise inner
+   CV gives the tree count, the Optuna objective (`--tune`, 25 trials) and out-of-fold probabilities for isotonic
+   calibration. Reference: ADABase paper, n-back fused AUC 0.88 / F1 0.77 (51 subjects, 2-min windows, 10-fold).
 6. **Ablations.** contactless (eye + AUs) vs contact vs all; leave-one-modality-out; single modality; majority class.
 7. **Evidence record:** label, calibrated probability, top-6 SHAP features with raw value and z-score, rule directions, quality.
 8. **Reasoner.** JSON `{conclusion, confidence, evidence[], conflicts[], abstain}`, temperature 0; verifier checks label,
-   confidence, feature names and every number; regenerate once, then abstain. Falls back to a template without Ollama.
+   confidence, feature names and every number; regenerate once, then abstain. Abstain is decided by rule
+   (confidence < 0.6 or all cited modalities low quality) and passed to the LLM. Falls back to a template without Ollama.
+   Setup: `brew install ollama && ollama serve & ollama pull qwen2.5:3b-instruct`.
 9. **Evaluation.** Balanced accuracy, macro-F1, AUROC (LOSO); n-back -> k-drive; ECE; faithfulness (remove cited
    features, probability must drop more than for random ones); citation accuracy; hallucination rate.
 
@@ -65,7 +73,6 @@ src/test_reasoner.py  # verifier self-check
 - rPPG step validation on UBFC-rPPG, PURE, MPSC-rPPG, IMVIA-NIR (POS algorithm; HR MAE vs contact PPG).
 - Pretrain encoders: EEG on MAHNOB-HCI (needs EULA), thermal on AIVA (Zenodo 14764535).
 - Final four-modality model on the team's own recordings (rPPG + thermal + ECG + EEG).
-- Optuna tuning inside subject-wise splits (not done yet).
 
 ## Rules
 - Subject-wise splits only; report the number of subjects and windows in every result.
