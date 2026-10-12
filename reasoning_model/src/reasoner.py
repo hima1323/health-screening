@@ -7,15 +7,17 @@
 3. Verifier: label unchanged, confidence = record confidence, every feature name and every number must exist in
    the evidence record. On failure regenerate once with the errors fed back, then abstain.
 If Ollama is not reachable, a deterministic template generator is used (recorded as generator=template).
+With --fusion the record comes from the agent + fusion model (fusion.py): support / conflict are modality agents
+that agree / disagree with the fused label, each cited with its probability and optionally one of its features.
 
-    python src/reasoner.py --subject 0 [--limit 20] [--model qwen2.5:3b-instruct]
+    python src/reasoner.py --subject 0 [--limit 20] [--model qwen2.5:3b-instruct] [--fusion]
 """
 import argparse
 import json
 import re
 import urllib.request
 
-from evidence import build
+from evidence import build, build_fusion
 from load_adabase import subject_id
 from train import RES
 
@@ -35,9 +37,33 @@ Reply with JSON only:
  "abstain": <the abstain value from the record>}
 "evidence" = features listed under SUPPORT, "conflicts" = features listed under CONFLICT."""
 
+SYSTEM_FUSION = """You explain the output of a cognitive-load model built from one agent per sensor modality and a
+fusion model that weighs them. You never change the final label.
+Use ONLY the agents, features and numbers in the record. Copy numbers exactly as written there.
+Do not mention any other agent, feature, number, threshold, count or percentage.
+Reply with JSON only:
+{"conclusion": "<label from the record>", "confidence": <confidence from the record>,
+ "evidence": [{"modality": "<agent>", "probability_high": <its P(high)>, "feature": "<optional: one of its features>",
+               "value": <that feature's value>, "z": <that feature's z>, "statement": "<one short sentence>"}],
+ "conflicts": [<same shape>],
+ "abstain": <the abstain value from the record>}
+Exactly one item per agent: every SUPPORT agent once in "evidence", every CONFLICT agent once in "conflicts".
+"modality" is the agent= string; "feature" is that agent's feature= string or left out."""
+
+
+def is_fusion(rec):
+    return "agents" in rec
+
+
+def system(rec):
+    return SYSTEM_FUSION if is_fusion(rec) else SYSTEM
+
 
 def rule_check(rec):
-    """Split cited features into those consistent with the predicted label and those against it."""
+    """Split cited features (or, for fusion, available agents) into those for and against the predicted label."""
+    if is_fusion(rec):
+        av = sorted([a for a in rec["agents"] if a["available"]], key=lambda a: -abs(a["contribution"]))
+        return [a for a in av if a["says"] == rec["label"]], [a for a in av if a["says"] != rec["label"]]
     support, conflict = [], []
     for f in rec["top_features"]:
         expected = f["learned_direction_high_load"]
@@ -52,6 +78,16 @@ def rule_check(rec):
 
 
 def prompt(rec, support, conflict):
+    if is_fusion(rec):
+        feat = lambda f: f"feature=\"{f['feature']}\" ({f['description']}) value={f['value']} {f['unit']} z={f['z']}"
+        line = lambda a: (f"- agent=\"{a['modality']}\": P(high)={a['probability_high']}; says {a['says']}; "
+                          f"fusion weight={a['weight']}; contribution={a['contribution']}; quality={a['quality']}; "
+                          f"top feature: " + feat(a["top_features"][0]))
+        off = [a["modality"] for a in rec["agents"] if not a["available"]]
+        return (f"label: {rec['label']}\nconfidence: {rec['confidence']}\nabstain: {str(must_abstain(rec)).lower()}\n"
+                f"unavailable or low-quality agents: {off or 'none'}\n"
+                f"SUPPORT:\n" + ("\n".join(map(line, support)) or "- none") +
+                f"\nCONFLICT:\n" + ("\n".join(map(line, conflict)) or "- none"))
     line = lambda f: (f"- feature=\"{f['feature']}\" means {f['description']}; value={f['value']} {f['unit']}; "
                       f"z={f['z']}; pushes toward {f['pushes_toward']}; "
                       f"matches expected high-load direction: {f['rule_agrees']}")
@@ -86,6 +122,15 @@ def ask_llm(model, messages):
 
 
 def template(rec, support, conflict):
+    if is_fusion(rec):
+        def item(a):
+            f = a["top_features"][0]
+            return {"modality": a["modality"], "probability_high": a["probability_high"], "feature": f["feature"],
+                    "value": f["value"], "z": f["z"],
+                    "statement": f"{a['modality']} agent gives P(high)={a['probability_high']}, led by "
+                                 f"{f['description']} at z={f['z']}"}
+        return {"conclusion": rec["label"], "confidence": rec["confidence"], "evidence": [item(a) for a in support],
+                "conflicts": [item(a) for a in conflict], "abstain": must_abstain(rec)}
     item = lambda f: {"feature": f["feature"], "value": f["value"], "z": f["z"],
                       "statement": f"{f['description']} at z={f['z']} pushes toward {f['pushes_toward']} load"}
     return {"conclusion": rec["label"], "confidence": rec["confidence"], "evidence": [item(f) for f in support],
@@ -96,11 +141,16 @@ def allowed_numbers(rec):
     nums = {rec["confidence"], rec["probability_high"], *[v for v in rec["quality"].values() if v is not None]}
     for f in rec["top_features"]:
         nums |= {f["value"], f["z"], f["shap"]}
+    for a in rec.get("agents", []):
+        nums |= {a.get("probability_high"), a["weight"], a["contribution"], a["quality"]}
     return {n for n in nums if n is not None}
 
 
 def number_ok(tok, allowed):
-    x = float(tok)
+    try:
+        x = float(tok)
+    except ValueError:  # e.g. "91.26 F": not a bare number from the record
+        return False
     tol = 0.5 * 10 ** -(len(tok.split(".")[1]) if "." in tok and "e" not in tok else 0)
     return any(abs(x - a) <= tol + 1e-9 or abs(x - a) <= 1e-3 * abs(a) for a in allowed)
 
@@ -116,17 +166,32 @@ def verify(out, rec):
         errs.append(f"confidence must be {rec['confidence']}")
     if out["abstain"] is not must_abstain(rec):
         errs.append(f"abstain must be {str(must_abstain(rec)).lower()}")
-    if out["abstain"] is not True and not out["evidence"] and any(f["pushes_toward"] == rec["label"]
-                                                                  for f in rec["top_features"]):
-        errs.append("evidence must cite the SUPPORT features unless abstaining")
+    if out["abstain"] is not True and not out["evidence"] and rule_check(rec)[0]:
+        errs.append("evidence must cite the SUPPORT items unless abstaining")
     cited = {f["feature"]: f for f in rec["top_features"]}
     allowed = allowed_numbers(rec)
+    agents = {a["modality"]: a for a in rec.get("agents", []) if a["available"]}
     for item in (out["evidence"] or []) + (out["conflicts"] or []):
+        if is_fusion(rec) and isinstance(item, dict):
+            a = agents.get(item.get("modality"))
+            if a is None:
+                errs.append(f"unknown or unavailable agent {item.get('modality')}")
+                continue
+            if item.get("probability_high") is not None and not number_ok(str(item["probability_high"]),
+                                                                          {a["probability_high"]}):
+                errs.append(f"{a['modality']}.probability_high must be {a['probability_high']}")
+            if not str(item.get("statement", "")).strip():
+                errs.append(f"{a['modality']} needs a statement")
+            if not item.get("feature"):
+                continue
+            if item["feature"] not in {f["feature"] for f in a["top_features"]}:
+                errs.append(f"feature {item['feature']} is not a top feature of the {a['modality']} agent")
+                continue
         if not isinstance(item, dict) or item.get("feature") not in cited:
             errs.append(f"unknown feature {item.get('feature') if isinstance(item, dict) else item}")
             continue
         f = cited[item["feature"]]
-        if not str(item.get("statement", "")).strip():
+        if not is_fusion(rec) and not str(item.get("statement", "")).strip():
             errs.append(f"{item['feature']} needs a statement")
         for k in ("value", "z"):
             if item.get(k) is not None and not number_ok(str(item[k]), {f[k]}):
@@ -145,7 +210,8 @@ def verify(out, rec):
 def explain(rec, model):
     support, conflict = rule_check(rec)
     try:
-        msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt(rec, support, conflict)}]
+        msgs = [{"role": "system", "content": system(rec)},
+                {"role": "user", "content": prompt(rec, support, conflict)}]
         gen, out = "llm:" + model, ask_llm(model, msgs)
     except OSError:  # Ollama not running / not installed
         gen, out, msgs = "template", template(rec, support, conflict), None
@@ -159,32 +225,36 @@ def explain(rec, model):
             errs = verify(out, rec)
         except OSError:
             pass
-    cited_first = [i.get("feature") for i in (out.get("evidence") or []) + (out.get("conflicts") or [])
-                   if isinstance(i, dict)] if isinstance(out, dict) else []
-    names = {f["feature"] for f in rec["top_features"]}
+    key = "modality" if is_fusion(rec) else "feature"
+    cited_first = [i.get(key) for i in (first_out.get("evidence") or []) + (first_out.get("conflicts") or [])
+                   if isinstance(i, dict)] if isinstance(first_out, dict) else []
+    names = {a["modality"] for a in rec["agents"] if a["available"]} if is_fusion(rec) \
+        else {f["feature"] for f in rec["top_features"]}
     if errs:  # abstain, keep the predictor's label untouched
         out = {"conclusion": rec["label"], "confidence": rec["confidence"], "evidence": [], "conflicts": [],
                "abstain": True}
     return {"subject": rec["subject"], "study": rec["study"], "level": rec["level"], "win_start": rec["win_start"],
             "label": rec["label"], "generator": gen, "attempts": attempts, "verified": not errs,
             "errors_first": first, "first_output": first_out, "errors_final": errs, "cited": len(cited_first),
-            "cited_in_top6": sum(c in names for c in cited_first), "rules": {f["feature"]: f["rule_agrees"]
-                                                                            for f in support + conflict},
+            "cited_in_top6": sum(c in names for c in cited_first),
+            "rules": {f.get("feature", f.get("modality")): f.get("rule_agrees") for f in support + conflict},
             "output": out}
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--subject", required=True)
-    ap.add_argument("--limit", type=int, help="only the first N windows")
+    ap.add_argument("--limit", type=int, help="only N windows, evenly spaced over the subject's runs")
     ap.add_argument("--model", default="qwen2.5:3b-instruct")
+    ap.add_argument("--fusion", action="store_true", help="explain the agent + fusion model")
     a = ap.parse_args()
     sid = subject_id(a.subject)
-    p = RES / "evidence" / f"{sid}.jsonl"
-    recs = [json.loads(l) for l in open(p)] if p.exists() else build(sid)
-    recs = recs[:a.limit] if a.limit else recs
-    (RES / "explanations").mkdir(parents=True, exist_ok=True)
-    with open(RES / "explanations" / f"{sid}.jsonl", "w") as fh:
+    ev, ex = ("evidence_fusion", "explanations_fusion") if a.fusion else ("evidence", "explanations")
+    p = RES / ev / f"{sid}.jsonl"
+    recs = [json.loads(l) for l in open(p)] if p.exists() else (build_fusion if a.fusion else build)(sid)
+    recs = recs[::max(1, len(recs) // a.limit)][:a.limit] if a.limit else recs
+    (RES / ex).mkdir(parents=True, exist_ok=True)
+    with open(RES / ex / f"{sid}.jsonl", "w") as fh:
         for rec in recs:
             r = explain(rec, a.model)
             fh.write(json.dumps(r) + "\n")

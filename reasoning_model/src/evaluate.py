@@ -154,19 +154,53 @@ def faithfulness():
 
 
 def reasoner_stats():
-    p = RES / "explanations"
-    recs = [json.loads(l) for f in sorted(p.glob("*.jsonl")) for l in open(f)] if p.exists() else []
+    """Per explanation kind (single model / fusion): first-try failures = verifier rejections (hallucination)."""
+    recs = [dict(json.loads(l), record=kind) for kind, d in [("single", "explanations"), ("fusion", "explanations_fusion")]
+            if (RES / d).exists() for f in sorted((RES / d).glob("*.jsonl")) for l in open(f)]
     if not recs:
         return None
-    r = pd.DataFrame([{"subject": x["subject"], "generator": x["generator"], "attempts": x["attempts"],
+    r = pd.DataFrame([{"record": x["record"], "subject": x["subject"], "generator": x["generator"],
+                       "attempts": x["attempts"],
                        "verified": x["verified"], "abstain": x["output"]["abstain"],
-                       "first_try_failed": x["attempts"] > 1 or not x["verified"],
+                       "first_try_failed": bool(x["errors_first"]),
                        "cited": x["cited"], "cited_ok": x["cited_in_top6"]} for x in recs])
-    s = pd.DataFrame([{"subjects": r.subject.nunique(), "windows": len(r), "generator": ",".join(r.generator.unique()),
-                       "hallucination_rate_first_try": r.first_try_failed.mean(),
-                       "final_unverified_rate": (~r.verified).mean(), "abstain_rate": r.abstain.mean(),
-                       "citation_accuracy": r.cited_ok.sum() / max(r.cited.sum(), 1)}])
+    s = pd.DataFrame([{"record": k, "subjects": g.subject.nunique(), "windows": len(g),
+                       "generator": ",".join(g.generator.unique()),
+                       "hallucination_rate_first_try": g.first_try_failed.mean(),
+                       "final_unverified_rate": (~g.verified).mean(), "abstain_rate": g.abstain.mean(),
+                       "citation_accuracy": g.cited_ok.sum() / max(g.cited.sum(), 1)} for k, g in r.groupby("record")])
     s.to_csv(RES / "reasoner.csv", index=False)
+    return s
+
+
+def fusion_faithfulness():
+    """Fusion model: make the most supportive available agent unavailable; P(label) should drop more than when
+    a random available agent is removed."""
+    from fusion import agent_probs, fuse
+    from train import task_rows
+    oof = pd.read_parquet(RES / "oof_fusion.parquet")
+    b0 = joblib.load(next((RES / "models" / "fusion").glob("*.joblib")))
+    df, feats = load(b0["ref"] or "stimulus")
+    rows_, _ = task_rows(df, "binary")
+    rng, out = np.random.default_rng(0), []
+    for sid, g in oof.groupby("subject"):
+        b = joblib.load(RES / "models" / "fusion" / f"{sid}.joblib")
+        raw, _ = agent_probs(b, rows_[rows_.subject == sid][feats])
+        base, contrib = fuse(b, raw)
+        sign = np.where(base >= 0.5, 1, -1)
+        for i in range(len(raw)):
+            av = [m for m in b["modalities"] if np.isfinite(raw.iloc[i][m])]
+            sup = [m for m in av if contrib.iloc[i][m] * sign[i] > 0]
+            if not sup or len(av) < 2:
+                continue
+            top = max(sup, key=lambda m: contrib.iloc[i][m] * sign[i])
+            drop = lambda m: (base[i] - fuse(b, raw.iloc[[i]].assign(**{m: np.nan}))[0][0]) * sign[i]
+            out.append({"subject": sid, "drop_top_agent": drop(top), "drop_random_agent": drop(rng.choice(av))})
+    r = pd.DataFrame(out)
+    s = pd.DataFrame([{"model": "fusion", "subjects": r.subject.nunique(), "windows": len(r),
+                       "mean_drop_top_agent": r.drop_top_agent.mean(), "mean_drop_random_agent": r.drop_random_agent.mean(),
+                       "share_top_gt_random": (r.drop_top_agent > r.drop_random_agent).mean()}])
+    s.to_csv(RES / "faithfulness_fusion.csv", index=False)
     return s
 
 
@@ -210,6 +244,8 @@ if __name__ == "__main__":
     print(faithfulness().to_string())
     print(directions().round(2).to_string())
     print(zscale().round(2).to_string())
+    if (RES / "oof_fusion.parquet").exists():
+        print(fusion_faithfulness().round(3).to_string())
     s = reasoner_stats()
     if s is not None:
         print(s.to_string())

@@ -62,12 +62,21 @@ src/test_reasoner.py  # verifier self-check
    calibration. Reference: ADABase paper, n-back fused AUC 0.88 / F1 0.77 (51 subjects, 2-min windows, 10-fold).
 6. **Ablations.** contactless (eye + AUs) vs contact vs all; leave-one-modality-out; single modality; majority class.
 7. **Evidence record:** label, calibrated probability, top-6 SHAP features with raw value and z-score, rule directions, quality.
+7b. **Modality agents + fusion** (`src/fusion.py`): one LightGBM agent per modality (calibrated P(high), SHAP over its
+   own features; unavailable when missing / low quality), fused by a logistic regression with non-negative agent
+   weights trained on inner out-of-fold agent outputs. Log-odds split exactly into per-agent contributions, which the
+   reasoner cites (`--fusion`). New sensors (rPPG, thermal, EEG) = new agents, pretrainable on single-modality data.
 8. **Reasoner.** JSON `{conclusion, confidence, evidence[], conflicts[], abstain}`, temperature 0; verifier checks label,
    confidence, feature names and every number; regenerate once, then abstain. Abstain is decided by rule
    (confidence < 0.6 or all cited modalities low quality) and passed to the LLM. Falls back to a template without Ollama.
    Setup: `brew install ollama && ollama serve & ollama pull qwen2.5:3b-instruct`.
 9. **Evaluation.** Balanced accuracy, macro-F1, AUROC (LOSO); n-back -> k-drive; ECE; faithfulness (remove cited
    features, probability must drop more than for random ones); citation accuracy; hallucination rate.
+
+## Test laptop hand-off
+`run_pipeline.sh` ends by writing `results/handoff.tar.gz` (features, fold models, evidence, LoRA adapter, tables).
+Unpack it into `reasoning_model/`, install `requirements.txt` (mlx/mlx-lm only on Apple Silicon), run Ollama, then
+`python src/reasoner.py --subject <id> [--fusion]` and `python src/evaluate.py`.
 
 ## Later stages (not now)
 - rPPG step validation on UBFC-rPPG, PURE, MPSC-rPPG, IMVIA-NIR (POS algorithm; HR MAE vs contact PPG).

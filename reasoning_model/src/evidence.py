@@ -42,6 +42,63 @@ def num(x):
     return None if x is None or not np.isfinite(x) else float(f"{x:.4g}")
 
 
+def entry(k, f, sv, rules):
+    """One cited feature: k = '<name>_z', f = the window's feature row, sv = SHAP values keyed by k."""
+    name = k[:-2]
+    desc, unit, lit = FEATURES[name]
+    return {"feature": name, "description": desc, "unit": unit, "value": num(f[name]), "z": num(f[k]),
+            "shap": num(sv[k]), "pushes_toward": "high" if sv[k] > 0 else "low",
+            "learned_direction_high_load": {1: "+", -1: "-", 0: "none"}[rules.get(k, 0)],
+            "literature_direction_high_load": {1: "+", -1: "-", None: "mixed"}[lit]}
+
+
+def seen(sv, f):
+    """Keep features the model actually saw: measured and passing the same quality gate as train.load."""
+    return sv[[np.isfinite(f.get(k, np.nan)) and f.get(f"q_{k.split('_')[0]}", 1) >= 0.5 for k in sv.index]]
+
+
+def write(dirname, sid, recs):
+    out = RES / dirname
+    out.mkdir(parents=True, exist_ok=True)
+    with open(out / f"{sid}.jsonl", "w") as fh:
+        fh.writelines(json.dumps(x) + "\n" for x in recs)
+    return recs
+
+
+def build_fusion(sid, top_per_agent=3):
+    """Evidence for the agent + fusion model: one report per modality agent, exact log-odds contributions."""
+    oof = pd.read_parquet(RES / "oof_fusion.parquet")
+    oof = oof[oof.subject == sid]
+    b = joblib.load(RES / "models" / "fusion" / f"{sid}.joblib")
+    feat = zscore(pd.read_parquet(FEAT / f"{sid}.parquet"), b["ref"] or "stimulus") \
+        .set_index(["study", "phase", "level", "win_start"])
+    weights = b["meta"]["coef"]
+    recs = []
+    for r in oof.to_dict("records"):
+        f = feat.loc[(r["study"], r["phase"], r["level"], r["win_start"])]
+        label = "high" if r["prob"] >= 0.5 else "low"
+        agents, flat = [], []
+        for m in b["modalities"]:
+            a = b["agents"][m]
+            p = r[f"agent_{m}"]
+            rep = {"modality": m, "available": bool(np.isfinite(p)), "quality": num(f.get(f"q_{m}", np.nan)),
+                   "weight": num(weights[m]), "contribution": num(r[f"contrib_{m}"])}
+            if rep["available"]:
+                sv = seen(pd.Series({c: r[f"shap_{c}"] for c in a["features"]}), f)
+                top = [dict(entry(k, f, sv, a["rules"]), modality=m)
+                       for k in sv.abs().sort_values(ascending=False).index[:top_per_agent]]
+                rep.update(probability_high=num(p), says="high" if p >= 0.5 else "low", top_features=top)
+                flat += top
+            agents.append(rep)
+        q = {m: num(f.get(f"q_{m}", np.nan)) for m in MODALITIES}
+        recs.append({"subject": sid, "study": r["study"], "phase": r["phase"], "level": int(r["level"]),
+                     "win_start": float(r["win_start"]), "model": "fusion", "label": label,
+                     "probability_high": num(r["prob"]), "confidence": num(r["prob"] if label == "high" else 1 - r["prob"]),
+                     "agents": agents, "top_features": flat, "quality": q,
+                     "low_quality_modalities": [m for m, v in q.items() if v is not None and v < 0.5]})
+    return write("evidence_fusion", sid, recs)
+
+
 def build(sid):
     oof = pd.read_parquet(RES / "oof_binary.parquet")
     oof = oof[oof.subject == sid]
@@ -55,39 +112,27 @@ def build(sid):
         f = feat.loc[(r.study, r.phase, r.level, r.win_start)]
         label = "high" if r.prob >= 0.5 else "low"
         sv = pd.Series([getattr(r, c) for c in shap_cols], index=[c[5:] for c in shap_cols])  # keys end with _z
-        # only features the model actually saw: measured and passing the same quality gate as train.load
-        sv = sv[[np.isfinite(f.get(k, np.nan)) and f.get(f"q_{k.split('_')[0]}", 1) >= 0.5 for k in sv.index]]
-        top = []
-        for k in sv.abs().sort_values(ascending=False).index[:TOP]:
-            name = k[:-2]
-            desc, unit, lit = FEATURES[name]
-            learned = rules.get(k, 0)
-            top.append({"feature": name, "description": desc, "unit": unit, "value": num(f[name]),
-                        "z": num(f[k]), "shap": num(sv[k]), "pushes_toward": "high" if sv[k] > 0 else "low",
-                        "learned_direction_high_load": {1: "+", -1: "-", 0: "none"}[learned],
-                        "literature_direction_high_load": {1: "+", -1: "-", None: "mixed"}[lit]})
+        sv = seen(sv, f)
+        top = [entry(k, f, sv, rules) for k in sv.abs().sort_values(ascending=False).index[:TOP]]
         q = {m: num(f.get(f"q_{m}", np.nan)) for m in MODALITIES}
         recs.append({"subject": sid, "study": r.study, "phase": r.phase, "level": int(r.level),
                      "win_start": float(r.win_start), "label": label, "probability_high": num(r.prob),
                      "confidence": num(r.prob if label == "high" else 1 - r.prob), "top_features": top,
                      "quality": q, "low_quality_modalities": [m for m, v in q.items() if v is not None and v < 0.5]})
-    out = RES / "evidence"
-    out.mkdir(parents=True, exist_ok=True)
-    with open(out / f"{sid}.jsonl", "w") as fh:
-        for x in recs:
-            fh.write(json.dumps(x) + "\n")
-    return recs
+    return write("evidence", sid, recs)
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--subject")
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--fusion", action="store_true", help="evidence for the agent + fusion model")
     a = ap.parse_args()
-    sids = sorted(pd.read_parquet(RES / "oof_binary.parquet", columns=["subject"]).subject.unique()) if a.all \
+    src = "oof_fusion.parquet" if a.fusion else "oof_binary.parquet"
+    sids = sorted(pd.read_parquet(RES / src, columns=["subject"]).subject.unique()) if a.all \
         else [subject_id(a.subject)]
     for sid in sids:
-        recs = build(sid)
+        recs = (build_fusion if a.fusion else build)(sid)
         print(f"{sid}: {len(recs)} evidence records")
     if not a.all:
         print(json.dumps(recs[0], indent=1))

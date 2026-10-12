@@ -101,14 +101,14 @@ def scores(task, model, X):
         model.predict_proba(X) if task == "3class" else model.predict(X)
 
 
-def inner_cv(X, y, groups, task, params, seed):
+def inner_cv(X, y, groups, task, params, seed, dropout=True):
     """Subject-wise inner CV with early stopping. Returns OOF scores, median best iteration, CV loss (lower=better)."""
     oof = np.zeros((len(X), 3)) if task == "3class" else np.zeros(len(X))
     iters = []
     rng = np.random.default_rng(seed)
     for tr, va in GroupKFold(INNER).split(X, y, groups):
         m = make(task, params, 500, seed)
-        m.fit(modality_dropout(X.iloc[tr], rng), y.iloc[tr], eval_set=[(X.iloc[va], y.iloc[va])],
+        m.fit(modality_dropout(X.iloc[tr], rng) if dropout else X.iloc[tr], y.iloc[tr], eval_set=[(X.iloc[va], y.iloc[va])],
               callbacks=[lgb.early_stopping(50, verbose=False)])
         oof[va] = scores(task, m, X.iloc[va])
         iters.append(m.best_iteration_ or 500)
