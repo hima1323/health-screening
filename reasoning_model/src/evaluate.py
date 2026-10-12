@@ -15,7 +15,7 @@ from sklearn.metrics import balanced_accuracy_score, f1_score, roc_auc_score
 
 from features import MODALITIES
 from load_adabase import subject_id
-from train import RES, load, loso, modality, predict
+from train import RES, load, loso, modality
 
 TOPK = 3  # features removed in the faithfulness test
 
@@ -76,7 +76,7 @@ def ablations():
 
 
 def faithfulness():
-    """Remove (NaN) the top-k SHAP features supporting the prediction; the probability should move toward the
+    """Remove (NaN) the top-k SHAP features supporting the prediction; the model probability should move toward the
     other class more than when removing k random available features."""
     df, feats = load()
     oof = pd.read_parquet(RES / "oof_binary.parquet")
@@ -84,22 +84,23 @@ def faithfulness():
     rows = []
     for sid, g in oof.groupby("subject"):
         b = joblib.load(RES / "models" / "binary" / f"{sid}.joblib")
+        raw = lambda Z: b["model"].predict_proba(Z)[0, 1]  # uncalibrated: isotonic steps hide small changes
         X = df.loc[df.subject == sid].set_index(["study", "phase", "level", "win_start"]) \
             .loc[list(g[["study", "phase", "level", "win_start"]].itertuples(index=False, name=None)), feats]
         X = X.reset_index(drop=True)
         sv = g[[f"shap_{c}" for c in feats]].to_numpy()
-        sign = np.where(g.prob.to_numpy() >= 0.5, 1, -1)
+        sign = np.where(g.prob_raw.to_numpy() >= 0.5, 1, -1)
         for i in range(len(X)):
             avail = np.flatnonzero(X.iloc[i].notna().to_numpy())
             support = [j for j in np.argsort(-sv[i] * sign[i]) if j in avail and sv[i, j] * sign[i] > 0][:TOPK]
             if len(support) < TOPK:
                 continue
-            base = predict(b, X.iloc[[i]])[0]
+            base = raw(X.iloc[[i]])
             cut, rnd = X.iloc[[i]].copy(), X.iloc[[i]].copy()
             cut.iloc[0, support] = np.nan
             rnd.iloc[0, rng.choice(avail, TOPK, replace=False)] = np.nan
-            rows.append({"subject": sid, "drop_cited": (base - predict(b, cut)[0]) * sign[i],
-                         "drop_random": (base - predict(b, rnd)[0]) * sign[i]})
+            rows.append({"subject": sid, "drop_cited": (base - raw(cut)) * sign[i],
+                         "drop_random": (base - raw(rnd)) * sign[i]})
     r = pd.DataFrame(rows)
     s = pd.DataFrame([{"subjects": r.subject.nunique(), "windows": len(r), "k": TOPK,
                        "mean_drop_cited": r.drop_cited.mean(), "mean_drop_random": r.drop_random.mean(),
@@ -116,7 +117,7 @@ def reasoner_stats():
     r = pd.DataFrame([{"subject": x["subject"], "generator": x["generator"], "attempts": x["attempts"],
                        "verified": x["verified"], "abstain": x["output"]["abstain"],
                        "first_try_failed": x["attempts"] > 1 or not x["verified"],
-                       "cited": len(x["output"].get("evidence", [])), "cited_ok": x["cited_in_top6"]} for x in recs])
+                       "cited": x["cited"], "cited_ok": x["cited_in_top6"]} for x in recs])
     s = pd.DataFrame([{"subjects": r.subject.nunique(), "windows": len(r), "generator": ",".join(r.generator.unique()),
                        "hallucination_rate_first_try": r.first_try_failed.mean(),
                        "final_unverified_rate": (~r.verified).mean(), "abstain_rate": r.abstain.mean(),

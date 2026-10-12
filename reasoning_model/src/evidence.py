@@ -54,7 +54,7 @@ def build(sid):
         label = "high" if r.prob >= 0.5 else "low"
         sv = pd.Series([getattr(r, c) for c in shap_cols], index=[c[5:] for c in shap_cols])  # keys end with _z
         # only features the model actually saw: measured and passing the same quality gate as train.load
-        sv = sv[[np.isfinite(f[k]) and f.get(f"q_{k.split('_')[0]}", 1) >= 0.5 for k in sv.index]]
+        sv = sv[[np.isfinite(f.get(k, np.nan)) and f.get(f"q_{k.split('_')[0]}", 1) >= 0.5 for k in sv.index]]
         top = []
         for k in sv.abs().sort_values(ascending=False).index[:TOP]:
             name = k[:-2]
