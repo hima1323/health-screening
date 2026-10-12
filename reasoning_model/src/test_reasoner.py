@@ -26,6 +26,8 @@ bad = copy.deepcopy(good); bad["evidence"][0]["statement"] = "ecg_hr also rose"
 assert any("ecg_hr" in e for e in verify(bad, REC))                           # uncited feature rejected
 bad = copy.deepcopy(good); bad["evidence"][0]["z"] = 2.5
 assert any(".z" in e for e in verify(bad, REC))                               # wrong value rejected
+bad = copy.deepcopy(good); del bad["evidence"][0]["statement"]
+assert any("statement" in e for e in verify(bad, REC))                        # explanation text required
 ok = copy.deepcopy(good); ok["evidence"][0]["statement"] = "pupil diameter 4.12 mm, z 1.5"
 assert verify(ok, REC) == [], verify(ok, REC)                                 # rounding of record numbers is fine
 low = copy.deepcopy(REC); low["confidence"] = 0.55

@@ -20,6 +20,7 @@ from load_adabase import subject_id
 from train import RES
 
 OLLAMA = "http://localhost:11434/api/chat"
+MLX = "http://localhost:8080/v1/chat/completions"  # `python -m mlx_lm server` (OpenAI API), optional LoRA adapter
 MIN_CONF = 0.6  # below this the explanation must abstain
 FEAT_RE = re.compile(r"\b(?:ecg|ppg|eda|rsp|emg|skt|eye|au)_[a-z0-9_]+")
 NUM_RE = re.compile(r"-?\d+(?:\.\d+)?(?:e-?\d+)?")
@@ -54,23 +55,33 @@ def prompt(rec, support, conflict):
     line = lambda f: (f"- feature=\"{f['feature']}\" means {f['description']}; value={f['value']} {f['unit']}; "
                       f"z={f['z']}; pushes toward {f['pushes_toward']}; "
                       f"matches expected high-load direction: {f['rule_agrees']}")
-    must = rec["confidence"] < MIN_CONF or all(f["feature"].split("_")[0] in rec["low_quality_modalities"]
-                                               for f in rec["top_features"])
+    must = must_abstain(rec)
     return (f"label: {rec['label']}\nconfidence: {rec['confidence']}\nabstain: {str(must).lower()}\n"
             f"low-quality modalities: {rec['low_quality_modalities'] or 'none'}\n"
             f"SUPPORT:\n" + ("\n".join(map(line, support)) or "- none") +
             f"\nCONFLICT:\n" + ("\n".join(map(line, conflict)) or "- none"))
 
 
+def must_abstain(rec):
+    return rec["confidence"] < MIN_CONF or all(f["feature"].split("_")[0] in rec["low_quality_modalities"]
+                                               for f in rec["top_features"])
+
+
 def ask_llm(model, messages):
-    """Raises OSError if Ollama is unreachable; malformed JSON comes back as {} and fails verification."""
-    body = json.dumps({"model": model, "messages": messages, "format": "json", "stream": False,
-                       "options": {"temperature": 0, "seed": 0}}).encode()
-    req = urllib.request.Request(OLLAMA, body, {"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=120) as r:
+    """model 'qwen2.5:3b-instruct' -> Ollama; 'mlx:<label>' -> local MLX server (label only names the run).
+    Raises OSError if the server is unreachable; malformed JSON comes back as {} and fails verification."""
+    if model.startswith("mlx:"):
+        url, body = MLX, {"messages": messages, "temperature": 0, "max_tokens": 700}
+    else:
+        url, body = OLLAMA, {"model": model, "messages": messages, "format": "json", "stream": False,
+                             "options": {"temperature": 0, "seed": 0}}
+    req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=300) as r:
         try:
-            return json.loads(json.loads(r.read())["message"]["content"])
-        except (ValueError, KeyError):
+            resp = json.loads(r.read())
+            text = resp["choices"][0]["message"]["content"] if "choices" in resp else resp["message"]["content"]
+            return json.loads(text[text.index("{"):text.rindex("}") + 1])  # tolerate ```json fences
+        except (ValueError, KeyError, IndexError):
             return {}
 
 
@@ -78,7 +89,7 @@ def template(rec, support, conflict):
     item = lambda f: {"feature": f["feature"], "value": f["value"], "z": f["z"],
                       "statement": f"{f['description']} at z={f['z']} pushes toward {f['pushes_toward']} load"}
     return {"conclusion": rec["label"], "confidence": rec["confidence"], "evidence": [item(f) for f in support],
-            "conflicts": [item(f) for f in conflict], "abstain": rec["confidence"] < MIN_CONF}
+            "conflicts": [item(f) for f in conflict], "abstain": must_abstain(rec)}
 
 
 def allowed_numbers(rec):
@@ -103,8 +114,8 @@ def verify(out, rec):
         errs.append(f"conclusion must be '{rec['label']}'")
     if not isinstance(out["confidence"], (int, float)) or abs(out["confidence"] - rec["confidence"]) > 1e-3:
         errs.append(f"confidence must be {rec['confidence']}")
-    if rec["confidence"] < MIN_CONF and out["abstain"] is not True:
-        errs.append("abstain must be true (confidence below 0.6)")
+    if out["abstain"] is not must_abstain(rec):
+        errs.append(f"abstain must be {str(must_abstain(rec)).lower()}")
     if out["abstain"] is not True and not out["evidence"] and any(f["pushes_toward"] == rec["label"]
                                                                   for f in rec["top_features"]):
         errs.append("evidence must cite the SUPPORT features unless abstaining")
@@ -115,6 +126,8 @@ def verify(out, rec):
             errs.append(f"unknown feature {item.get('feature') if isinstance(item, dict) else item}")
             continue
         f = cited[item["feature"]]
+        if not str(item.get("statement", "")).strip():
+            errs.append(f"{item['feature']} needs a statement")
         for k in ("value", "z"):
             if item.get(k) is not None and not number_ok(str(item[k]), {f[k]}):
                 errs.append(f"{item['feature']}.{k} must be {f[k]}")
