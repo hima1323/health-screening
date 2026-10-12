@@ -1,8 +1,7 @@
 """Window features per subject -> data/features/<subject>.parquet.
 
 Each kept segment is processed once (NeuroKit2), then cut into 30 s windows with 50% overlap.
-Every feature also gets a `<name>_z` column: z-score against the same subject's resting baseline
-(baseline level 1 of the same task). Raw values are kept for the evidence record.
+Only raw values are stored; per-subject z-scores are added at load time by `zscore()` (see there).
 
     python src/features.py --subject 0                 # one subject (downloads if missing)
     python src/features.py --all --delete-raw          # download -> extract -> delete raw, one subject at a time
@@ -195,18 +194,30 @@ def extract(sid):
                          "nback_n": nb, "dual": int(g.study == "n-back" and g.phase == "test" and g.level > 3),
                          "tlx": tlx.get((g.study, g.level), np.nan) if g.phase == "test" else np.nan, **f})
     s.close()
-    out = pd.DataFrame(rows)
-    feats = feature_cols(out)
-    # z-score against the subject's own resting baseline (level-1 baseline of the same task)
-    z = []
-    for study, grp in out.groupby("study"):
-        base = grp[(grp.phase == "baseline") & (grp.level == 1)][feats]
-        z.append((grp[feats] - base.mean()) / base.std().replace(0, np.nan))
-    return pd.concat([out, pd.concat(z).add_suffix("_z")], axis=1)
+    return pd.DataFrame(rows)
 
 
 def feature_cols(df):
     return [c for c in df.columns if c.split("_")[0] in MODALITIES and not c.endswith("_z")]
+
+
+def zscore(df, ref="stimulus"):
+    """Add `<feature>_z` per subject and task, using no labels.
+    ref="stimulus" (default): centre on baseline 2 (same visual stimulus, no task), scale by the subject's SD over
+      all their windows of that task. Removes the luminance confound of the black-screen baseline (pupil) and the
+      near-zero resting SD of EMG / rare AUs that blew z-scores up to |z| > 10.
+    ref="rest": centre and scale on baseline 1 (5 min black screen), as in the original brief."""
+    df = df.drop(columns=[c for c in df.columns if c.endswith("_z")])
+    feats = feature_cols(df)
+    z = []
+    for _, grp in df.groupby(["subject", "study"]):
+        lvl = 2 if ref == "stimulus" else 1
+        base = grp[(grp.phase == "baseline") & (grp.level == lvl)][feats]
+        if base.empty:  # k-drive baseline 2 was not extracted for the first 30 subjects: centre on baseline 1
+            base = grp[(grp.phase == "baseline") & (grp.level == 1)][feats]
+        sd = grp[feats].std() if ref == "stimulus" else base.std()
+        z.append((grp[feats] - base.mean()) / sd.replace(0, np.nan))
+    return pd.concat([df, pd.concat(z).add_suffix("_z")], axis=1)
 
 
 def run(sid, delete_raw=False):

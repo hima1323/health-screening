@@ -49,9 +49,13 @@ def summarize(oof, task, kd=None):
                           "spearman_within_subject": rho}])
 
 
+def trained_ref():
+    return joblib.load(next((RES / "models" / "binary").glob("*.joblib")))["ref"] or "stimulus"
+
+
 def ablations():
     df, feats = load()
-    sets = {"all": feats,
+    sets = {"all": feats, "all (ref=rest, original brief)": None,
             "contact": [c for c in feats if MODALITIES[modality(c)] == "contact"],
             "contactless (eye+AU)": [c for c in feats if MODALITIES[modality(c)] == "contactless"]}
     for m in MODALITIES:
@@ -59,7 +63,11 @@ def ablations():
         sets[f"all minus {m}"] = [c for c in feats if modality(c) != m]
     rows = []
     for name, fs in sets.items():
-        oof, kd = loso(df, fs, "binary", save=False)
+        if fs is None:
+            d, fs = load("rest")
+            oof, kd = loso(d, fs, "binary", save=False)
+        else:
+            oof, kd = loso(df, fs, "binary", save=False)
         r = summarize(oof, "binary", kd).set_index("set")
         rows.append({"features": name, "n_features": len(fs), "subjects": r.loc["n-back LOSO", "subjects"],
                      "windows": r.loc["n-back LOSO", "windows"],
@@ -75,10 +83,46 @@ def ablations():
     pd.DataFrame(rows).to_csv(RES / "ablations.csv", index=False)
 
 
+def directions():
+    """Learned direction under high load per feature (sign of high-low mean z, per LOSO fold) vs literature."""
+    from evidence import FEATURES
+    rules = [joblib.load(p)["rules"] for p in sorted((RES / "models" / "binary").glob("*.joblib"))]
+    df, feats = load(trained_ref())
+    from train import task_rows
+    rows_, y = task_rows(df, "binary")
+    d = rows_[y == 1][feats].mean() - rows_[y == 0][feats].mean()
+    out = []
+    for c in feats:
+        signs = [r.get(c, 0) for r in rules]
+        lit = FEATURES[c[:-2]][2]
+        learned = int(np.sign(sum(signs))) if abs(sum(signs)) > len(signs) / 2 else 0  # majority of folds
+        out.append({"feature": c[:-2], "mean_z_high_minus_low": d[c], "folds_up": signs.count(1),
+                    "folds_down": signs.count(-1), "folds_flat": signs.count(0), "learned": learned,
+                    "literature": lit, "agrees": None if lit is None or learned == 0 else learned == lit})
+    r = pd.DataFrame(out).sort_values("mean_z_high_minus_low", key=abs, ascending=False)
+    r.to_csv(RES / "directions.csv", index=False)
+    return r
+
+
+def zscale():
+    """How large are z-scores under each reference? (n-back test windows)"""
+    rows = []
+    for ref in ["rest", "stimulus"]:
+        df, feats = load(ref)
+        z = df[(df.study == "n-back") & (df.phase == "test")][feats].abs()
+        rows.append({"ref": ref, "subjects": df.subject.nunique(), "windows": len(z),
+                     "median_abs_z": float(np.nanmedian(z)), "p95_abs_z": float(np.nanpercentile(z, 95)),
+                     "share_abs_z_gt_5": float((z > 5).sum().sum() / z.notna().sum().sum()),
+                     "worst_feature": z.median().idxmax()[:-2], "worst_median_abs_z": z.median().max()})
+    r = pd.DataFrame(rows)
+    r.to_csv(RES / "zscale.csv", index=False)
+    return r
+
+
 def faithfulness():
     """Remove (NaN) the top-k SHAP features supporting the prediction; the model probability should move toward the
     other class more than when removing k random available features."""
-    df, feats = load()
+    df, feats = load(trained_ref())
     oof = pd.read_parquet(RES / "oof_binary.parquet")
     rng = np.random.default_rng(0)
     rows = []
@@ -164,6 +208,8 @@ if __name__ == "__main__":
     print(m.to_string())
     reliability_plot(oof, kd)
     print(faithfulness().to_string())
+    print(directions().round(2).to_string())
+    print(zscale().round(2).to_string())
     s = reasoner_stats()
     if s is not None:
         print(s.to_string())

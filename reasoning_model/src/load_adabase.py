@@ -27,7 +27,7 @@ SUBJECTS = ["0000-ACAA", "0001-AGDJ", "0002-AHEG", "0003-AZFR", "0004-BDCD", "00
             "0021-RNDM", "0022-RSBC", "0023-SFKF", "0024-SZLE", "0025-TBMO", "0026-XAPL", "0027-YMAD",
             "0028-ZFML", "0029-ZZOV"]
 # segments we extract features from: (study, phase, level)
-KEEP = {("n-back", "baseline", 1), ("n-back", "baseline", 2), ("k-drive", "baseline", 1)} \
+KEEP = {("n-back", "baseline", 1), ("n-back", "baseline", 2), ("k-drive", "baseline", 1), ("k-drive", "baseline", 2)} \
     | {("n-back", "test", l) for l in range(1, 7)} | {("k-drive", "test", l) for l in range(1, 4)}
 
 

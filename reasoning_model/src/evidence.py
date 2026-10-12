@@ -14,7 +14,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from features import FEAT, MODALITIES
+from features import FEAT, MODALITIES, zscore
 from load_adabase import subject_id
 from train import RES
 
@@ -45,8 +45,10 @@ def num(x):
 def build(sid):
     oof = pd.read_parquet(RES / "oof_binary.parquet")
     oof = oof[oof.subject == sid]
-    rules = joblib.load(RES / "models" / "binary" / f"{sid}.joblib")["rules"]
-    feat = pd.read_parquet(FEAT / f"{sid}.parquet").set_index(["study", "phase", "level", "win_start"])
+    bundle = joblib.load(RES / "models" / "binary" / f"{sid}.joblib")
+    rules = bundle["rules"]
+    feat = zscore(pd.read_parquet(FEAT / f"{sid}.parquet"), bundle["ref"] or "stimulus") \
+        .set_index(["study", "phase", "level", "win_start"])
     shap_cols = [c for c in oof.columns if c.startswith("shap_")]
     recs = []
     for r in oof.itertuples(index=False):

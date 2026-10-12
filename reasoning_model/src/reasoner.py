@@ -29,9 +29,9 @@ Use ONLY the features and numbers in the evidence record. Copy numbers exactly a
 Do not mention any other feature, number, threshold, count or percentage.
 Reply with JSON only:
 {"conclusion": "<label from the record>", "confidence": <confidence from the record>,
- "evidence": [{"feature": "<name>", "value": <value>, "z": <z>, "statement": "<one short sentence>"}],
- "conflicts": [{"feature": "<name>", "value": <value>, "z": <z>, "statement": "<one short sentence>"}],
- "abstain": <true if confidence < 0.6 or all cited signals are low quality, else false>}
+ "evidence": [{"feature": "<exact feature= string>", "value": <value>, "z": <z>, "statement": "<one short sentence>"}],
+ "conflicts": [{"feature": "<exact feature= string>", "value": <value>, "z": <z>, "statement": "<one short sentence>"}],
+ "abstain": <the abstain value from the record>}
 "evidence" = features listed under SUPPORT, "conflicts" = features listed under CONFLICT."""
 
 
@@ -51,9 +51,12 @@ def rule_check(rec):
 
 
 def prompt(rec, support, conflict):
-    line = lambda f: (f"- {f['feature']} ({f['description']}): value={f['value']} {f['unit']}, z={f['z']}, "
-                      f"pushes toward {f['pushes_toward']}, matches expected high-load direction: {f['rule_agrees']}")
-    return (f"label: {rec['label']}\nconfidence: {rec['confidence']}\n"
+    line = lambda f: (f"- feature=\"{f['feature']}\" means {f['description']}; value={f['value']} {f['unit']}; "
+                      f"z={f['z']}; pushes toward {f['pushes_toward']}; "
+                      f"matches expected high-load direction: {f['rule_agrees']}")
+    must = rec["confidence"] < MIN_CONF or all(f["feature"].split("_")[0] in rec["low_quality_modalities"]
+                                               for f in rec["top_features"])
+    return (f"label: {rec['label']}\nconfidence: {rec['confidence']}\nabstain: {str(must).lower()}\n"
             f"low-quality modalities: {rec['low_quality_modalities'] or 'none'}\n"
             f"SUPPORT:\n" + ("\n".join(map(line, support)) or "- none") +
             f"\nCONFLICT:\n" + ("\n".join(map(line, conflict)) or "- none"))
@@ -102,6 +105,9 @@ def verify(out, rec):
         errs.append(f"confidence must be {rec['confidence']}")
     if rec["confidence"] < MIN_CONF and out["abstain"] is not True:
         errs.append("abstain must be true (confidence below 0.6)")
+    if out["abstain"] is not True and not out["evidence"] and any(f["pushes_toward"] == rec["label"]
+                                                                  for f in rec["top_features"]):
+        errs.append("evidence must cite the SUPPORT features unless abstaining")
     cited = {f["feature"]: f for f in rec["top_features"]}
     allowed = allowed_numbers(rec)
     for item in (out["evidence"] or []) + (out["conflicts"] or []):
@@ -130,7 +136,7 @@ def explain(rec, model):
         gen, out = "llm:" + model, ask_llm(model, msgs)
     except OSError:  # Ollama not running / not installed
         gen, out, msgs = "template", template(rec, support, conflict), None
-    first = verify(out, rec)
+    first_out, first = out, verify(out, rec)
     attempts, errs = 1, first
     if errs and msgs:
         msgs += [{"role": "assistant", "content": json.dumps(out)},
@@ -148,7 +154,7 @@ def explain(rec, model):
                "abstain": True}
     return {"subject": rec["subject"], "study": rec["study"], "level": rec["level"], "win_start": rec["win_start"],
             "label": rec["label"], "generator": gen, "attempts": attempts, "verified": not errs,
-            "errors_first": first, "errors_final": errs, "cited": len(cited_first),
+            "errors_first": first, "first_output": first_out, "errors_final": errs, "cited": len(cited_first),
             "cited_in_top6": sum(c in names for c in cited_first), "rules": {f["feature"]: f["rule_agrees"]
                                                                             for f in support + conflict},
             "output": out}
