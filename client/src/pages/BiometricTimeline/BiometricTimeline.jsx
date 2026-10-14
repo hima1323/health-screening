@@ -25,7 +25,7 @@ export default function BiometricTimeline() {
   return (
     <Layout eyebrow="Aura biometrics" title="Past sessions">
       <p className="muted">
-        {data.sessions.length} recorded sessions · open one to see all of its signals, what they indicate, and
+        {data.sessions.length} recorded sessions · open one to see what it showed and
         whether to see a doctor.
       </p>
 

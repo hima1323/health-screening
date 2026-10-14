@@ -1,0 +1,40 @@
+/* above StillWaterScene (same layer, later in the page), below the content */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: #fff;
+  pointer-events: none;
+}
+
+.wash {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+
+.rose {
+  top: -12%;
+  right: -18%;
+  width: 70vmax;
+  height: 55vmax;
+  background: #f6c6bd;
+}
+
+.calm {
+  top: 38%;
+  left: -25%;
+  width: 60vmax;
+  height: 50vmax;
+  background: #c6d9ea;
+}
+
+.amber {
+  bottom: -18%;
+  right: -12%;
+  width: 55vmax;
+  height: 45vmax;
+  background: #f3dcb6;
+}

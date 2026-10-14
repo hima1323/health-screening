@@ -12,7 +12,15 @@ import SessionReport from './pages/SessionReport';
 import BiometricTimeline from './pages/BiometricTimeline';
 import SessionAnalysis from './pages/SessionAnalysis';
 import Kiosk from './pages/Kiosk';
-import { DoctorLogin, DoctorOverview, DoctorPatient, DoctorPatients, DoctorReport, RequireDoctor } from './pages/Doctor';
+import {
+  DoctorLogin,
+  DoctorOverview,
+  DoctorPatient,
+  DoctorPatients,
+  DoctorReport,
+  DoctorSession,
+  RequireDoctor,
+} from './pages/Doctor';
 
 export default function App() {
   return (
@@ -39,6 +47,7 @@ export default function App() {
             <Route path="/doctor/patients" element={<DoctorPatients />} />
             <Route path="/doctor/patients/:patientId" element={<DoctorPatient />} />
             <Route path="/doctor/reports/:code" element={<DoctorReport />} />
+            <Route path="/doctor/patients/:patientId/sessions/:key" element={<DoctorSession />} />
           </Route>
 
           {/* the screening app itself */}

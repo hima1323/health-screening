@@ -13,6 +13,7 @@ export { default as PhaseTable } from './PhaseTable';
 export { default as SessionCard } from './SessionCard';
 export { default as SignalSketch, envelope } from './SignalSketch';
 export { default as AssessmentPanel } from './AssessmentPanel';
+export { default as ReadingsSummary } from './ReadingsSummary';
 export { default as ReportUploader } from './ReportUploader';
 export { default as GoogleButton } from './GoogleButton';
 export { default as RequireAccount } from './RequireAccount';

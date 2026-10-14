@@ -1,0 +1,49 @@
+{
+  "_about": "What the patient reads for each session: normal or not, and each reading against its normal range. Hand-written from the session's resting metrics; ADABase sessions carry their own (reasoning_model/src/export_sessions.py).",
+  "mcd-1020": {
+    "status": "normal",
+    "text": "All your readings were in the healthy range.",
+    "readings": [
+      { "label": "Heart rate at rest", "value": 83, "unit": "bpm", "normal": "50–100", "ok": true },
+      { "label": "Heart-rate variability", "value": 28.3, "unit": "ms", "normal": "20 or more", "ok": true },
+      { "label": "Body temperature", "value": 36.7, "unit": "°C", "normal": "below 38.0", "ok": true },
+      { "label": "Heart rate after exercise", "value": 100, "unit": "bpm", "normal": "a rise is expected", "ok": true, "note": "Rose by 17 bpm, as it should" }
+    ]
+  },
+  "mcd-1149": {
+    "status": "normal",
+    "text": "All your readings were in the healthy range.",
+    "readings": [
+      { "label": "Heart rate at rest", "value": 74.8, "unit": "bpm", "normal": "50–100", "ok": true },
+      { "label": "Heart-rate variability", "value": 25.9, "unit": "ms", "normal": "20 or more", "ok": true },
+      { "label": "Body temperature", "value": 36.5, "unit": "°C", "normal": "below 38.0", "ok": true },
+      { "label": "Heart rate after exercise", "value": 74.8, "unit": "bpm", "normal": "a rise is expected", "ok": true, "note": "Did not rise — the exercise was probably light" }
+    ]
+  },
+  "mcd-1217": {
+    "status": "normal",
+    "text": "All your readings were in the healthy range.",
+    "readings": [
+      { "label": "Heart rate at rest", "value": 68.9, "unit": "bpm", "normal": "50–100", "ok": true },
+      { "label": "Heart-rate variability", "value": 32.4, "unit": "ms", "normal": "20 or more", "ok": true },
+      { "label": "Body temperature", "value": 36.5, "unit": "°C", "normal": "below 38.0", "ok": true }
+    ]
+  },
+  "drivedb-drive05": {
+    "status": "normal",
+    "text": "All your readings were in the healthy range. Your heart sped up in traffic, which is a normal reaction.",
+    "readings": [
+      { "label": "Heart rate at rest", "value": 65.9, "unit": "bpm", "normal": "50–100", "ok": true },
+      { "label": "Heart-rate variability", "value": 63, "unit": "ms", "normal": "20 or more", "ok": true },
+      { "label": "Heart rate while driving", "value": 89.8, "unit": "bpm", "normal": "50–100", "ok": true, "note": "Higher than at rest — normal stress of city traffic" }
+    ]
+  },
+  "thermal-s01": {
+    "status": "unclear",
+    "text": "This recording can't say whether you are healthy. It shows how a cold drink cools the face.",
+    "readings": [
+      { "label": "Forehead temperature", "value": 33.3, "unit": "°C", "normal": "31–35 (skin)", "ok": true },
+      { "label": "Mouth temperature while drinking", "value": 32.7, "unit": "°C", "normal": "drops with a cold drink", "ok": true, "note": "Cooled by 1.4 °C, then warmed back" }
+    ]
+  }
+}

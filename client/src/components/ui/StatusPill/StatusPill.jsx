@@ -6,6 +6,7 @@ const TONE_BY_STATUS = {
   stable: 'ok',
   cleared: 'ok',
   normal: 'ok',
+  'not normal': 'warn',
   good: 'ok',
   'sensors ready': 'ok',
   capturing: 'warn',

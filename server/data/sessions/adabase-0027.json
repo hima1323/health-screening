@@ -1,0 +1,588 @@
+{
+ "id": "adabase-0027",
+ "source": {
+  "dataset": "ADABase",
+  "kind": "public",
+  "url": "https://doi.org/10.3390/s23010340",
+  "note": "ADABase n-back recordings (Oppelt et al., 2023). Predictions are out-of-fold: the model never saw this subject during training."
+ },
+ "subject": {
+  "id": "0027-YMAD"
+ },
+ "label": "Cognitive load \u00b7 n-back",
+ "durationS": 585,
+ "modalities": [
+  {
+   "key": "au",
+   "label": "Face (action units)",
+   "detail": "Recorded"
+  },
+  {
+   "key": "eye",
+   "label": "Eye tracker",
+   "detail": "Recorded"
+  },
+  {
+   "key": "ecg",
+   "label": "ECG",
+   "detail": "Recorded"
+  },
+  {
+   "key": "ppg",
+   "label": "Pulse (PPG)",
+   "detail": "Recorded"
+  },
+  {
+   "key": "eda",
+   "label": "Skin conductance",
+   "detail": "Recorded"
+  },
+  {
+   "key": "rsp",
+   "label": "Breathing",
+   "detail": "Recorded"
+  },
+  {
+   "key": "emg",
+   "label": "Muscle (EMG)",
+   "detail": "Recorded"
+  },
+  {
+   "key": "skt",
+   "label": "Skin temperature",
+   "detail": "Recorded"
+  }
+ ],
+ "phases": [
+  {
+   "name": "1-back",
+   "startS": 0,
+   "endS": 105,
+   "discontinuous": false,
+   "note": "Single task, low load"
+  },
+  {
+   "name": "2-back",
+   "startS": 105,
+   "endS": 195,
+   "discontinuous": true,
+   "note": "Single task, high load"
+  },
+  {
+   "name": "3-back",
+   "startS": 195,
+   "endS": 285,
+   "discontinuous": true,
+   "note": "Single task, high load"
+  },
+  {
+   "name": "1-back dual",
+   "startS": 285,
+   "endS": 390,
+   "discontinuous": true,
+   "note": "Dual task, low load"
+  },
+  {
+   "name": "2-back dual",
+   "startS": 390,
+   "endS": 495,
+   "discontinuous": true,
+   "note": "Dual task, high load"
+  },
+  {
+   "name": "3-back dual",
+   "startS": 495,
+   "endS": 585,
+   "discontinuous": true,
+   "note": "Dual task, high load"
+  }
+ ],
+ "tracks": [
+  {
+   "key": "p-high",
+   "group": "load",
+   "label": "Fused P(high load)",
+   "fs": 0.06666666666666667,
+   "values": [
+    0.92,
+    0.632,
+    0.2,
+    0.891,
+    0.725,
+    0.914,
+    0.961,
+    0.913,
+    0.807,
+    0.474,
+    0.469,
+    0.694,
+    0.918,
+    0.941,
+    0.63,
+    0.498,
+    0.252,
+    0.947,
+    0.926,
+    0.556,
+    0.993,
+    0.995,
+    0.892,
+    0.971,
+    0.975,
+    0.979,
+    0.999,
+    0.994,
+    0.988,
+    0.996,
+    0.998,
+    0.939,
+    0.812,
+    0.985,
+    0.311,
+    0.396,
+    0.606,
+    0.249,
+    0.486
+   ]
+  },
+  {
+   "key": "agent-au",
+   "group": "load",
+   "label": "Face (action units)",
+   "fs": 0.06666666666666667,
+   "values": [
+    0.652,
+    0.652,
+    0.325,
+    0.652,
+    0.86,
+    0.871,
+    0.889,
+    0.86,
+    0.871,
+    0.86,
+    0.86,
+    0.86,
+    0.987,
+    0.86,
+    0.781,
+    0.86,
+    0.325,
+    0.968,
+    0.968,
+    0.6,
+    1.0,
+    1.0,
+    0.833,
+    0.86,
+    0.987,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    0.987,
+    0.889,
+    0.871,
+    0.533,
+    0.6,
+    0.325,
+    0.091,
+    0.652
+   ]
+  },
+  {
+   "key": "agent-eye",
+   "group": "load",
+   "label": "Eye tracker",
+   "fs": 0.06666666666666667,
+   "values": [
+    0.795,
+    0.678,
+    0.731,
+    0.775,
+    0.336,
+    0.577,
+    0.731,
+    0.896,
+    0.678,
+    0.336,
+    0.336,
+    0.348,
+    0.678,
+    0.795,
+    0.678,
+    0.336,
+    0.678,
+    0.775,
+    0.577,
+    0.731,
+    0.896,
+    0.8,
+    0.775,
+    0.788,
+    0.75,
+    0.678,
+    0.896,
+    0.795,
+    0.577,
+    0.775,
+    0.788,
+    0.678,
+    0.348,
+    0.896,
+    0.678,
+    0.577,
+    0.788,
+    0.788,
+    0.602
+   ]
+  },
+  {
+   "key": "nback",
+   "group": "task",
+   "label": "n-back level",
+   "fs": 0.06666666666666667,
+   "values": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+   ]
+  }
+ ],
+ "metricDefs": [
+  {
+   "key": "meanProb",
+   "label": "Mean P(high load)",
+   "digits": 2
+  },
+  {
+   "key": "calledHigh",
+   "label": "Windows called high",
+   "unit": "%",
+   "digits": 0
+  }
+ ],
+ "metrics": [
+  {
+   "phase": "1-back",
+   "values": {
+    "meanProb": 0.75,
+    "calledHigh": 86
+   }
+  },
+  {
+   "phase": "2-back",
+   "values": {
+    "meanProb": 0.71,
+    "calledHigh": 67
+   }
+  },
+  {
+   "phase": "3-back",
+   "values": {
+    "meanProb": 0.7,
+    "calledHigh": 67
+   }
+  },
+  {
+   "phase": "1-back dual",
+   "values": {
+    "meanProb": 0.91,
+    "calledHigh": 100
+   }
+  },
+  {
+   "phase": "2-back dual",
+   "values": {
+    "meanProb": 0.96,
+    "calledHigh": 100
+   }
+  },
+  {
+   "phase": "3-back dual",
+   "values": {
+    "meanProb": 0.51,
+    "calledHigh": 33
+   }
+  }
+ ],
+ "quality": {
+  "status": "good",
+  "message": "8 of 8 modality agents had data. Time axis is window time: one point per 30 s window, every 15 s."
+ },
+ "fusion": {
+  "title": "Agents + fusion",
+  "method": "One LightGBM agent per modality, combined by a logistic regression with non-negative weights \u00b7 trained on the other 29 subjects",
+  "score": 18,
+  "scoreMax": 39,
+  "band": "windows classified correctly",
+  "verdict": "Poor",
+  "stats": [
+   {
+    "label": "AUROC",
+    "value": "0.42",
+    "hint": "0.5 is chance, 1.0 is perfect"
+   },
+   {
+    "label": "Balanced accuracy",
+    "value": "38%",
+    "hint": "Mean of low and high recall"
+   }
+  ],
+  "parts": [
+   {
+    "key": "au",
+    "label": "Face (action units)",
+    "points": null,
+    "reading": "average push 2.06 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "eye",
+    "label": "Eye tracker",
+    "points": null,
+    "reading": "average push 0.81 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "rsp",
+    "label": "Breathing",
+    "points": null,
+    "reading": "average push 0.76 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "ecg",
+    "label": "ECG",
+    "points": null,
+    "reading": "average push 0.50 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "skt",
+    "label": "Skin temperature",
+    "points": null,
+    "reading": "average push 0.26 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "ppg",
+    "label": "Pulse (PPG)",
+    "points": null,
+    "reading": "average push 0.23 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "eda",
+    "label": "Skin conductance",
+    "points": null,
+    "reading": "average push 0.00 log-odds \u00b7 available in 100% of windows"
+   },
+   {
+    "key": "emg",
+    "label": "Muscle (EMG)",
+    "points": null,
+    "reading": "average push 0.00 log-odds \u00b7 available in 100% of windows"
+   }
+  ],
+  "note": "The fused log-odds are the sum of the agents' contributions; the larger an agent's push, the more it decides the label. Positive pushes toward high load."
+ },
+ "summary": {
+  "status": "normal",
+  "text": "All your resting readings were in the healthy range.",
+  "readings": [
+   {
+    "label": "Heart rate at rest",
+    "value": 80.5,
+    "unit": "bpm",
+    "normal": "50\u2013100",
+    "ok": true
+   },
+   {
+    "label": "Heart-rate variability",
+    "value": 60.0,
+    "unit": "ms",
+    "normal": "20 or more",
+    "ok": true
+   },
+   {
+    "label": "Breathing rate at rest",
+    "value": 19.3,
+    "unit": "breaths/min",
+    "normal": "12\u201320",
+    "ok": true
+   },
+   {
+    "label": "Body's response to harder tasks",
+    "value": 3,
+    "unit": "of 6 rounds",
+    "normal": "most rounds",
+    "ok": false,
+    "note": "How clearly your body reacted to mental effort \u2014 not a health measure"
+   }
+  ]
+ },
+ "assessment": {
+  "condition": "Your effort readings matched the task in 3 of 6 rounds",
+  "findings": [
+   {
+    "label": "1-back \u00b7 easy round",
+    "tone": "warn",
+    "detail": "Read as high effort 6 of 7 times \u2014 not what the task asked for"
+   },
+   {
+    "label": "2-back \u00b7 hard round",
+    "tone": "ok",
+    "detail": "Read as high effort 4 of 6 times \u2014 as expected"
+   },
+   {
+    "label": "3-back \u00b7 hard round",
+    "tone": "ok",
+    "detail": "Read as high effort 4 of 6 times \u2014 as expected"
+   },
+   {
+    "label": "1-back dual \u00b7 easy round",
+    "tone": "warn",
+    "detail": "Read as high effort 7 of 7 times \u2014 not what the task asked for"
+   },
+   {
+    "label": "2-back dual \u00b7 hard round",
+    "tone": "ok",
+    "detail": "Read as high effort 7 of 7 times \u2014 as expected"
+   },
+   {
+    "label": "3-back dual \u00b7 hard round",
+    "tone": "warn",
+    "detail": "Read as high effort 2 of 6 times \u2014 not what the task asked for"
+   }
+  ],
+  "advice": {
+   "level": "ok",
+   "answer": "No",
+   "text": "Your resting readings are in the healthy range."
+  },
+  "disclaimer": "Research prototype trained on 30 ADABase subjects; not validated for screening."
+ },
+ "reasoning": {
+  "conclusion": "Your body's signals did not clearly show when the task got harder, so this reading is unreliable for you. This measures mental effort, not health.",
+  "steps": [
+   {
+    "look": "1-back \u00b7 0\u201330 s",
+    "groups": [
+     {
+      "heading": "Points to high load",
+      "items": [
+       {
+        "label": "Eye tracker",
+        "text": "The pupil diameter is 3.7 mm."
+       },
+       {
+        "label": "Breathing",
+        "text": "The breathing rate is 23.6 breaths per minute."
+       },
+       {
+        "label": "Face (action units)",
+        "text": "Facial action unit 14 activation rate is 0.251."
+       },
+       {
+        "label": "ECG",
+        "text": "The heart rate is 85.4 bpm."
+       },
+       {
+        "label": "Skin temperature",
+        "text": "The finger skin temperature slope is 0.00629 F/s."
+       },
+       {
+        "label": "Pulse (PPG)",
+        "text": "The pulse amplitude is 0.0962 a.u."
+       }
+      ]
+     }
+    ],
+    "so": "Model says high load (92% confident); the task was low load \u2014 a miss."
+   },
+   {
+    "look": "2-back \u00b7 30\u201360 s",
+    "found": "No explanation shown: confidence was below 60% or the signals were poor.",
+    "so": "Model says low load (53% confident); the task was high load \u2014 a miss."
+   },
+   {
+    "look": "3-back \u00b7 30\u201360 s",
+    "found": "No explanation shown: confidence was below 60% or the signals were poor.",
+    "so": "Model says low load (50% confident); the task was high load \u2014 a miss."
+   },
+   {
+    "look": "1-back dual \u00b7 30\u201360 s",
+    "found": "No explanation shown: the explainer quoted numbers that aren't in the data, twice.",
+    "so": "Model says high load (100% confident); the task was low load \u2014 a miss."
+   },
+   {
+    "look": "2-back dual \u00b7 15\u201345 s",
+    "groups": [
+     {
+      "heading": "Points to high load",
+      "items": [
+       {
+        "label": "Face (action units)",
+        "text": "Facial action unit 14 activation rate is high, contributing significantly to the high label."
+       },
+       {
+        "label": "Eye tracker",
+        "text": "Pupil diameter is high, contributing to the high label."
+       },
+       {
+        "label": "Breathing",
+        "text": "Breathing depth is high, contributing to the high label."
+       },
+       {
+        "label": "ECG",
+        "text": "Heart rate is high, contributing to the high label."
+       },
+       {
+        "label": "Skin temperature",
+        "text": "Finger skin temperature slope is high, contributing to the high label."
+       },
+       {
+        "label": "Pulse (PPG)",
+        "text": "Pulse rate is high, contributing to the high label."
+       }
+      ]
+     }
+    ],
+    "so": "Model says high load (99% confident); the task was high load."
+   }
+  ]
+ }
+}

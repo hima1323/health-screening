@@ -6,7 +6,7 @@ import { formatDate } from '../../components/SessionCard';
 import { Card, CardRow, StatusPill, Spinner, ErrorState } from '../../components/ui';
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
-import { initials, triage } from './doctor';
+import { SUMMARY_LABEL, initials, triage } from './doctor';
 import styles from './DoctorPatient.module.css';
 
 const POSITION_LABEL = { above: 'Above range', below: 'Below range', within: 'In range' };
@@ -146,6 +146,29 @@ export default function DoctorPatient() {
           </ul>
         </Card>
       </div>
+
+      {data.sessions?.length > 0 && (
+        <Card>
+          <h3>Recorded sessions</h3>
+          <p className="muted small">Each opens into what the model concluded and all the original data</p>
+          <ul className={styles.list}>
+            {data.sessions.map((s) => (
+              <li key={s.sessionKey}>
+                <Link to={`/doctor/patients/${patientId}/sessions/${s.sessionKey}`} className={styles.row}>
+                  <div className={styles.rowMain}>
+                    <p className={styles.rowTitle}>
+                      {s.label} · {s.source.dataset}
+                    </p>
+                    <p className="muted small">{s.summary?.text}</p>
+                  </div>
+                  <StatusPill dot={false}>{SUMMARY_LABEL[s.summary?.status] ?? 'No summary'}</StatusPill>
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Card>
         <h3>Screening history</h3>

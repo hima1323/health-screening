@@ -4,6 +4,7 @@ const Doctor = require('../models/Doctor');
 const Report = require('../models/Report');
 const ReportShare = require('../models/ReportShare');
 const ScreeningLog = require('../models/ScreeningLog');
+const StudySession = require('../models/StudySession');
 const requireDoctor = require('../middleware/requireDoctor');
 const { issueDoctorToken } = require('../lib/token');
 const google = require('../lib/google');
@@ -94,12 +95,30 @@ router.get('/patients/:patientId', async (req, res) => {
   // the same answer for "no such patient" and "not shared with you", so ids can't be probed
   if (visible.length === 0) return res.status(404).json({ error: 'Patient not found' });
 
-  const history = await ScreeningLog.find({ patientId }).select('-patientId -__v').sort({ occurredAt: -1 }).lean();
+  const [history, sessions] = await Promise.all([
+    ScreeningLog.find({ patientId }).select('-patientId -__v').sort({ occurredAt: -1 }).lean(),
+    StudySession.find({ patientId }).select('sessionKey label recordedOn summary source.dataset').sort({ sessionKey: 1 }).lean(),
+  ]);
   res.json({
     patient: visible[0].patientId,
     reports: visible.map((s) => ({ ...s.reportId, sharedAt: s.sharedAt, lastOpenedAt: s.lastOpenedAt })),
     history,
+    sessions,
   });
+});
+
+// GET /api/doctor/patients/:patientId/sessions/:key — one recorded session of that patient: the model's
+// output and all the original data. Same rule as the patient: only after they shared a report with this doctor.
+router.get('/patients/:patientId/sessions/:key', async (req, res) => {
+  const { patientId, key } = req.params;
+  if (!mongoose.isValidObjectId(patientId)) return res.status(404).json({ error: 'Session not found' });
+  const [shared, session] = await Promise.all([
+    ReportShare.exists({ doctorId: req.doctor._id, patientId }),
+    StudySession.findOne({ sessionKey: key, patientId }).populate('patientId', 'name age').lean(),
+  ]);
+  if (!shared || !session) return res.status(404).json({ error: 'Session not found' });
+  const { patientId: patient, ...rest } = session;
+  res.json({ session: rest, patient });
 });
 
 // GET /api/doctor/reports/:shareCode — open a report with the patient's code. The first open

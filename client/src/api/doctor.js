@@ -47,3 +47,5 @@ export async function doctorGoogleLogin(credential) {
   return doctor;
 }
 export const getDoctorPatient = (patientId) => doctorSend(`/patients/${encodeURIComponent(patientId)}`);
+export const getDoctorPatientSession = (patientId, key) =>
+  doctorSend(`/patients/${encodeURIComponent(patientId)}/sessions/${encodeURIComponent(key)}`);
