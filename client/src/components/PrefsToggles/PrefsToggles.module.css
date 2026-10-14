@@ -1,0 +1,71 @@
+.toggles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 44 px tall: the minimum touch target */
+.segment {
+  display: flex;
+  height: 44px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.segment button,
+.vision {
+  min-width: 38px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segment button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.vision {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.vision {
+  position: relative;
+}
+
+/* the select covers the eye button invisibly: tapping the eye opens the system picker */
+.vision select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.vision.on {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.vision:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.segment button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}

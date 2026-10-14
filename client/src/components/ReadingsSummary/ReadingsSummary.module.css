@@ -31,15 +31,15 @@
 }
 
 .normal {
-  color: #3e5f78;
-  background: rgba(109, 143, 173, 0.16);
-  border-color: rgba(109, 143, 173, 0.35);
+  color: var(--calm-ink);
+  background: rgb(var(--calm-rgb) / 0.16);
+  border-color: rgb(var(--calm-rgb) / 0.35);
 }
 
 .abnormal {
-  color: #7a5820;
-  background: rgba(196, 149, 79, 0.16);
-  border-color: rgba(196, 149, 79, 0.38);
+  color: var(--amber-ink);
+  background: rgb(var(--amber-rgb) / 0.16);
+  border-color: rgb(var(--amber-rgb) / 0.38);
 }
 
 .unclear {
@@ -108,13 +108,13 @@
 }
 
 .fine {
-  color: #3e5f78;
-  background: rgba(109, 143, 173, 0.18);
+  color: var(--calm-ink);
+  background: rgb(var(--calm-rgb) / 0.18);
 }
 
 .check {
-  color: #7a5820;
-  background: rgba(196, 149, 79, 0.22);
+  color: var(--amber-ink);
+  background: rgb(var(--amber-rgb) / 0.22);
 }
 
 .advice {
@@ -145,7 +145,7 @@
   top: 0;
   bottom: 0;
   border-radius: var(--radius-pill);
-  background: rgba(109, 143, 173, 0.35);
+  background: rgb(var(--calm-rgb) / 0.35);
 }
 
 .marker {
@@ -163,8 +163,12 @@
   background: var(--calm);
 }
 
+/* shape as well as colour, for colour-blind readers: Fine is a filled dot, Check a hollow ring */
 .markerCheck {
-  background: var(--amber);
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 4px solid var(--amber);
 }
 
 .meaning {

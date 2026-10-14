@@ -201,3 +201,27 @@
     display: inline;
   }
 }
+
+/* phones: the language and colour-blind buttons drop to their own row under the title, so the title isn't cut
+   short; the brand and the account chip keep the first row */
+@container device (max-width: 620px) {
+  .header {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .brand {
+    flex: 1;
+  }
+
+  .headerEnd {
+    display: contents;
+  }
+
+  .prefs {
+    order: 3;
+    flex-basis: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

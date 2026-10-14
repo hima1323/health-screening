@@ -46,7 +46,7 @@
 
 .locked {
   color: var(--calm);
-  border-color: rgba(109, 143, 173, 0.5);
+  border-color: rgb(var(--calm-rgb) / 0.5);
 }
 
 .video {
@@ -203,8 +203,8 @@
   max-width: 360px;
   padding: 10px 14px;
   border-radius: var(--radius-tile);
-  background: rgba(201, 122, 112, 0.14);
-  border: 1px solid rgba(201, 122, 112, 0.35);
+  background: rgb(var(--rose-rgb) / 0.14);
+  border: 1px solid rgb(var(--rose-rgb) / 0.35);
   color: var(--rose-deep);
   font-size: 12.5px;
   font-weight: 600;

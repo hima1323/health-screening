@@ -197,5 +197,5 @@
   border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 700;
-  color: #7a5820;
+  color: var(--amber-ink);
 }

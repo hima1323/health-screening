@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Stethoscope, Clock } from 'lucide-react';
 import { getDoctorReport } from '../../api';
 import useResource from '../../hooks/useResource';
+import usePageTitle from '../../hooks/usePageTitle';
 import { Card, CardRow, CardHeading, IconBadge, StatusPill, Spinner, ErrorState } from '../../components/ui';
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
@@ -15,6 +16,7 @@ const POSITION_LABEL = { above: 'Above range', below: 'Below range', within: 'In
 export default function DoctorReport() {
   const code = normaliseCode(useParams().code);
   const { data, error } = useResource(() => getDoctorReport(code), [code]);
+  usePageTitle(data ? `Report ${code}, ${data.patient.name} · Clinician` : `Report ${code} · Clinician`);
 
   if (error) return <ErrorState message={error} />;
   if (!data) return <Spinner />;

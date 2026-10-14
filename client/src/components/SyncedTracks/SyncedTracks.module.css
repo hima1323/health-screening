@@ -32,7 +32,7 @@
 }
 
 .overviewPhases .bandAlt {
-  background: rgba(201, 122, 112, 0.1);
+  background: rgb(var(--rose-rgb) / 0.1);
 }
 
 .window {
@@ -105,7 +105,7 @@
 }
 
 .scroller:focus-visible {
-  box-shadow: 0 0 0 2px rgba(201, 122, 112, 0.45);
+  box-shadow: 0 0 0 2px rgb(var(--rose-rgb) / 0.45);
 }
 
 .scroller::-webkit-scrollbar {
@@ -151,7 +151,7 @@
 }
 
 .bandAlt {
-  background: rgba(201, 122, 112, 0.1);
+  background: rgb(var(--rose-rgb) / 0.1);
 }
 
 /* phase names ride along the left edge while that phase is on screen */
@@ -216,10 +216,8 @@
   white-space: nowrap;
 }
 
-.key i {
-  width: 14px;
-  height: 3px;
-  border-radius: 2px;
+.key svg {
+  flex: none;
 }
 
 .crosshair {

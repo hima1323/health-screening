@@ -4,6 +4,7 @@ import { studySessionFramesUrl } from '../../api';
 import { TONES } from '../SignalSketch';
 import { COLORMAPS, gradientCss } from './colormap';
 import styles from './ThermalViewer.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /**
  * The thermogram itself, after Hans's thermal explorer: every frame in false
@@ -14,6 +15,8 @@ import styles from './ThermalViewer.module.css';
  * when the graph below is scrubbed, the two stay on the same frame.
  */
 export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, time, onTime }) {
+  // `t` is a time in seconds in this file, so the translator is `tr`
+  const { t: tr } = usePrefs();
   const { width: W, height: H, count, fps, tempMinC, tempMaxC, displayMinC, displayMaxC } = meta;
   const duration = count / fps;
   const [pixels, setPixels] = useState(null);
@@ -93,18 +96,26 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
           for (let col = x; col < x + w; col += 1) sum += frame[row * W + col];
         }
         return [key, toC(sum / (w * h))];
-      })
+      }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frame, rois, W, offset]);
 
-  const tone = (roi) => TONES[Math.max(0, tracks.findIndex((tr) => tr.key === roi.track)) % TONES.length];
+  const tone = (roi) =>
+    TONES[
+      Math.max(
+        0,
+        tracks.findIndex((tr) => tr.key === roi.track),
+      ) % TONES.length
+    ];
 
   const point = (event) => {
     const r = event.currentTarget.getBoundingClientRect();
     const x = Math.floor(((event.clientX - r.left) / r.width) * W);
     const y = Math.floor(((event.clientY - r.top) / r.height) * H);
-    setHover(x >= 0 && y >= 0 && x < W && y < H ? { x, y, px: event.clientX - r.left, py: event.clientY - r.top } : null);
+    setHover(
+      x >= 0 && y >= 0 && x < W && y < H ? { x, y, px: event.clientX - r.left, py: event.clientY - r.top } : null,
+    );
   };
 
   if (error) return <p className={styles.error}>{error}</p>;
@@ -118,14 +129,31 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
           onPointerMove={point}
           onPointerLeave={() => setHover(null)}
         >
-          <canvas ref={canvasRef} width={W} height={H} className={styles.canvas} role="img" aria-label={`Thermal frame ${index + 1} of ${count}`} />
-          {!pixels && <div className={styles.loading}>Loading {count} thermal frames…</div>}
+          <canvas
+            ref={canvasRef}
+            width={W}
+            height={H}
+            className={styles.canvas}
+            role="img"
+            aria-label={tr(`Thermal frame ${index + 1} of ${count}`)}
+          />
+          {!pixels && <div className={styles.loading}>{tr(`Loading ${count} thermal frames…`)}</div>}
           <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className={styles.overlay} aria-hidden="true">
             {rois.map((roi) => {
               const [x, y, w, h] = roi.box;
               return (
-                <rect key={roi.key} x={x} y={y} width={w} height={h} fill="none" stroke={tone(roi)}
-                  strokeWidth={2} strokeDasharray={roi.valid ? undefined : '4 3'} vectorEffect="non-scaling-stroke" />
+                <rect
+                  key={roi.key}
+                  x={x}
+                  y={y}
+                  width={w}
+                  height={h}
+                  fill="none"
+                  stroke={tone(roi)}
+                  strokeWidth={2}
+                  strokeDasharray={roi.valid ? undefined : '4 3'}
+                  vectorEffect="non-scaling-stroke"
+                />
               );
             })}
           </svg>
@@ -149,16 +177,16 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
             className={styles.play}
             onClick={() => setPlaying((p) => !p)}
             disabled={!pixels}
-            aria-label={playing ? 'Pause' : 'Play'}
+            aria-label={tr(playing ? 'Pause' : 'Play')}
           >
             {playing ? <Pause size={15} /> : <Play size={15} />}
           </button>
           <span className={styles.clock}>
-            {t.toFixed(1)} / {duration.toFixed(1)} s · frame {index + 1}/{count}
+            {t.toFixed(1)} / {duration.toFixed(1)} s · {tr('frame')} {index + 1}/{count}
           </span>
         </div>
 
-        <div className={styles.maps} role="group" aria-label="Colour map">
+        <div className={styles.maps} role="group" aria-label={tr('Colour map')}>
           {Object.entries(COLORMAPS).map(([key, m]) => (
             <button
               key={key}
@@ -167,7 +195,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
               aria-pressed={cmap === key}
               onClick={() => setCmap(key)}
             >
-              {m.label}
+              {tr(m.label)}
             </button>
           ))}
         </div>
@@ -177,7 +205,7 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
             <li key={roi.key}>
               <span className={styles.roiName}>
                 <i style={{ background: tone(roi) }} aria-hidden="true" />
-                {roi.label}
+                {tr(roi.label)}
               </span>
               <span className={styles.roiTemp}>
                 {roi.valid && roiTemps[roi.key] !== undefined ? `${roiTemps[roi.key].toFixed(1)} °C` : '—'}
@@ -186,10 +214,12 @@ export default function ThermalViewer({ sessionKey, frames: meta, rois, tracks, 
           ))}
         </ul>
 
-        {meta.simulated && <p className={styles.simulated}>Simulated thermal video — prototype data</p>}
+        {meta.simulated && <p className={styles.simulated}>{tr('Simulated thermal video — prototype data')}</p>}
         <p className="muted small">
-          {W} × {H} px · {fps} frames/s · hover the image for any pixel's temperature. Play, or move across the
-          graph below — both show the same moment.
+          {W} × {H} px · {fps}{' '}
+          {tr(
+            "frames/s · hover the image for any pixel's temperature. Play, or move across the graph below — both show the same moment.",
+          )}
         </p>
       </div>
     </div>

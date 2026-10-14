@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, ExternalLink } from 'lucide-react';
 import { getDoctorPatientSession } from '../../api';
 import useResource from '../../hooks/useResource';
+import usePageTitle from '../../hooks/usePageTitle';
 import SyncedTracks from '../../components/SyncedTracks';
 import ThermalViewer from '../../components/ThermalViewer';
 import PhaseTable from '../../components/PhaseTable';
@@ -23,6 +24,7 @@ import styles from './DoctorSession.module.css';
 export default function DoctorSession() {
   const { patientId, key } = useParams();
   const { data, error } = useResource(() => getDoctorPatientSession(patientId, key), [patientId, key]);
+  usePageTitle(data ? `${data.session.label}, ${data.patient.name} · Clinician` : 'Session · Clinician');
   // one clock shared by the thermal viewer and the signal graph
   const [time, setTime] = useState(null);
 

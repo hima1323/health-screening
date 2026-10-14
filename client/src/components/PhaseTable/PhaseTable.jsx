@@ -1,4 +1,5 @@
 import styles from './PhaseTable.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 const show = (v, digits) => (v === null || v === undefined ? '—' : Number(v).toFixed(digits));
 
@@ -7,6 +8,7 @@ const show = (v, digits) => (v === null || v === undefined ? '—' : Number(v).t
  * The change is tinted by whether it moved the healthy way for that metric.
  */
 export default function PhaseTable({ metricDefs, metrics }) {
+  const { t } = usePrefs();
   const phases = metrics.map((m) => m.phase);
   const first = metrics[0]?.values ?? {};
   const last = metrics[metrics.length - 1]?.values ?? {};
@@ -17,11 +19,11 @@ export default function PhaseTable({ metricDefs, metrics }) {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th scope="col">Metric</th>
+            <th scope="col">{t('Metric')}</th>
             {phases.map((p) => (
               <th scope="col" key={p}>{p}</th>
             ))}
-            {showDelta && <th scope="col">Change</th>}
+            {showDelta && <th scope="col">{t('Change')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -34,7 +36,7 @@ export default function PhaseTable({ metricDefs, metrics }) {
             return (
               <tr key={def.key}>
                 <th scope="row">
-                  {def.label}
+                  {t(def.label)}
                   {def.unit && <span className={styles.unit}> {def.unit}</span>}
                 </th>
                 {metrics.map((m) => (

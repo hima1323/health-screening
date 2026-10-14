@@ -15,6 +15,7 @@ import HeroBanner from './HeroBanner';
 import { Card, Spinner, ErrorState } from '../../components/ui';
 import { downloadJson } from '../../utils/download';
 import styles from './SessionAnalysis.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /** The model's own labels, in words a patient reads; anything not listed keeps its label. */
 const PLAIN = {
@@ -33,6 +34,7 @@ const plain = (label) => PLAIN[label] ?? label;
  * data. A white page with soft colour washes behind the cards. (Chosen over a concise version in the Lab 9 A/B test.)
  */
 export default function SessionAnalysis() {
+  const { t } = usePrefs();
   const { key } = useParams();
   const { data, error } = useResource(() => getStudySession(key), [key]);
   // one clock shared by the thermal viewer and the signal graph
@@ -48,12 +50,17 @@ export default function SessionAnalysis() {
   const metricDefs = s.metricDefs.map((d) => ({ ...d, label: plain(d.label) }));
 
   return (
-    <Layout eyebrow={`Session ${sessionId(s.sessionKey)} · ${formatDate(s.recordedOn)}`} title={s.label}>
+    <Layout
+      eyebrow={`Session ${sessionId(s.sessionKey)} · ${formatDate(s.recordedOn)}`}
+      title={s.label}
+      // the label repeats across sessions, so the tab title carries the session id too
+      pageTitle={`${s.label}, session ${sessionId(s.sessionKey)}`}
+    >
       <Backdrop />
       {s.simulationNote && <p className={styles.prototype}>{s.simulationNote}</p>}
 
       <Link to="/timeline" className={styles.back}>
-        <ArrowLeft size={14} aria-hidden="true" /> Past sessions
+        <ArrowLeft size={14} aria-hidden="true" /> {t('Past sessions')}
       </Link>
 
       {s.summary?.readings?.length > 0 && (
@@ -67,34 +74,34 @@ export default function SessionAnalysis() {
       )}
 
       <Card>
-        <h3>This session at a glance</h3>
+        <h3>{t('This session at a glance')}</h3>
         <dl className={styles.glance}>
           <div>
-            <dt>{minutes} min</dt>
-            <dd>How long you were recorded</dd>
+            <dt>{t(`${minutes} min`)}</dt>
+            <dd>{t('How long you were recorded')}</dd>
           </div>
           <div>
             <dt>{s.modalities.length}</dt>
-            <dd>Sensors used: {s.modalities.map((m) => m.label).join(', ')}</dd>
+            <dd>{t(`Sensors used: ${s.modalities.map((m) => m.label).join(', ')}`)}</dd>
           </div>
           <div>
             <dt>{s.phases.length}</dt>
-            <dd>Parts of the session: {s.phases.map((p) => p.name).join(', ')}</dd>
+            <dd>{t(`Parts of the session: ${s.phases.map((p) => p.name).join(', ')}`)}</dd>
           </div>
           <div>
             <dt>{points.toLocaleString()}</dt>
-            <dd>Measurements behind these results</dd>
+            <dd>{t('Measurements behind these results')}</dd>
           </div>
         </dl>
         <p className="muted small">
-          Signal quality: {s.quality.status}. One recording is a snapshot of that day, not a diagnosis.
+          {t(`Signal quality: ${s.quality.status}. One recording is a snapshot of that day, not a diagnosis.`)}
         </p>
       </Card>
 
       {s.assessment && (
         <Card>
-          <h3>How each part of the session went</h3>
-          {s.reasoning?.conclusion && <p className="muted small">{s.reasoning.conclusion}</p>}
+          <h3>{t('How each part of the session went')}</h3>
+          {s.reasoning?.conclusion && <p className="muted small">{t(s.reasoning.conclusion)}</p>}
           {/* the doctor question is already answered above */}
           <AssessmentPanel assessment={{ ...s.assessment, advice: null }} />
         </Card>
@@ -104,9 +111,9 @@ export default function SessionAnalysis() {
       <details className={styles.full}>
         <summary className={styles.fullToggle}>
           <span>
-            <strong>Show all your data</strong>
+            <strong>{t('Show all your data')}</strong>
             <small>
-              {points.toLocaleString()} measurements from {s.modalities.length} sensors, as charts and a table
+              {t(`${points.toLocaleString()} measurements from ${s.modalities.length} sensors, as charts and a table`)}
             </small>
           </span>
           <ChevronDown size={16} aria-hidden="true" className={styles.chevron} />
@@ -114,8 +121,9 @@ export default function SessionAnalysis() {
 
         <Card>
           <p className="muted small">
-            Each line is one measurement over time; the shaded bands are the parts of the session. Drag across the chart
-            to read every line at the same moment.
+            {t(
+              'Each line is one measurement over time; the shaded bands are the parts of the session. Drag across the chart to read every line at the same moment.',
+            )}
           </p>
 
           {s.frames && (
@@ -140,18 +148,18 @@ export default function SessionAnalysis() {
           <PhaseTable metricDefs={metricDefs} metrics={s.metrics} />
 
           <button type="button" className={styles.back} onClick={() => downloadJson(s, `${s.sessionKey}.json`)}>
-            <Download size={14} aria-hidden="true" /> Download all data
+            <Download size={14} aria-hidden="true" /> {t('Download all data')}
           </button>
         </Card>
       </details>
 
-      <p className="muted small">Your doctor sees the full analysis. A screening aid, not a diagnosis.</p>
+      <p className="muted small">{t('Your doctor sees the full analysis. A screening aid, not a diagnosis.')}</p>
 
       <p className={`muted small ${styles.source}`}>
-        {s.source.note}{' '}
+        {t(s.source.note)}{' '}
         {s.source.url && (
           <a href={s.source.url} target="_blank" rel="noreferrer">
-            Source <ExternalLink size={11} aria-hidden="true" />
+            {t('Source')} <ExternalLink size={11} aria-hidden="true" />
           </a>
         )}
       </p>

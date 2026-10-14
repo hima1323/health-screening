@@ -6,9 +6,11 @@ import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import { initials, matchesSearch } from './doctor';
 import styles from './DoctorPatients.module.css';
+import usePageTitle from '../../hooks/usePageTitle';
 
 /** Every patient who shared a report with this doctor, as cards, most urgent first. A card opens the patient. */
 export default function DoctorPatients() {
+  usePageTitle('Patients · Clinician');
   const { patients, search } = useOutletContext();
   if (!patients) return <Spinner />;
 

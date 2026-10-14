@@ -16,7 +16,7 @@
 }
 
 .simulatedModality strong {
-  color: #7a5820;
+  color: var(--amber-ink);
 }
 
 .source a {
@@ -30,11 +30,11 @@
   padding: 10px 14px;
   border: 1px dashed rgba(122, 88, 32, 0.45);
   border-radius: var(--radius-tile);
-  background: rgba(196, 149, 79, 0.12);
+  background: rgb(var(--amber-rgb) / 0.12);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
-  color: #7a5820;
+  color: var(--amber-ink);
 }
 
 /* numbered steps joined by a thin line, so the chain reads top to bottom */

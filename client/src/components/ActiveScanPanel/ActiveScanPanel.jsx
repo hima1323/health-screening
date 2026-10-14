@@ -7,6 +7,7 @@ import { Card, Button, StatTile, StatusPill, Spinner, ErrorState } from '../ui';
 import AuraOrb from '../AuraOrb';
 import InfoSheet from '../InfoSheet';
 import styles from './ActiveScanPanel.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 const SIGNAL_TONE = {
   lighting: 'var(--calm)',
@@ -17,6 +18,7 @@ const SIGNAL_TONE = {
 
 /** The live capture screen: step tracker, countdown orb and signal quality. */
 export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhaseChange }) {
+  const { t } = usePrefs();
   const { data: session, error } = useResource(() => getActiveScan(sessionId), [sessionId]);
   const remaining = useCountdown(session?.progress.secondsRemaining);
 
@@ -44,7 +46,7 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
         {steps.map((step, index) => (
           <div key={step} className={`${styles.step} ${index <= currentStepIndex ? styles.stepDone : ''}`.trim()}>
             <span className={styles.stepBar} />
-            <span className={styles.stepLabel}>{step}</span>
+            <span className={styles.stepLabel}>{t(step)}</span>
           </div>
         ))}
       </div>
@@ -52,7 +54,7 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
       <Card className={styles.focus}>
         <AuraOrb
           size={172}
-          value={isDone ? 'Done' : remaining}
+          value={isDone ? t('Done') : remaining}
           caption={isDone ? 'analysing readings' : 'seconds remaining'}
           ring={{ inset: 22, progress: elapsed }}
         />
@@ -60,20 +62,18 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
         <StatTile className={styles.guidance}>
           <p className={styles.instruction}>
             <Wind size={16} strokeWidth={1.8} aria-hidden="true" />
-            {isDone ? 'Capture complete' : progress.instruction}
+            {t(isDone ? 'Capture complete' : progress.instruction)}
           </p>
           <p className="muted center">
-            {isDone
-              ? 'Your readings are being analysed. Your session report will be ready shortly.'
-              : progress.note}
+            {t(isDone ? 'Your readings are being analysed. Your session report will be ready shortly.' : progress.note)}
           </p>
         </StatTile>
 
         {isDone && (
           <div className={styles.doneActions}>
-            <Button onClick={onComplete}>View session report</Button>
+            <Button onClick={onComplete}>{t('View session report')}</Button>
             <Button variant="link" onClick={onBack}>
-              Back to Scan Hub
+              {t('Back to Scan Hub')}
             </Button>
           </div>
         )}
@@ -82,14 +82,14 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
       {/* live-capture detail — once capture is done it no longer applies */}
       {!isDone && (
         <Card>
-          <p className={`label ${styles.signalsLabel}`}>Signal quality</p>
+          <p className={`label ${styles.signalsLabel}`}>{t('Signal quality')}</p>
           <div className={styles.signals}>
             {signals.map((signal) => (
               <StatTile key={signal.key} className={styles.signal}>
                 <span className={styles.signalDot} style={{ background: SIGNAL_TONE[signal.key] }} aria-hidden="true" />
                 <div>
-                  <StatTile.Label>{signal.label}</StatTile.Label>
-                  <p className={styles.signalValue}>{signal.value}</p>
+                  <StatTile.Label>{t(signal.label)}</StatTile.Label>
+                  <p className={styles.signalValue}>{t(signal.value)}</p>
                 </div>
               </StatTile>
             ))}
@@ -101,13 +101,13 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
         <>
           <Card className={`wide-only ${styles.fallback}`}>
             <p>
-              <strong>{ecgFallback.title}</strong> — {ecgFallback.description}
+              <strong>{t(ecgFallback.title)}</strong> — {t(ecgFallback.description)}
             </p>
             <StatusPill dot={false}>{ecgFallback.badge}</StatusPill>
           </Card>
           <div className={`phone-only ${styles.fallbackRow}`}>
             <InfoSheet icon={HeartPulse} label={ecgFallback.title} hint={ecgFallback.badge}>
-              <p>{ecgFallback.description}</p>
+              <p>{t(ecgFallback.description)}</p>
             </InfoSheet>
           </div>
         </>
@@ -115,7 +115,7 @@ export default function ActiveScanPanel({ sessionId, onComplete, onBack, onPhase
 
       {!isDone && (
         <Button variant="link" className={styles.cancel} onClick={onBack}>
-          <X size={14} aria-hidden="true" /> Cancel session
+          <X size={14} aria-hidden="true" /> {t('Cancel session')}
         </Button>
       )}
     </>

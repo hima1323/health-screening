@@ -14,6 +14,12 @@
   /* "all good" — a dusty blue from the water, so no green clashes with the scene */
   --calm: #6d8fad;
   --steel: #7e96a6;
+  /* the same hues as channels, for tints (rgb(var(--calm-rgb) / 0.16)), and their dark text shades */
+  --rose-rgb: 201 122 112;
+  --amber-rgb: 196 149 79;
+  --calm-rgb: 109 143 173;
+  --calm-ink: #3e5f78;
+  --amber-ink: #7a5820;
 
   /* the glass is tinted rose so it sits in the sky rather than reading as cold white */
   --glass-blur: blur(26px) saturate(135%);
@@ -35,6 +41,31 @@
 
   --gap: 16px;
   --page-max: 1120px;
+}
+
+/* colour-blind mode (header eye button): the Okabe–Ito palette, which stays distinct with protanopia and
+   deuteranopia — blue for fine, orange for check, vermillion for alerts */
+:root[data-vision='cb'] {
+  --rose: #d55e00;
+  --rose-deep: #a34700;
+  --amber: #e69f00;
+  --calm: #0072b2;
+  --steel: #56b4e9;
+  --rose-rgb: 213 94 0;
+  --amber-rgb: 230 159 0;
+  --calm-rgb: 0 114 178;
+  --calm-ink: #00507d;
+  --amber-ink: #7a4300;
+}
+
+/* colour-vision previews: the whole page as a protanope / deuteranope sees it (filters in PrefsProvider). On the root
+   element a filter does not trap fixed elements, so the tab bar and backdrop stay put. */
+:root[data-simulate='protanopia'] {
+  filter: url(#simulate-protanopia);
+}
+
+:root[data-simulate='deuteranopia'] {
+  filter: url(#simulate-deuteranopia);
 }
 
 * {

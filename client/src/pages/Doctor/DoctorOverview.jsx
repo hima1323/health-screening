@@ -7,9 +7,11 @@ import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import { matchesSearch, overviewStats } from './doctor';
 import styles from './DoctorOverview.module.css';
+import usePageTitle from '../../hooks/usePageTitle';
 
 /** The doctor's overview: four numbers, the latest readings against their ranges, who needs them, and what came in. */
 export default function DoctorOverview() {
+  usePageTitle('Overview · Clinician');
   const { patients, search } = useOutletContext();
   if (!patients) return <Spinner />;
 

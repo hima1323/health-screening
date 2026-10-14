@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 import SessionCard from '../../components/SessionCard';
 import { Card, Spinner, ErrorState } from '../../components/ui';
 import styles from './BiometricTimeline.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /** Group sessions by the dataset they came from, keeping the server's order. */
 function byDataset(sessions) {
@@ -17,6 +18,7 @@ function byDataset(sessions) {
 
 /** Every past session; each opens into its multimodal analysis. */
 export default function BiometricTimeline() {
+  const { t } = usePrefs();
   const { data, error } = useResource(getStudySessions, []);
 
   if (error) return <ErrorState message={error} />;
@@ -25,15 +27,12 @@ export default function BiometricTimeline() {
   return (
     <Layout eyebrow="Aura biometrics" title="Past sessions">
       <p className="muted">
-        {data.sessions.length} recorded sessions · open one to see what it showed and
-        whether to see a doctor.
+        {t(`${data.sessions.length} recorded sessions · open one to see what it showed and whether to see a doctor.`)}
       </p>
 
       {byDataset(data.sessions).map(([dataset, sessions]) => (
         <Card key={dataset}>
-          <p className="label">
-            {dataset} · {sessions.length} session{sessions.length > 1 ? 's' : ''}
-          </p>
+          <p className="label">{t(`${dataset} · ${sessions.length} session${sessions.length > 1 ? 's' : ''}`)}</p>
           <div className={styles.sessions}>
             {sessions.map((s) => (
               <SessionCard key={s.sessionKey} session={s} />

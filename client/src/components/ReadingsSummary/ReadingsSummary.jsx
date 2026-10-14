@@ -1,5 +1,6 @@
 import { CircleCheck, CircleAlert, CircleHelp } from 'lucide-react';
 import styles from './ReadingsSummary.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /** What each reading tells you, in one line; shown in the detailed version. */
 const MEANING = {
@@ -59,6 +60,7 @@ const STATUS = {
  * `detailed` adds what each reading means and a bar showing where it sits against the normal range.
  */
 export default function ReadingsSummary({ summary, advice, detailed = false }) {
+  const { t } = usePrefs();
   const { title, Icon } = STATUS[summary.status] ?? STATUS.unclear;
 
   return (
@@ -66,8 +68,8 @@ export default function ReadingsSummary({ summary, advice, detailed = false }) {
       <div className={`${styles.verdict} ${styles[summary.status]}`}>
         <Icon size={28} strokeWidth={1.7} aria-hidden="true" />
         <div>
-          <p className={styles.title}>{title}</p>
-          <p className={styles.text}>{summary.text}</p>
+          <p className={styles.title}>{t(title)}</p>
+          <p className={styles.text}>{t(summary.text)}</p>
         </div>
       </div>
 
@@ -75,18 +77,18 @@ export default function ReadingsSummary({ summary, advice, detailed = false }) {
         {summary.readings.map((r) => (
           <li key={r.label} className={styles.reading}>
             <div className={styles.what}>
-              <p className={styles.label}>{r.label}</p>
-              <p className={styles.range}>Normal: {r.normal}</p>
-              {r.note && <p className={styles.range}>{r.note}</p>}
+              <p className={styles.label}>{t(r.label)}</p>
+              <p className={styles.range}>{t(`Normal: ${r.normal}`)}</p>
+              {r.note && <p className={styles.range}>{t(r.note)}</p>}
             </div>
             <p className={styles.value}>
-              {r.value} <small>{r.unit}</small>
+              {r.value} <small>{t(r.unit)}</small>
             </p>
-            <span className={`${styles.badge} ${r.ok ? styles.fine : styles.check}`}>{r.ok ? 'Fine' : 'Check'}</span>
+            <span className={`${styles.badge} ${r.ok ? styles.fine : styles.check}`}>{t(r.ok ? 'Fine' : 'Check')}</span>
             {detailed && (
               <div className={styles.detail}>
                 <RangeBar value={r.value} normal={r.normal} ok={r.ok} />
-                {MEANING[r.label] && <p className={styles.meaning}>{MEANING[r.label]}</p>}
+                {MEANING[r.label] && <p className={styles.meaning}>{t(MEANING[r.label])}</p>}
               </div>
             )}
           </li>
@@ -95,7 +97,10 @@ export default function ReadingsSummary({ summary, advice, detailed = false }) {
 
       {advice && (
         <p className={styles.advice}>
-          <strong>See a doctor? {advice.answer}.</strong> {advice.text}
+          <strong>
+            {t('See a doctor?')} {t(advice.answer)}.
+          </strong>{' '}
+          {t(advice.text)}
         </p>
       )}
     </div>

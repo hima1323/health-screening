@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { Minus, Plus, Maximize2 } from 'lucide-react';
 import SignalSketch, { envelope, robustRange, TONES } from '../SignalSketch';
 import styles from './SyncedTracks.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 // zoom steps in px per second; 60 keeps individual pulse beats and ECG complexes legible
 const ZOOMS = [15, 30, 60, 120, 240];
@@ -46,7 +47,11 @@ const fmt = (v, unit) =>
  * scrolls sideways at a fixed time scale so waveforms stay readable however long
  * the session is. One crosshair reads every channel at the same instant.
  */
+const DASHES = ['none', '7 4', '2 3', '10 3 2 3'];
+
 export default function SyncedTracks({ tracks, phases, durationS, time = null, onScrub }) {
+  // `t` is a track throughout this file, so the translator is `tr`
+  const { t: tr } = usePrefs();
   const scroller = useRef(null);
   const surface = useRef(null);
   const [viewWidth, setViewWidth] = useState(0);
@@ -61,13 +66,15 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
   const rows = useMemo(() => groupTracks(tracks), [tracks]);
   const paths = useMemo(
     () => rows.map((row) => row.tracks.map((t) => pathFor(t, width, durationS, row.min, row.max))),
-    [rows, width, durationS]
+    [rows, width, durationS],
   );
   const overview = useMemo(
     () => tracks.map((t) => ({ key: t.key, label: t.label, ...envelope(t.values, 160) })),
-    [tracks]
+    [tracks],
   );
   const tone = (track) => TONES[tracks.indexOf(track) % TONES.length];
+  // a dash pattern per line, so the lines stay apart without colour (colour-blind readers)
+  const dash = (track) => DASHES[tracks.indexOf(track) % DASHES.length];
 
   const syncView = useCallback(() => {
     const el = scroller.current;
@@ -202,34 +209,52 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
     <div className={styles.wrap}>
       <div className={styles.overview} title="Whole recording — press or drag to move there">
         <div className={styles.overviewInner} onPointerDown={steerStart} onPointerMove={steerMove}>
-        <div className={styles.overviewPhases} aria-hidden="true">
-          {phases.map((p, i) => (
-            <span key={p.name} className={i % 2 ? styles.bandAlt : ''} style={{ left: x(p.startS), width: x(p.endS - p.startS) }} />
-          ))}
-        </div>
-        <SignalSketch tracks={overview} laneHeight={20} gap={5} />
-        {scrollable && (
-          <span
-            className={styles.window}
-            style={{ left: `${view.from * 100}%`, width: `${(view.to - view.from) * 100}%` }}
-            aria-hidden="true"
-          />
-        )}
+          <div className={styles.overviewPhases} aria-hidden="true">
+            {phases.map((p, i) => (
+              <span
+                key={p.name}
+                className={i % 2 ? styles.bandAlt : ''}
+                style={{ left: x(p.startS), width: x(p.endS - p.startS) }}
+              />
+            ))}
+          </div>
+          <SignalSketch tracks={overview} laneHeight={20} gap={5} />
+          {scrollable && (
+            <span
+              className={styles.window}
+              style={{ left: `${view.from * 100}%`, width: `${(view.to - view.from) * 100}%` }}
+              aria-hidden="true"
+            />
+          )}
         </div>
       </div>
       <div className={styles.overviewKeys}>
         {tracks.map((t) => (
           <span key={t.key} className={styles.key}>
-            <i style={{ background: tone(t) }} />
-            {t.label}
+            <Swatch color={tone(t)} dash={dash(t)} />
+            {tr(t.label)}
           </span>
         ))}
         <span className={styles.toolbar}>
-          {scrollable && <span className={styles.hint}>Scroll or drag to move · pinch or ⌘-scroll to zoom</span>}
-          <button type="button" className={styles.tool} onClick={zoomOut} disabled={pxPerS === null} aria-label="Zoom out">
+          {scrollable && (
+            <span className={styles.hint}>{tr('Scroll or drag to move · pinch or ⌘-scroll to zoom')}</span>
+          )}
+          <button
+            type="button"
+            className={styles.tool}
+            onClick={zoomOut}
+            disabled={pxPerS === null}
+            aria-label={tr('Zoom out')}
+          >
             <Minus size={14} />
           </button>
-          <button type="button" className={styles.tool} onClick={zoomIn} disabled={pxPerS === ZOOMS[ZOOMS.length - 1]} aria-label="Zoom in">
+          <button
+            type="button"
+            className={styles.tool}
+            onClick={zoomIn}
+            disabled={pxPerS === ZOOMS[ZOOMS.length - 1]}
+            aria-label={tr('Zoom in')}
+          >
             <Plus size={14} />
           </button>
           <button
@@ -237,9 +262,9 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
             className={`${styles.tool} ${styles.fit}`}
             onClick={() => zoom(null)}
             disabled={pxPerS === null || fitsWhole}
-            aria-label="Show the whole recording"
+            aria-label={tr('Show the whole recording')}
           >
-            <Maximize2 size={13} /> Fit
+            <Maximize2 size={13} /> {tr('Fit')}
           </button>
         </span>
       </div>
@@ -249,7 +274,7 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
         ref={scroller}
         onScroll={syncView}
         tabIndex={0}
-        aria-label="Signal graph — arrow keys move through the recording"
+        aria-label={tr('Signal graph — arrow keys move through the recording')}
       >
         <div
           className={`${styles.surface} ${scrollable ? styles.pannable : ''} ${dragging ? styles.dragging : ''}`.trim()}
@@ -285,14 +310,19 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
                 aria-label={row.tracks.map((t) => t.label).join(' and ')}
               >
                 {row.tracks.map((t, i) => (
-                  <path key={t.key} d={paths[r][i]} className={styles.line} style={{ stroke: tone(t) }} />
+                  <path
+                    key={t.key}
+                    d={paths[r][i]}
+                    className={styles.line}
+                    style={{ stroke: tone(t), strokeDasharray: dash(t) }}
+                  />
                 ))}
               </svg>
               <div className={styles.legend}>
                 {row.tracks.map((t) => (
                   <span key={t.key} className={styles.key}>
-                    <i style={{ background: tone(t) }} />
-                    {t.label}
+                    <Swatch color={tone(t)} dash={dash(t)} />
+                    {tr(t.label)}
                   </span>
                 ))}
               </div>
@@ -317,7 +347,7 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
 
       <div className={styles.readout} aria-live="polite">
         {shown === null ? (
-          <p className="muted small">Move across the graph to read every channel at the same instant.</p>
+          <p className="muted small">{tr('Move across the graph to read every channel at the same instant.')}</p>
         ) : (
           <>
             <p className={styles.readoutHead}>
@@ -326,7 +356,7 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
             <div className={styles.readoutGrid}>
               {tracks.map((t) => (
                 <span key={t.key}>
-                  <em>{t.label}</em> {fmt(at(t), t.unit)}
+                  <em>{tr(t.label)}</em> {fmt(at(t), t.unit)}
                 </span>
               ))}
             </div>
@@ -334,5 +364,23 @@ export default function SyncedTracks({ tracks, phases, durationS, time = null, o
         )}
       </div>
     </div>
+  );
+}
+
+/** The legend's sample of a line: its colour and its dash pattern. */
+function Swatch({ color, dash }) {
+  return (
+    <svg width="20" height="6" aria-hidden="true">
+      <line
+        x1="1"
+        y1="3"
+        x2="19"
+        y2="3"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeDasharray={dash}
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

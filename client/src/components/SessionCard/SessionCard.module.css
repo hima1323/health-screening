@@ -77,7 +77,7 @@
 .simulated em {
   font-style: normal;
   font-weight: 700;
-  color: #7a5820;
+  color: var(--amber-ink);
 }
 
 /* the session's id, quoted when a patient talks to staff about it */
@@ -109,20 +109,20 @@
 }
 
 .ok {
-  color: #46698a;
-  background: rgba(109, 143, 173, 0.14);
+  color: var(--calm-ink);
+  background: rgb(var(--calm-rgb) / 0.14);
 }
 
 .routine,
 .rescan {
-  color: #8a6526;
-  background: rgba(196, 149, 79, 0.16);
+  color: var(--amber-ink);
+  background: rgb(var(--amber-rgb) / 0.16);
 }
 
 .soon,
 .urgent {
   color: var(--rose-deep);
-  background: rgba(201, 122, 112, 0.16);
+  background: rgb(var(--rose-rgb) / 0.16);
 }
 
 @media (prefers-reduced-motion: reduce) {

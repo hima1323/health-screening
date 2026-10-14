@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Stethoscope } from 'lucide-react';
 import SignalSketch from '../SignalSketch';
 import styles from './SessionCard.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 const seconds = (s) => (s >= 60 ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}` : `${Math.round(s)} s`);
 
 /** One past session: when, its id, what was recorded, a sketch of all of it, and whether to see a doctor. */
 export default function SessionCard({ session }) {
+  const { t } = usePrefs();
   const { sessionKey, label, durationS, modalities, preview = [], assessment, recordedOn } = session;
   const advice = assessment?.advice;
 
@@ -15,11 +17,11 @@ export default function SessionCard({ session }) {
       <div className={styles.top}>
         <div className={styles.titles}>
           <p className={styles.label}>
-            {formatDate(recordedOn)}
+            {t(formatDate(recordedOn))}
             <span className={styles.sessionId}>{sessionId(sessionKey)}</span>
           </p>
           <p className={styles.meta}>
-            {label} · {seconds(durationS)}
+            {t(label)} · {seconds(durationS)}
           </p>
         </div>
         <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
@@ -34,8 +36,8 @@ export default function SessionCard({ session }) {
             className={`${styles.chip} ${m.simulated ? styles.simulated : ''}`.trim()}
             title={m.simulated ? 'Simulated for the prototype' : undefined}
           >
-            {m.label}
-            {m.simulated && <em> sim</em>}
+            {t(m.label)}
+            {m.simulated && <em> {t('sim')}</em>}
           </span>
         ))}
       </div>
@@ -43,7 +45,7 @@ export default function SessionCard({ session }) {
       {advice && (
         <p className={`${styles.advice} ${styles[advice.level]}`}>
           <Stethoscope size={13} aria-hidden="true" />
-          <span>Doctor:</span> <strong>{advice.answer}</strong>
+          <span>{t('Doctor:')}</span> <strong>{t(advice.answer)}</strong>
         </p>
       )}
     </Link>

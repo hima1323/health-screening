@@ -5,6 +5,7 @@ import useQrScanner from '../../hooks/useQrScanner';
 import { Sheet } from '../InfoSheet';
 import { Card, Button } from '../ui';
 import styles from './QrScanner.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 const HEADLINE = {
   starting: 'Waking the camera…',
@@ -61,6 +62,7 @@ const FAILURES = {
 
 /** Live camera viewfinder that decodes the station QR code. */
 export default function QrScanner({ station = 'Station 2', onScanned, onCancel }) {
+  const { t } = usePrefs();
   // only codes our own kiosks generate are accepted — the server checks the signature
   const { state, failure, rejection, videoRef, canvasRef, retry, skip } = useQrScanner({
     onDecode: onScanned,
@@ -78,11 +80,11 @@ export default function QrScanner({ station = 'Station 2', onScanned, onCancel }
 
   return (
     <Card className={styles.card}>
-      <p className="label center tight">{station}</p>
+      <p className="label center tight">{t(station)}</p>
 
       <div className={styles.body}>
         <div className={`${styles.viewfinder} ${state === 'found' ? styles.locked : ''}`.trim()}>
-          <video ref={videoRef} className={styles.video} playsInline muted aria-label="Camera preview" />
+          <video ref={videoRef} className={styles.video} playsInline muted aria-label={t('Camera preview')} />
           <canvas ref={canvasRef} className={styles.canvas} />
 
           <span className={`${styles.corner} ${styles.cornerTl}`} />
@@ -105,9 +107,9 @@ export default function QrScanner({ station = 'Station 2', onScanned, onCancel }
 
         <p className={styles.headline}>
           <ScanLine size={16} strokeWidth={1.8} aria-hidden="true" />
-          {cameraFailed ? info.title : HEADLINE[state]}
+          {t(cameraFailed ? info.title : HEADLINE[state])}
         </p>
-        <p className="muted center">{body}</p>
+        <p className="muted center">{t(body)}</p>
         {rejection && state === 'scanning' && (
           <p className={styles.rejection} role="alert">
             <ShieldAlert size={15} strokeWidth={1.8} aria-hidden="true" />
@@ -116,31 +118,31 @@ export default function QrScanner({ station = 'Station 2', onScanned, onCancel }
         )}
         {cameraFailed && !dialogOpen && (
           <Button variant="link" onClick={() => setDialogOpen(true)}>
-            Why, and how to fix it
+            {t('Why, and how to fix it')}
           </Button>
         )}
       </div>
 
       {/* actions sit at the bottom of the screen, within thumb reach */}
       <div className={styles.actions}>
-        {cameraFailed && <Button onClick={skip}>Continue without camera</Button>}
+        {cameraFailed && <Button onClick={skip}>{t('Continue without camera')}</Button>}
         {cameraFailed && (
           <Button variant="link" onClick={retry}>
-            Try again
+            {t('Try again')}
           </Button>
         )}
         <Button variant="link" onClick={onCancel}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </div>
 
       {cameraFailed && dialogOpen && (
         <Sheet title={info.title} role="alertdialog" onClose={() => setDialogOpen(false)}>
-          <p className={styles.why}>{info.why}</p>
-          <p className={`label ${styles.fixLabel}`}>How to fix it</p>
+          <p className={styles.why}>{t(info.why)}</p>
+          <p className={`label ${styles.fixLabel}`}>{t('How to fix it')}</p>
           <ol className={styles.fix}>
             {info.fix.map((step) => (
-              <li key={step}>{step}</li>
+              <li key={step}>{t(step)}</li>
             ))}
           </ol>
           {failure?.name && (
@@ -150,9 +152,9 @@ export default function QrScanner({ station = 'Station 2', onScanned, onCancel }
             </p>
           )}
           <div className={styles.dialogActions}>
-            <Button onClick={skip}>Continue without camera</Button>
+            <Button onClick={skip}>{t('Continue without camera')}</Button>
             <Button variant="link" onClick={retry}>
-              Try again
+              {t('Try again')}
             </Button>
           </div>
         </Sheet>

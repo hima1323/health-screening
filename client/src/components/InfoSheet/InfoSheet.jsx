@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import styles from './InfoSheet.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /**
  * A tappable row that slides its content up from the bottom of the screen.
@@ -9,6 +10,7 @@ import styles from './InfoSheet.module.css';
  * sheet covers the phone screen, not the browser window.
  */
 export default function InfoSheet({ icon: Icon, label, hint, title, children }) {
+  const { t } = usePrefs();
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,8 +22,8 @@ export default function InfoSheet({ icon: Icon, label, hint, title, children }) 
           </span>
         )}
         <span className={styles.triggerText}>
-          <span className={styles.triggerLabel}>{label}</span>
-          {hint && <span className={styles.triggerHint}>{hint}</span>}
+          <span className={styles.triggerLabel}>{t(label)}</span>
+          {hint && <span className={styles.triggerHint}>{t(hint)}</span>}
         </span>
         <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
       </button>
@@ -37,6 +39,7 @@ export default function InfoSheet({ icon: Icon, label, hint, title, children }) 
 
 /** The bottom sheet itself, for screens that open it on their own (e.g. an error). */
 export function Sheet({ title, onClose, role = 'dialog', children }) {
+  const { t } = usePrefs();
   const titleId = useId();
 
   useEffect(() => {
@@ -57,9 +60,9 @@ export function Sheet({ title, onClose, role = 'dialog', children }) {
         <span className={styles.grabber} aria-hidden="true" />
         <div className={styles.head}>
           <h3 id={titleId} className={styles.title}>
-            {title}
+            {t(title)}
           </h3>
-          <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
+          <button type="button" className={styles.close} onClick={onClose} aria-label={t('Close')}>
             <X size={16} />
           </button>
         </div>

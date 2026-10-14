@@ -4,8 +4,8 @@
   border-radius: var(--radius-card);
   border: 1px solid var(--glass-edge);
   background:
-    radial-gradient(120% 140% at 100% 0%, rgba(201, 122, 112, 0.28), transparent 60%),
-    radial-gradient(90% 120% at 0% 100%, rgba(109, 143, 173, 0.22), transparent 60%),
+    radial-gradient(120% 140% at 100% 0%, rgb(var(--rose-rgb) / 0.28), transparent 60%),
+    radial-gradient(90% 120% at 0% 100%, rgb(var(--calm-rgb) / 0.22), transparent 60%),
     var(--glass-solid);
   box-shadow: var(--glass-shadow);
   overflow: hidden;
