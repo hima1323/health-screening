@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import styles from './AccountChip.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /** Who is signed in, and the way out. */
 export default function AccountChip() {
+  const { t } = usePrefs();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -24,7 +26,7 @@ export default function AccountChip() {
         <span className={styles.name}>{user.profile?.fullName || user.name}</span>
         <span className={styles.email}>{user.email}</span>
       </span>
-      <button type="button" className={styles.signOut} onClick={leave} aria-label="Sign out">
+      <button type="button" className={styles.signOut} onClick={leave} aria-label={t('Sign out')}>
         <LogOut size={15} aria-hidden="true" />
       </button>
     </div>

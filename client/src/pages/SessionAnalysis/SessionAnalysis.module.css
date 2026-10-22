@@ -18,23 +18,6 @@
   background: var(--glass-solid);
 }
 
-.modalities {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: 10px 0 4px;
-}
-
-.modality {
-  font-size: 11px;
-  color: var(--ink-3);
-}
-
-.modality strong {
-  font-weight: 600;
-  color: var(--ink-2);
-}
-
 .source a {
   display: inline-flex;
   align-items: center;
@@ -46,96 +29,49 @@
   padding: 10px 14px;
   border: 1px dashed rgba(122, 88, 32, 0.45);
   border-radius: var(--radius-tile);
-  background: rgba(196, 149, 79, 0.12);
+  background: rgb(var(--amber-rgb) / 0.12);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
-  color: #7a5820;
+  color: var(--amber-ink);
 }
 
-.simulatedModality strong {
-  color: #7a5820;
-}
-
-/* ---- reasoning ---- */
-.conclusion {
-  margin-top: 10px;
-  font-family: var(--font-display);
-  font-size: 22px;
-  line-height: 1.3;
-}
-
-.howLabel {
-  margin-top: 18px;
-}
-
-/* numbered steps joined by a thin line, so the chain reads top to bottom */
-.steps {
-  margin: 10px 0 14px;
-  padding: 0;
-  list-style: none;
-  counter-reset: step;
-}
-
-.step {
-  position: relative;
-  padding: 0 0 16px 36px;
-  counter-increment: step;
-}
-
-.step::before {
-  content: counter(step);
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--glass-solid);
-  border: 1px solid var(--glass-edge);
+button.back {
+  font: inherit;
   font-size: 11.5px;
-  font-weight: 700;
-  color: var(--ink-2);
-}
-
-.step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 28px;
-  bottom: 4px;
-  left: 11.5px;
-  width: 1px;
-  background: var(--glass-edge);
-}
-
-.step:last-child {
-  padding-bottom: 0;
-}
-
-.stepLook {
-  font-size: 13.5px;
-  font-weight: 700;
-  line-height: 24px;
-}
-
-.stepFound {
-  margin-top: 2px;
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--ink-2);
-}
-
-.stepSo {
-  margin-top: 4px;
-  font-size: 13px;
-  line-height: 1.55;
   font-weight: 600;
+  margin-top: 12px;
+  cursor: pointer;
 }
 
-/* ---- full analysis, collapsed by default ---- */
+.glance {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 12px 0 10px;
+}
+
+.glance > div {
+  padding: 12px 14px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-tile);
+  border: 1px solid var(--glass-edge);
+}
+
+.glance dt {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.glance dd {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* ---- "Show all your data", collapsed by default ---- */
 .full > summary::-webkit-details-marker {
   display: none;
 }
@@ -143,26 +79,31 @@
 .fullToggle {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  background: var(--glass-tile);
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 18px;
+  border-radius: var(--radius-tile);
+  background: var(--glass-solid);
   border: 1px solid var(--glass-edge);
-  color: var(--ink-2);
-  font-size: 12.5px;
-  font-weight: 600;
   list-style: none;
   cursor: pointer;
 }
 
-.fullToggle:hover {
-  color: var(--ink);
-  background: var(--glass-solid);
+.fullToggle strong {
+  display: block;
+  font-size: 14px;
+}
+
+.fullToggle small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-2);
 }
 
 .chevron {
+  flex: none;
   transition: transform 0.2s ease;
 }
 

@@ -6,7 +6,11 @@ import StillWaterScene from '../../components/StillWaterScene';
 import { Sheet } from '../../components/InfoSheet';
 import { Button, Field } from '../../components/ui';
 import { buildPatients, initials, normaliseCode } from './doctor';
+import { PrefsContext } from '../../context/PrefsContext';
 import styles from './DoctorShell.module.css';
+
+// the clinician side is English-only: shared components (status pills, panels) render untranslated here
+const ENGLISH = { lang: 'en', vision: 'normal', colourBlind: false, t: (text) => text };
 
 const NAV = [
   { to: '/doctor', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -27,13 +31,22 @@ export default function DoctorShell({ doctor, signOut }) {
   const reload = useCallback(() => {
     getDoctorPatients().then(
       ({ patients }) => setRaw(patients),
-      (err) => setError(err.message)
+      (err) => setError(err.message),
     );
   }, []);
   useEffect(reload, [reload]);
 
   const patients = raw && buildPatients(raw);
-  const today = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  const today = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+
+  useEffect(() => {
+    document.documentElement.lang = 'en';
+  }, []);
 
   return (
     <div className={styles.shell}>
@@ -52,7 +65,12 @@ export default function DoctorShell({ doctor, signOut }) {
 
         <nav className={styles.nav} aria-label="Doctor pages">
           {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`.trim()}>
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`.trim()}
+            >
               <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
               {label}
             </NavLink>
@@ -103,7 +121,9 @@ export default function DoctorShell({ doctor, signOut }) {
               {error}
             </p>
           ) : (
-            <Outlet context={{ doctor, patients, search, reload }} />
+            <PrefsContext.Provider value={ENGLISH}>
+              <Outlet context={{ doctor, patients, search, reload }} />
+            </PrefsContext.Provider>
           )}
         </main>
       </div>

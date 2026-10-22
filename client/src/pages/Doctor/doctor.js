@@ -75,3 +75,6 @@ export const initials = (name) =>
     .slice(0, 2)
     .map((w) => w[0].toUpperCase())
     .join('');
+
+/** A recorded session's patient summary, as a status pill reads it. */
+export const SUMMARY_LABEL = { normal: 'Normal', abnormal: 'Not normal', unclear: 'No health reading' };

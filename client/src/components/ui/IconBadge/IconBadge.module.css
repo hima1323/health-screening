@@ -14,12 +14,12 @@
 
 .rose {
   color: var(--rose);
-  background: rgba(201, 122, 112, 0.14);
-  border-color: rgba(201, 122, 112, 0.32);
+  background: rgb(var(--rose-rgb) / 0.14);
+  border-color: rgb(var(--rose-rgb) / 0.32);
 }
 
 .amber {
   color: var(--amber);
-  background: rgba(196, 149, 79, 0.14);
-  border-color: rgba(196, 149, 79, 0.32);
+  background: rgb(var(--amber-rgb) / 0.14);
+  border-color: rgb(var(--amber-rgb) / 0.32);
 }

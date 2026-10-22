@@ -1,0 +1,61 @@
+"""Verifier self-check: python src/test_reasoner.py"""
+import copy
+
+from reasoner import rule_check, template, verify
+
+REC = {"label": "high", "confidence": 0.82, "probability_high": 0.82, "quality": {"ecg": 1.0, "eye": 0.7},
+       "low_quality_modalities": [], "top_features": [
+           {"feature": "eye_pupil_mean", "description": "pupil diameter", "unit": "mm", "value": 4.119, "z": 1.52,
+            "shap": 0.41, "pushes_toward": "high", "learned_direction_high_load": "+",
+            "literature_direction_high_load": "+"},
+           {"feature": "ecg_pnn50", "description": "pNN50 heart-rate variability", "unit": "%", "value": 22.7,
+            "z": 0.8, "shap": -0.12, "pushes_toward": "low", "learned_direction_high_load": "-",
+            "literature_direction_high_load": "-"}]}
+
+s, c = rule_check(REC)
+assert [f["feature"] for f in s] == ["eye_pupil_mean"] and s[0]["rule_agrees"] is True
+assert [f["feature"] for f in c] == ["ecg_pnn50"] and c[0]["rule_agrees"] is False
+good = template(REC, s, c)
+assert verify(good, REC) == [], verify(good, REC)
+
+bad = copy.deepcopy(good); bad["conclusion"] = "low"
+assert any("conclusion" in e for e in verify(bad, REC))                       # label change rejected
+bad = copy.deepcopy(good); bad["evidence"][0]["statement"] = "pupil grew by 37 percent"
+assert any("37" in e for e in verify(bad, REC))                               # invented number rejected
+bad = copy.deepcopy(good); bad["evidence"][0]["statement"] = "ecg_hr also rose"
+assert any("ecg_hr" in e for e in verify(bad, REC))                           # uncited feature rejected
+bad = copy.deepcopy(good); bad["evidence"][0]["z"] = 2.5
+assert any(".z" in e for e in verify(bad, REC))                               # wrong value rejected
+bad = copy.deepcopy(good); bad["evidence"][0]["value"] = "4.119 mm"
+assert any(".value" in e for e in verify(bad, REC))                           # value with unit rejected, no crash
+bad = copy.deepcopy(good); del bad["evidence"][0]["statement"]
+assert any("statement" in e for e in verify(bad, REC))                        # explanation text required
+ok = copy.deepcopy(good); ok["evidence"][0]["statement"] = "pupil diameter 4.12 mm, z 1.5"
+assert verify(ok, REC) == [], verify(ok, REC)                                 # rounding of record numbers is fine
+low = copy.deepcopy(REC); low["confidence"] = 0.55
+assert any("abstain" in e for e in verify(dict(good, confidence=0.55), low))  # must abstain when unsure
+
+# fusion record: agents instead of a flat feature list
+pupil = dict(REC["top_features"][0], modality="eye")
+pnn = dict(REC["top_features"][1], modality="ecg")
+FUS = {"label": "high", "confidence": 0.82, "probability_high": 0.82, "quality": {"ecg": 1.0, "eye": 0.7},
+       "low_quality_modalities": [], "top_features": [pupil, pnn], "agents": [
+           {"modality": "eye", "available": True, "quality": 0.7, "weight": 0.98, "contribution": 1.2,
+            "probability_high": 0.79, "says": "high", "top_features": [pupil]},
+           {"modality": "ecg", "available": True, "quality": 1.0, "weight": 0.5, "contribution": -0.3,
+            "probability_high": 0.31, "says": "low", "top_features": [pnn]},
+           {"modality": "au", "available": False, "quality": 0.0, "weight": 0.9, "contribution": 0.1}]}
+s, c = rule_check(FUS)
+assert [a["modality"] for a in s] == ["eye"] and [a["modality"] for a in c] == ["ecg"]
+good = template(FUS, s, c)
+assert verify(good, FUS) == [], verify(good, FUS)
+bad = copy.deepcopy(good); bad["evidence"][0]["modality"] = "au"
+assert any("agent au" in e for e in verify(bad, FUS))                          # unavailable agent rejected
+bad = copy.deepcopy(good); bad["evidence"][0]["probability_high"] = 0.9
+assert any("probability_high" in e for e in verify(bad, FUS))                  # wrong agent probability rejected
+bad = copy.deepcopy(good); bad["evidence"][0]["feature"] = "ecg_pnn50"
+assert any("not a top feature of the eye" in e for e in verify(bad, FUS))      # feature under wrong agent rejected
+ok = copy.deepcopy(good); ok["evidence"][0] = {"modality": "eye", "probability_high": 0.79,
+                                               "statement": "eye agent leans high with weight 0.98"}
+assert verify(ok, FUS) == [], verify(ok, FUS)                                   # agent-level citation is fine
+print("verifier ok")

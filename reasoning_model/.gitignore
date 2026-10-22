@@ -1,0 +1,5 @@
+.venv/
+data/adabase/
+__pycache__/
+data/features/
+results/*

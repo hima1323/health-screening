@@ -18,6 +18,7 @@ import {
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import styles from './SessionReport.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 /** "Normal is 72–96 bpm — yours is above it." Falls back to the range alone if it can't be read. */
 function rangeLine({ value, normalRange }, unit) {
@@ -30,6 +31,7 @@ function rangeLine({ value, normalRange }, unit) {
 
 /** The results of a completed screening session. */
 export default function SessionReport() {
+  const { t } = usePrefs();
   const { sessionId } = usePrimary();
   const { data, error } = useResource(() => getReport(sessionId), [sessionId]);
   const [sharing, setSharing] = useState(false);
@@ -48,19 +50,19 @@ export default function SessionReport() {
               <IconBadge tone="rose">
                 <Stethoscope size={17} strokeWidth={1.7} />
               </IconBadge>
-              <h3>Nurse check requested</h3>
+              <h3>{t('Nurse check requested')}</h3>
             </CardHeading>
             <StatusPill dot={false}>{`Queue #${nurseCheck.queueId}`}</StatusPill>
           </CardRow>
-          <p className="muted">{nurseCheck.message}</p>
+          <p className="muted">{t(nurseCheck.message)}</p>
           <p className="muted small icon-line">
-            <Clock size={13} aria-hidden="true" /> Estimated review · {nurseCheck.reviewTime} · {nurseCheck.room}
+            <Clock size={13} aria-hidden="true" /> {t('Estimated review')} · {t(nurseCheck.reviewTime)} · {t(nurseCheck.room)}
           </p>
         </Card>
       )}
 
       <Card className={styles.results}>
-        <h3>Key results</h3>
+        <h3>{t('Key results')}</h3>
         <ul className={styles.resultList}>
           {RESULTS.map(({ key, label, unit, icon: Icon, tone, measures }) => {
             const result = data[key];
@@ -72,7 +74,7 @@ export default function SessionReport() {
                     <IconBadge tone={tone}>
                       <Icon size={17} strokeWidth={1.7} />
                     </IconBadge>
-                    <span className={styles.resultName}>{label}</span>
+                    <span className={styles.resultName}>{t(label)}</span>
                   </CardHeading>
                   <StatusPill dot={false}>{result.status}</StatusPill>
                 </CardRow>
@@ -81,7 +83,7 @@ export default function SessionReport() {
                   <span className={styles.unit}> {unit}</span>
                 </p>
                 <p className={styles.plain}>
-                  {measures} {rangeLine(result, unit)} {result.note}
+                  {t(measures)} {t(rangeLine(result, unit))} {t(result.note)}
                 </p>
               </li>
             );
@@ -90,11 +92,11 @@ export default function SessionReport() {
       </Card>
 
       <Button onClick={() => setSharing(true)} aria-haspopup="dialog">
-        Share with doctor · Code {shareCode}
+        {t(`Share with doctor · Code ${shareCode}`)}
         <ArrowRight size={15} aria-hidden="true" />
       </Button>
       <p className="muted small icon-line center">
-        <ShieldCheck size={13} aria-hidden="true" /> {encryptionNote}
+        <ShieldCheck size={13} aria-hidden="true" /> {t(encryptionNote)}
       </p>
 
       {sharing && (
@@ -124,6 +126,7 @@ function shareText(data, sessionId) {
 
 /** Hands the share code to the doctor: copy it, or send it with the results through the phone's share menu. */
 function ShareSheet({ shareCode, text, onClose }) {
+  const { t } = usePrefs();
   const [copied, setCopied] = useState(null); // null | 'ok' | 'failed'
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
@@ -147,23 +150,23 @@ function ShareSheet({ shareCode, text, onClose }) {
 
   return (
     <Sheet title="Share with your doctor" onClose={onClose}>
-      <p>Give your doctor this code. They enter it in Aura Screen to open your full report.</p>
+      <p>{t('Give your doctor this code. They enter it in Aura Screen to open your full report.')}</p>
       <p className={styles.shareCode} aria-label={`Share code ${shareCode.split('').join(' ')}`}>
         {shareCode}
       </p>
       <div className={styles.shareActions}>
         <Button onClick={copy}>
           {copied === 'ok' ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
-          {copied === 'ok' ? 'Code copied' : 'Copy code'}
+          {t(copied === 'ok' ? 'Code copied' : 'Copy code')}
         </Button>
         {canShare && (
           <Button variant="link" onClick={share}>
-            <Share2 size={15} aria-hidden="true" /> Send code and results…
+            <Share2 size={15} aria-hidden="true" /> {t('Send code and results…')}
           </Button>
         )}
       </div>
       <p className="muted small center" role="status">
-        {copied === 'failed' ? 'Could not copy — please write the code down.' : 'The code only opens this report.'}
+        {t(copied === 'failed' ? 'Could not copy — please write the code down.' : 'The code only opens this report.')}
       </p>
     </Sheet>
   );

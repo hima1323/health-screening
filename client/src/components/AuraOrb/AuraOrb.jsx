@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import styles from './AuraOrb.module.css';
+import usePrefs from '../../hooks/usePrefs';
 
 const BANDS = [
   { top: '43%', opacity: 1, delay: '0s' },
@@ -20,6 +21,7 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
  * @param {object} [ring]    { progress: 0..1, inset: px } to wrap it in a capture ring
  */
 export default function AuraOrb({ size = 184, value, caption, children, ring }) {
+  const { t } = usePrefs();
   const stageRef = useRef(null);
   const [pulses, setPulses] = useState([]);
 
@@ -72,7 +74,7 @@ export default function AuraOrb({ size = 184, value, caption, children, ring }) 
 
       <div className={styles.content}>
         <div className={`numeral ${String(value).length > 3 ? styles.valueLong : styles.value}`}>{value}</div>
-        {caption && <div className={styles.caption}>{caption}</div>}
+        {caption && <div className={styles.caption}>{t(caption)}</div>}
         {children}
       </div>
     </div>

@@ -62,6 +62,14 @@ const pipelineStageSchema = new mongoose.Schema(
 const studySessionSchema = new mongoose.Schema(
   {
     sessionKey: { type: String, required: true, unique: true },
+    // whose recording this is: the doctor sees it on that patient's page
+    patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', index: true },
+    // what the patient reads: normal or not, and each reading against its normal range
+    summary: {
+      status: { type: String, enum: ['normal', 'abnormal', 'unclear'] },
+      text: String,
+      readings: [{ _id: false, label: String, value: Number, unit: String, normal: String, ok: Boolean, note: String }],
+    },
     source: { dataset: String, kind: String, url: String, note: String },
     subject: { id: String, age: Number, sex: String, bmi: Number },
     label: { type: String, required: true },
@@ -128,7 +136,15 @@ const studySessionSchema = new mongoose.Schema(
       type: new mongoose.Schema(
         {
           conclusion: String,
-          steps: [{ _id: false, look: String, found: String, so: String }],
+          steps: [
+            {
+              _id: false,
+              look: String,
+              found: String, // plain-text finding, or the reason there is no explanation
+              groups: [{ _id: false, heading: String, items: [{ _id: false, label: String, text: String }] }],
+              so: String,
+            },
+          ],
         },
         { _id: false }
       ),
