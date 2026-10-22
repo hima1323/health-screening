@@ -40,11 +40,11 @@ store what you need (segment absolute start times, event logs) before deleting.
 **Features and old results (optional; saves hours of retraining).** The user can copy these from the first laptop
 (they're not on GitHub). On the first laptop, run:
 ```sh
-cd reasoning_model && tar czf review_input.tar.gz data/features results/*.parquet results/*.csv \
+cd reasoning_model && tar czf results/review_input.tar.gz data/features results/*.parquet results/*.csv \
     results/evidence results/evidence_fusion results/explanations results/explanations_fusion \
     results/explanations_*_holdout.jsonl results/models
 ```
-Unpack it into `reasoning_model/` here. Without it, rebuild with `python src/features.py --all` (keeps raw unless
+Unpack it here with `tar xzf review_input.tar.gz` inside `reasoning_model/`. Without it, rebuild with `python src/features.py --all` (keeps raw unless
 `--delete-raw`), then `python src/train.py --task binary --tune` and `python src/fusion.py` (several hours on CPU).
 Note: the old `results/handoff.tar.gz` does **not** contain the `oof_*.parquet` files that E1/E2/E4 read.
 
