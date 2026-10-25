@@ -8,8 +8,8 @@
   min-height: 100dvh;
   padding: 16px 24px 24px;
   background:
-    radial-gradient(70% 55% at 50% 45%, rgba(249, 220, 205, 0.55), rgba(249, 220, 205, 0) 70%),
-    linear-gradient(180deg, #d9d4e2 0%, #cfdde5 100%);
+    radial-gradient(70% 55% at 50% 45%, rgba(20, 149, 138, 0.08), rgba(20, 149, 138, 0) 70%),
+    linear-gradient(180deg, #eef3f6 0%, #dfe8ed 100%);
 }
 
 .stage[data-device='full'] {
@@ -88,7 +88,7 @@
   container: device / size;
   position: relative;
   overflow: hidden;
-  background: #cfdde5;
+  background: #eef3f6;
   isolation: isolate;
 }
 
@@ -100,17 +100,17 @@
   border-radius: 46px;
   /* a thin dark bezel, then a soft drop shadow */
   box-shadow:
-    0 0 0 10px #2d2629,
+    0 0 0 10px #1b232b,
     0 0 0 11px rgba(255, 255, 255, 0.25),
-    0 40px 80px -20px rgba(59, 50, 56, 0.45);
+    0 40px 80px -20px rgba(30, 43, 55, 0.45);
 }
 
 .stage[data-device='kiosk'] .device {
   border-radius: 28px;
   box-shadow:
-    0 0 0 18px #2d2629,
+    0 0 0 18px #1b232b,
     0 0 0 19px rgba(255, 255, 255, 0.25),
-    0 40px 80px -20px rgba(59, 50, 56, 0.45);
+    0 40px 80px -20px rgba(30, 43, 55, 0.45);
 }
 
 .stage[data-device='full'] .device {

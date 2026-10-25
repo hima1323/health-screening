@@ -40,7 +40,7 @@
   overflow: hidden;
   border-radius: 28px;
   color: var(--ink-2);
-  background: rgba(59, 50, 56, 0.14);
+  background: rgba(30, 43, 55, 0.14);
   border: 1px solid var(--glass-edge);
 }
 
@@ -72,7 +72,7 @@
   height: 78px;
   border-radius: 50%;
   color: inherit;
-  background: rgba(253, 240, 238, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--glass-edge);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

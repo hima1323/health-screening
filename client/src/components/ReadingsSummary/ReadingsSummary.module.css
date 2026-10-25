@@ -137,7 +137,7 @@
   height: 8px;
   margin: 2px 0 8px;
   border-radius: var(--radius-pill);
-  background: rgba(59, 50, 56, 0.08);
+  background: rgba(30, 43, 55, 0.08);
 }
 
 .band {
@@ -156,7 +156,7 @@
   border-radius: 50%;
   border: 2px solid #fff;
   transform: translate(-50%, -50%);
-  box-shadow: 0 1px 4px rgba(59, 50, 56, 0.25);
+  box-shadow: 0 1px 4px rgba(30, 43, 55, 0.25);
 }
 
 .markerFine {

@@ -49,7 +49,7 @@
 }
 
 .skipped {
-  background: rgba(59, 50, 56, 0.3);
+  background: rgba(30, 43, 55, 0.3);
 }
 
 .connector {
@@ -57,7 +57,7 @@
   width: 1.5px;
   min-height: 14px;
   margin: 3px 0;
-  background: rgba(59, 50, 56, 0.16);
+  background: rgba(30, 43, 55, 0.16);
 }
 
 .body {
@@ -112,7 +112,7 @@
 
 .tag_all {
   color: var(--ink-2);
-  background: rgba(59, 50, 56, 0.1);
+  background: rgba(30, 43, 55, 0.1);
 }
 
 .warn {

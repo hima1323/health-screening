@@ -3,33 +3,33 @@
  * Design tokens and the element reset — everything else is a *.module.css.
  */
 :root {
-  --ink: #3b3238;
-  --ink-2: rgba(59, 50, 56, 0.68);
-  --ink-3: rgba(59, 50, 56, 0.44);
-  --on-ink: #f6eee9;
+  /* clean clinical: slate ink on white, teal for "all good", coral for accents and alerts */
+  --ink: #1e2b37;
+  --ink-2: rgba(30, 43, 55, 0.7);
+  --ink-3: rgba(30, 43, 55, 0.48);
+  --on-ink: #ffffff;
 
-  --rose: #c97a70;
-  --rose-deep: #a2554c;
-  --amber: #c4954f;
-  /* "all good" — a dusty blue from the water, so no green clashes with the scene */
-  --calm: #6d8fad;
-  --steel: #7e96a6;
+  --rose: #e0604f;
+  --rose-deep: #b8432f;
+  --amber: #d4900a;
+  --calm: #14958a;
+  --steel: #6b7f8e;
   /* the same hues as channels, for tints (rgb(var(--calm-rgb) / 0.16)), and their dark text shades */
-  --rose-rgb: 201 122 112;
-  --amber-rgb: 196 149 79;
-  --calm-rgb: 109 143 173;
-  --calm-ink: #3e5f78;
-  --amber-ink: #7a5820;
+  --rose-rgb: 224 96 79;
+  --amber-rgb: 212 144 10;
+  --calm-rgb: 20 149 138;
+  --calm-ink: #0c6158;
+  --amber-ink: #7f5400;
 
-  /* the glass is tinted rose so it sits in the sky rather than reading as cold white */
-  --glass-blur: blur(26px) saturate(135%);
-  --glass-top: rgba(253, 235, 233, 0.62);
-  --glass-bottom: rgba(249, 226, 229, 0.32);
-  --glass-solid: rgba(252, 234, 232, 0.56);
-  --glass-tile: rgba(252, 233, 232, 0.5);
-  --glass-edge: rgba(255, 242, 240, 0.78);
-  --glass-sheen: rgba(255, 247, 245, 0.9);
-  --glass-shadow: 0 14px 34px rgba(122, 84, 88, 0.16);
+  /* near-opaque white cards with a cool grey edge */
+  --glass-blur: blur(20px) saturate(120%);
+  --glass-top: rgba(255, 255, 255, 0.94);
+  --glass-bottom: rgba(255, 255, 255, 0.86);
+  --glass-solid: rgba(255, 255, 255, 0.92);
+  --glass-tile: rgba(240, 245, 248, 0.95);
+  --glass-edge: rgba(214, 225, 232, 0.95);
+  --glass-sheen: rgba(255, 255, 255, 1);
+  --glass-shadow: 0 8px 24px rgba(20, 45, 65, 0.08);
 
   /* TAN Pearl is a licensed face — it is used when installed, Cormorant Garamond stands in otherwise */
   --font-display: 'TAN Pearl', 'Cormorant Garamond', Georgia, serif;
@@ -76,7 +76,7 @@
 
 body {
   min-height: 100dvh;
-  background: #cfdde5;
+  background: #eef3f6;
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;

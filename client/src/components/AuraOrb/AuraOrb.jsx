@@ -91,8 +91,8 @@ export default function AuraOrb({ size = 184, value, caption, children, ring }) 
           <svg viewBox="0 0 240 240" className={styles.ringSvg} aria-hidden="true">
             <defs>
               <linearGradient id="auraOrbRing" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#E4A79C" />
-                <stop offset="55%" stopColor="#D9C3CB" />
+                <stop offset="0%" stopColor="#14958A" />
+                <stop offset="55%" stopColor="#9FD6CF" />
                 <stop offset="100%" stopColor="#8FB3C7" />
               </linearGradient>
             </defs>

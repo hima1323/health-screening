@@ -10,16 +10,15 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 60% at 78% 8%, #f9dcc4 0%, rgba(249, 220, 196, 0) 62%),
-    radial-gradient(90% 46% at 12% 22%, #e5c6cf 0%, rgba(229, 198, 207, 0) 64%),
-    linear-gradient(180deg, #d3cfe0 0%, #e7cbcb 24%, #f0d5c4 44%, #dcd8e0 56%, #bed3e1 70%, #a5c0d5 100%);
+    radial-gradient(120% 60% at 78% 8%, rgba(20, 149, 138, 0.08) 0%, rgba(20, 149, 138, 0) 62%),
+    linear-gradient(180deg, #f7fafb 0%, #eef4f7 56%, #e4eef2 100%);
 }
 
 .cloud {
   position: absolute;
   border-radius: 50%;
   filter: blur(24px);
-  background: #fbefe6;
+  background: #ffffff;
   opacity: 0.75;
 }
 
@@ -44,7 +43,7 @@
   left: -10%;
   top: 31%;
   opacity: 0.4;
-  background: #f0d6ce;
+  background: #ffffff;
 }
 
 .roseBand {
@@ -53,7 +52,7 @@
   right: 0;
   top: 24%;
   height: 14%;
-  background: linear-gradient(180deg, rgba(224, 152, 134, 0.42), rgba(226, 166, 150, 0));
+  background: linear-gradient(180deg, rgba(20, 149, 138, 0.05), rgba(20, 149, 138, 0));
   filter: blur(10px);
 }
 
@@ -63,7 +62,7 @@
   right: 0;
   bottom: 0;
   height: 44%;
-  background: linear-gradient(180deg, #b4cbdb 0%, #c2d3dd 18%, #d2c9d1 46%, #b8ccd9 72%, #97b3c9 100%);
+  background: linear-gradient(180deg, #e8f1f4 0%, #e2edf1 46%, #d9e8ec 100%);
 }
 
 /* the horizon line where sky meets water */
