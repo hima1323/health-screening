@@ -1,13 +1,51 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
+import Button from '../ui/Button';
 import styles from './GoogleButton.module.css';
+
+const LABELS = {
+  continue_with: 'Continue with Google',
+  signup_with: 'Sign up with Google',
+  signin_with: 'Sign in with Google',
+};
 
 /**
  * Google's own rendered sign-in button (Google Identity Services).
  *
  * It hands back a signed ID token, which `onCredential` sends to the API for
  * verification. Google requires its own button markup, so this mounts theirs.
+ * Google refuses GIS inside the Android app's web view, so there it signs in
+ * natively instead — the ID token is for the same web client ID either way.
  */
-export default function GoogleButton({ clientId, text = 'continue_with', onCredential }) {
+export default function GoogleButton(props) {
+  return Capacitor.isNativePlatform() ? <NativeGoogleButton {...props} /> : <WebGoogleButton {...props} />;
+}
+
+function NativeGoogleButton({ clientId, text = 'continue_with', onCredential }) {
+  const [error, setError] = useState(null);
+
+  const signIn = async () => {
+    setError(null);
+    try {
+      await SocialLogin.initialize({ google: { webClientId: clientId } });
+      const { result } = await SocialLogin.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+      onCredential(result.idToken);
+    } catch (err) {
+      // closing Google's account sheet is not an error worth showing
+      if (!/cancel/i.test(err.message)) setError(err.message);
+    }
+  };
+
+  return (
+    <div className={styles.slot}>
+      <Button onClick={signIn}>{LABELS[text] || LABELS.continue_with}</Button>
+      {error && <p role="alert">{error}</p>}
+    </div>
+  );
+}
+
+function WebGoogleButton({ clientId, text = 'continue_with', onCredential }) {
   const slot = useRef(null);
   const callback = useRef(onCredential);
 

@@ -1,5 +1,15 @@
 {
   "appId": "in.aura.screen",
   "appName": "Aura Screen",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "facebook": false,
+        "apple": false,
+        "twitter": false
+      }
+    }
+  }
 }
