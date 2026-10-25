@@ -87,3 +87,31 @@
   gap: 4px;
   margin-bottom: 8px;
 }
+
+.empty {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.model {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.model .plain {
+  margin-top: 0;
+}
+
+.meter > span {
+  display: block;
+  height: 6px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--calm);
+}

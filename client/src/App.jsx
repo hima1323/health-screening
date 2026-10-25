@@ -22,6 +22,7 @@ import {
   DoctorPatient,
   DoctorPatients,
   DoctorReport,
+  DoctorScans,
   DoctorSession,
   RequireDoctor,
 } from './pages/Doctor';
@@ -50,6 +51,7 @@ export default function App() {
             <Route element={<RequireDoctor />}>
               <Route path="/doctor" element={<DoctorOverview />} />
               <Route path="/doctor/patients" element={<DoctorPatients />} />
+              <Route path="/doctor/scans" element={<DoctorScans />} />
               <Route path="/doctor/patients/:patientId" element={<DoctorPatient />} />
               <Route path="/doctor/reports/:code" element={<DoctorReport />} />
               <Route path="/doctor/patients/:patientId/sessions/:key" element={<DoctorSession />} />

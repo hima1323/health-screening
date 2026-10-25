@@ -3,7 +3,6 @@ import { BASE_URL, request, post } from './client';
 /** Every screen reads from MongoDB through these endpoints. */
 export const getPrimary = () => request('/primary');
 export const getScanHub = (patientId) => request(`/patients/${patientId}/scan-hub`);
-export const getActiveScan = (sessionId) => request(`/sessions/${sessionId}/active-scan`);
 export const getReport = (sessionId) => request(`/sessions/${sessionId}/report`);
 export const getStudySessions = () => request('/study-sessions');
 export const getStudySession = (key) => request(`/study-sessions/${key}`);
@@ -14,3 +13,8 @@ export const studySessionFramesUrl = (key) => `${BASE_URL}/study-sessions/${key}
 
 export * from './auth';
 export * from './doctor';
+
+/** A live scan: start it with the kiosk code the phone scanned, then poll it until the model has answered. */
+export const startScan = (code) => post('/scans', { code });
+export const getScan = (id) => request(`/scans/${id}`);
+export const getStationLive = (stationId) => request(`/stations/${stationId}/live`);

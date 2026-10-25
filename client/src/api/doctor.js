@@ -49,3 +49,7 @@ export async function doctorGoogleLogin(credential) {
 export const getDoctorPatient = (patientId) => doctorSend(`/patients/${encodeURIComponent(patientId)}`);
 export const getDoctorPatientSession = (patientId, key) =>
   doctorSend(`/patients/${encodeURIComponent(patientId)}/sessions/${encodeURIComponent(key)}`);
+export const getDoctorNotes = (patientId) => doctorSend(`/patients/${encodeURIComponent(patientId)}/notes`);
+export const addDoctorNote = (patientId, text) =>
+  doctorSend(`/patients/${encodeURIComponent(patientId)}/notes`, { method: 'POST', body: { text } });
+export const deleteDoctorNote = (noteId) => doctorSend(`/notes/${encodeURIComponent(noteId)}`, { method: 'DELETE' });

@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Stethoscope } from 'lucide-react';
-import { getDoctorPatient } from '../../api';
+import { ArrowLeft, ChevronRight, Stethoscope, Trash2 } from 'lucide-react';
+import { addDoctorNote, deleteDoctorNote, getDoctorNotes, getDoctorPatient } from '../../api';
 import useResource from '../../hooks/useResource';
 import usePageTitle from '../../hooks/usePageTitle';
 import { formatDate } from '../../components/SessionCard';
-import { Card, CardRow, StatusPill, Spinner, ErrorState } from '../../components/ui';
+import { Button, Card, CardRow, StatusPill, Spinner, ErrorState } from '../../components/ui';
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import { SUMMARY_LABEL, initials, triage } from './doctor';
@@ -98,7 +99,7 @@ export default function DoctorPatient() {
                 </tr>
               </thead>
               <tbody>
-                {RESULTS.map(({ key, label, unit }) => (
+                {RESULTS.filter(({ key }) => reports.some((r) => r[key])).map(({ key, label, unit }) => (
                   <tr key={key}>
                     <th scope="row">{label}</th>
                     {oldestFirst.map((r) => {
@@ -118,6 +119,16 @@ export default function DoctorPatient() {
                     })}
                   </tr>
                 ))}
+                {reports.some((r) => r.model) && (
+                  <tr>
+                    <th scope="row">Mental load (model)</th>
+                    {oldestFirst.map((r) => (
+                      <td key={r.shareCode} className={modelCall(r) === 'high' ? styles.out : ''}>
+                        {r.model ? `${modelCall(r)} · ${Math.round(r.model.summary.confidence * 100)}%` : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -136,8 +147,8 @@ export default function DoctorPatient() {
                     <p className="muted small">
                       {r.triage.outOfRange.length > 0
                         ? `Out of range: ${r.triage.outOfRange.map((x) => x.label.toLowerCase()).join(', ')}`
-                        : 'All readings in range'}{' '}
-                      · shared {formatDate(r.sharedAt)}
+                        : 'All readings in range'}
+                      {r.model && ` · model: ${modelCall(r)} mental load`} · shared {formatDate(r.sharedAt)}
                     </p>
                   </div>
                   <StatusPill dot={false}>{r.triage.label}</StatusPill>
@@ -172,6 +183,8 @@ export default function DoctorPatient() {
         </Card>
       )}
 
+      <Notes patientId={patientId} />
+
       <Card>
         <h3>Screening history</h3>
         {history.length === 0 ? (
@@ -190,7 +203,13 @@ export default function DoctorPatient() {
                   <StatusPill dot={false}>{log.status}</StatusPill>
                 </CardRow>
                 <p className={styles.vitals}>
-                  Heart rate <strong>{log.heartRate} bpm</strong> · Temperature <strong>{log.temp} °C</strong>
+                  Heart rate <strong>{log.heartRate ?? '—'} bpm</strong>
+                  {log.temp != null && (
+                    <>
+                      {' '}
+                      · Temperature <strong>{log.temp} °C</strong>
+                    </>
+                  )}
                 </p>
                 {log.clinicianDirective && <p className="muted small">{log.clinicianDirective}</p>}
               </li>
@@ -199,5 +218,84 @@ export default function DoctorPatient() {
         )}
       </Card>
     </>
+  );
+}
+
+/** "high" / "low" / "unclear" for a report the reasoning model read. */
+const modelCall = (r) => (r.model.summary.abstain ? 'unclear' : r.model.summary.label);
+
+/** The doctor's own notes on this patient — private to them, newest first. */
+function Notes({ patientId }) {
+  const [notes, setNotes] = useState(null);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getDoctorNotes(patientId).then(({ notes: list }) => setNotes(list), (err) => setError(err.message));
+  }, [patientId]);
+
+  async function add(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const { note } = await addDoctorNote(patientId, text);
+      setNotes((list) => [note, ...list]);
+      setText('');
+    } catch (err) {
+      setError(err.message);
+    }
+    setBusy(false);
+  }
+
+  async function remove(id) {
+    try {
+      await deleteDoctorNote(id);
+      setNotes((list) => list.filter((n) => n._id !== id));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <Card>
+      <h3>Your notes</h3>
+      <p className="muted small">Only you see these.</p>
+      <form className={styles.noteForm} onSubmit={add}>
+        <textarea
+          className={styles.noteInput}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="e.g. High mental load on today's scan — ask about sleep and work stress."
+          maxLength={2000}
+          rows={3}
+          aria-label="New note"
+        />
+        <Button type="submit" className={styles.noteSubmit} disabled={busy || !text.trim()}>
+          {busy ? 'Saving…' : 'Add note'}
+        </Button>
+      </form>
+      {error && (
+        <p className="muted small" role="alert">
+          {error}
+        </p>
+      )}
+      {notes?.length > 0 && (
+        <ul className={styles.list}>
+          {notes.map((note) => (
+            <li key={note._id} className={styles.note}>
+              <div>
+                <p className={styles.noteText}>{note.text}</p>
+                <p className="muted small">{formatDate(note.createdAt)}</p>
+              </div>
+              <button type="button" className={styles.noteDelete} onClick={() => remove(note._id)} aria-label="Delete note">
+                <Trash2 size={15} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

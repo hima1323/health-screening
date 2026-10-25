@@ -85,6 +85,7 @@ function PatientCard({ entry: { patient, reports, latest } }) {
           latest.nurseCheck?.queueId && 'Nurse check requested',
           latest.triage.outOfRange.length > 0 &&
             `${latest.triage.outOfRange.map((r) => r.label.toLowerCase()).join(' and ')} out of range`,
+          latest.model?.summary.label === 'high' && !latest.model.summary.abstain && 'Model: high mental load',
         ]
           .filter(Boolean)
           .join(' · ') || 'All latest readings in range'}

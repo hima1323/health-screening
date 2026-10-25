@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, LogIn, ShieldCheck } from 'lucide-react';
 import { doctorGoogleLogin, doctorLogin, getDoctorToken, getProviders } from '../../api';
 import useResource from '../../hooks/useResource';
 import GoogleButton from '../../components/GoogleButton';
@@ -87,6 +87,9 @@ export default function DoctorLogin() {
         <p className="muted small icon-line">
           <ShieldCheck size={13} aria-hidden="true" /> You only see reports that patients have shared with you.
         </p>
+        <Button variant="link" onClick={() => navigate('/signin')}>
+          <ArrowLeft size={15} aria-hidden="true" /> Back to the patient app
+        </Button>
       </Card>
     </Layout>
   );

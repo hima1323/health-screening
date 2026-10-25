@@ -15,8 +15,12 @@ export function triage(report) {
   });
   const watched = RESULTS.some(({ key }) => /watch/i.test(report[key]?.status ?? ''));
 
+  // a confident high-load call from the reasoning model is worth a look, never an alarm on its own
+  const model = report.model?.summary;
+  const highLoad = model && model.label === 'high' && !model.abstain;
+
   if (report.nurseCheck?.queueId || outOfRange.length >= 2) return { level: 'attention', label: 'Needs attention', rank: 0, outOfRange };
-  if (outOfRange.length === 1 || watched) return { level: 'review', label: 'Review', rank: 1, outOfRange };
+  if (outOfRange.length === 1 || watched || highLoad) return { level: 'review', label: 'Review', rank: 1, outOfRange };
   return { level: 'stable', label: 'Stable', rank: 2, outOfRange };
 }
 

@@ -33,6 +33,8 @@ const reportSchema = new mongoose.Schema({
   },
   shareCode: String,
   encryptionNote: String,
+  // a live scan's model output (model_service/serve.py): summary, per-window results, the sample it read
+  model: mongoose.Schema.Types.Mixed,
 });
 
 module.exports = mongoose.model('Report', reportSchema);

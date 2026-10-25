@@ -160,6 +160,7 @@ Then follow [Run it](#run-it) below.
 ```
 webapp/
 ├── client/                 Vite React app (see client/README.md)
+├── model_service/          the reasoning model as an HTTP service (Python), its fold models and samples
 └── server/                 Express + Mongoose API
     ├── index.js            app entry — mounts the routers, connects, listens
     ├── db.js               mongoose connection
@@ -195,21 +196,57 @@ After changing the analysis, rebuild the study sessions and reload just those �
 python3 analysis/build_sessions.py && (cd server && npm run sessions)
 ```
 
+## Live scan and the reasoning model
+
+A scan runs end to end on real requests:
+
+1. The kiosk (`/kiosk`) shows a QR code the server signed; it changes every 10 minutes.
+2. The phone scans it (**Begin contactless scan**); the server checks the signature and starts a scan
+   (`POST /api/scans`). The kiosk screen follows along (`GET /api/stations/:id/live`).
+3. The station "captures". This demo station has no sensors, so it replays a recorded sample: one
+   2-minute n-back block from ADABase, as 30 s feature windows of 8 sensors (`model_service/samples/`).
+4. The server sends that sample to the model service (`model_service/serve.py`, Python): 8 LightGBM sensor
+   agents + the fusion model from `reasoning_model/`, using the fold that was trained on the other 29 people,
+   so it never saw the person it reads. It returns the call, confidence, each sensor's exact log-odds push,
+   each window, the strongest features (TreeSHAP) and a template explanation.
+5. The answer becomes a report with its own share code. The patient sees it in plain words; a doctor who
+   enters the code sees the full analysis, and it lists under **Model results**.
+
+The server starts the model service itself (Python from `reasoning_model/.venv`, else `python3`, or
+`MODEL_PYTHON`). `python model_service/serve.py --check` confirms it reproduces `fusion.py`'s own
+probabilities; `model_service/export_samples.py` rebuilds the samples and copies their fold models.
+
+### Presentation run-through
+
+1. Laptop / projector: open `https://<app>/kiosk` — the QR code.
+2. Phone (app or browser): create an account, fill in details, **Begin contactless scan**, point at the QR.
+   If the camera won't start, **Continue without camera** links to the same station.
+3. Watch both screens: capture countdown → sample sent → model answers (about 15 s). **View session report**.
+4. On the report, **Share with doctor** shows the code.
+5. Doctor: `/doctor/login` (or **I'm a doctor** on the sign-in screen) → **Add shared report** → the code.
+   The report shows the model output; **Model results** lists every scan and how often the call matched what
+   the person was really doing. Add a note on the patient page. The dashboard refreshes every 10 s.
+
+Scans rotate through the samples (3-back high, 1-back low, 3-back dual high), so a second scan shows a
+different result.
+
 ## Deploy (Render) and install on a phone
 
-`render.yaml` defines one free web service: it builds `client/` and the Express
-server serves it beside the API, so the app and API share one HTTPS URL.
+`render.yaml` defines one free Docker web service (`Dockerfile`): the built client, the Express API and the
+Python model service, all on one HTTPS URL. The image build runs the model self-check, so a broken model
+fails the deploy instead of the demo.
 
 1. Render dashboard → **New → Blueprint** → pick this repo and branch.
 2. Fill in `MONGODB_URI` (MongoDB Atlas; allow `0.0.0.0/0` in Network Access),
    `GOOGLE_CLIENT_ID` and `DEMO_DOCTOR_EMAIL`. `JWT_SECRET` is generated.
-3. Load the data into Atlas once, from this machine:
-   `cd server && MONGODB_URI='<atlas uri>' npm run seed && MONGODB_URI='<atlas uri>' npm run sessions`
+3. Load the demo data into Atlas once, from this machine:
+   `cd server && MONGODB_URI='<atlas uri>' npm run seed`
 4. For Google sign-in, add the `https://<name>.onrender.com` URL to the OAuth
    client's Authorised JavaScript origins.
 
 The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_URL`
-is set, which Render does) so the free instance doesn't sleep.
+is set, which Render does) so the free instance doesn't sleep. `/api/health` also reports whether the model
+service is up (`"model": true`) — check it before presenting.
 
 On a phone, open the onrender.com URL: Android Chrome → menu → **Install app**;
 iPhone Safari → Share → **Add to Home Screen**. It opens full-screen like an app.
@@ -255,4 +292,7 @@ needed — the browser gets the ID token and the server only verifies it.
 | `POST`/`DELETE` | `/api/auth/me/reports[/:id]` | attach or drop past reports |
 | `GET` | `/api/primary` | resolve the signed-in patient and session ids |
 | `GET` | `/api/patients/:id/scan-hub` · `/timeline` | screen data |
-| `GET` | `/api/sessions/:sessionId/active-scan` · `/report` | screen data |
+| `GET` | `/api/sessions/:sessionId/report` | screen data |
+| `POST` | `/api/scans` | start a live scan from a kiosk code → `GET /api/scans/:id` to follow it |
+| `GET` | `/api/stations/:id/live` | the kiosk's view of its current scan (stage only) |
+| `GET`/`POST`/`DELETE` | `/api/doctor/patients/:id/notes` · `/api/doctor/notes/:id` | a doctor's own notes |

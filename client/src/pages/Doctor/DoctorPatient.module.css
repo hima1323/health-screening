@@ -232,3 +232,67 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.noteForm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.noteInput {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-tile);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-tile);
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  resize: vertical;
+}
+
+.noteInput:focus-visible {
+  outline: 2px solid var(--calm);
+  outline-offset: 1px;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--glass-edge);
+}
+
+.noteText {
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.noteDelete {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.noteDelete:hover {
+  color: var(--rose-deep);
+  background: rgb(var(--rose-rgb) / 0.1);
+}
+
+.noteSubmit {
+  width: auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}

@@ -7,6 +7,7 @@ import { Card, CardRow, CardHeading, IconBadge, StatusPill, Spinner, ErrorState 
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import { formatDate } from '../../components/SessionCard';
+import ModelResult from '../../components/ModelResult';
 import { normaliseCode, triage } from './doctor';
 import styles from './Doctor.module.css';
 
@@ -49,7 +50,7 @@ export default function DoctorReport() {
         <p className={styles.verdict}>
           {level.outOfRange.length === 0
             ? 'All key readings are within their normal ranges.'
-            : `${level.outOfRange.length} of ${RESULTS.length} key readings are out of range: ${level.outOfRange
+            : `${level.outOfRange.length} of ${RESULTS.filter(({ key }) => report[key]).length} key readings are out of range: ${level.outOfRange
                 .map((r) => r.label.toLowerCase())
                 .join(' and ')}.`}
         </p>
@@ -109,6 +110,8 @@ export default function DoctorReport() {
         </div>
       </Card>
 
+      {report.model && <ModelResult model={report.model} />}
+
       <Card>
         <h3>Screening history</h3>
         {history.length === 0 ? (
@@ -127,7 +130,13 @@ export default function DoctorReport() {
                   <StatusPill dot={false}>{log.status}</StatusPill>
                 </CardRow>
                 <p className={styles.historyVitals}>
-                  Heart rate <strong>{log.heartRate} bpm</strong> · Temperature <strong>{log.temp} °C</strong>
+                  Heart rate <strong>{log.heartRate ?? '—'} bpm</strong>
+                  {log.temp != null && (
+                    <>
+                      {' '}
+                      · Temperature <strong>{log.temp} °C</strong>
+                    </>
+                  )}
                 </p>
                 {log.clinicianDirective && <p className="muted small">{log.clinicianDirective}</p>}
               </li>

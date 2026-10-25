@@ -1,0 +1,201 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.headline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.big {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.explanation {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 75ch;
+}
+
+.axisLabels {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 62px 6px 140px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: 130px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+  min-height: 26px;
+}
+
+.barName {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* the neutral zero line sits in the middle; bars grow away from it */
+.track {
+  position: relative;
+  height: 14px;
+}
+
+.track::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 50%;
+  width: 1px;
+  background: var(--ink-3);
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.bar.toHigh {
+  border-radius: 0 4px 4px 0;
+}
+
+.bar.toLow {
+  border-radius: 4px 0 0 4px;
+}
+
+.toHigh {
+  background: var(--amber);
+}
+
+.toLow {
+  background: var(--calm);
+}
+
+.barValue {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink);
+}
+
+.windows {
+  display: flex;
+  gap: 8px;
+}
+
+.window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 72px;
+}
+
+.windowValue {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.windowTrack {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 80px;
+  border-bottom: 1px solid var(--ink-3);
+}
+
+/* the decision line at P = 0.5 */
+.windowTrack::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  bottom: 50%;
+  border-top: 1px dashed var(--ink-3);
+}
+
+.windowBar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.table th {
+  padding: 0 8px 8px 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink-3);
+}
+
+.table td {
+  padding: 8px 8px 8px 0;
+  border-top: 1px solid var(--glass-edge);
+  font-variant-numeric: tabular-nums;
+}
+
+.provenance :global(.icon-line) {
+  align-items: flex-start;
+}
+
+.provenance svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.provenance {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-edge);
+}
+
+@container device (max-width: 640px) {
+  .bars li {
+    grid-template-columns: 96px 1fr 44px;
+  }
+
+  .axisLabels {
+    margin: 0 54px 6px 106px;
+  }
+
+  .big {
+    font-size: 26px;
+  }
+
+  .table th:nth-child(4),
+  .table td:nth-child(4) {
+    display: none;
+  }
+}

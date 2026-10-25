@@ -6,13 +6,17 @@ const connectDB = require('./db');
 const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
 const doctorRouter = require('./routes/doctor');
+const scans = require('./routes/scans');
+const model = require('./lib/model');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/doctor', doctorRouter);
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.get('/api/health', async (req, res) => res.json({ ok: true, model: (await model.health()).ok === true }));
+app.use('/api/scans', scans.router);
+app.get('/api/stations/:stationId/live', scans.stationLive);
 app.use('/api', apiRouter);
 
 // the built client (npm run build in client/), so one deploy serves app + API
@@ -29,6 +33,8 @@ function keepAwake(url) {
     fetch(`${url}/api/health`).catch((err) => console.warn('Keep-awake ping failed:', err.message));
   }, 5 * 60 * 1000);
 }
+
+model.start();
 
 connectDB()
   .then(() => {
