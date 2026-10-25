@@ -1,4 +1,4 @@
-import { request, post } from './client';
+import { BASE_URL, request, post } from './client';
 
 /** Every screen reads from MongoDB through these endpoints. */
 export const getPrimary = () => request('/primary');
@@ -9,7 +9,7 @@ export const getStudySessions = () => request('/study-sessions');
 export const getStudySession = (key) => request(`/study-sessions/${key}`);
 export const getStationCode = (stationId) => request(`/stations/${stationId}/code`);
 export const verifyStationCode = (code) => post('/stations/verify', { code });
-export const studySessionFramesUrl = (key) => `/api/study-sessions/${key}/frames`;
+export const studySessionFramesUrl = (key) => `${BASE_URL}/study-sessions/${key}/frames`;
 
 
 export * from './auth';

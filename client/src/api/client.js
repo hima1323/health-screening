@@ -1,4 +1,5 @@
-const BASE_URL = '/api';
+// the native app (npm run build:android) has no same-origin API, so it names the server
+export const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`;
 const TOKEN_KEY = 'aura-screen.token';
 
 /** The session token issued at sign-in, remembered across reloads. */

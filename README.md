@@ -215,6 +215,20 @@ On a phone, open the onrender.com URL: Android Chrome → menu → **Install app
 iPhone Safari → Share → **Add to Home Screen**. It opens full-screen like an app.
 Uploaded past reports live on the instance's disk and are lost on each redeploy.
 
+### Native Android app
+
+`client/android/` is a Capacitor project (open it in Android Studio). The app
+bundles the client and calls the Render API named in `client/.env.android`.
+Needs JDK 21 and the Android SDK.
+
+```bash
+cd client && npm run build:android            # bundle the client into android/
+cd android && ./gradlew assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
+```
+
+Google sign-in doesn't work inside the app (Google blocks embedded web views);
+email + password does.
+
 ## Environment
 
 `server/.env` — see `server/.env.example`.

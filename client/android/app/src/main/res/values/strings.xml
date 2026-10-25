@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Aura Screen</string>
+    <string name="title_activity_main">Aura Screen</string>
+    <string name="package_name">in.aura.screen</string>
+    <string name="custom_url_scheme">in.aura.screen</string>
+</resources>
