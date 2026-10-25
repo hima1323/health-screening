@@ -1,0 +1,20 @@
+# Render Blueprint: one web service that builds the client and serves it with the API.
+# Render dashboard > New > Blueprint > pick this repo; it asks for the sync: false values.
+services:
+  - type: web
+    name: aura-screen
+    runtime: node
+    plan: free
+    buildCommand: cd client && npm ci && npm run build && cd ../server && npm ci
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: DEMO_DOCTOR_EMAIL
+        sync: false

@@ -195,6 +195,26 @@ After changing the analysis, rebuild the study sessions and reload just those �
 python3 analysis/build_sessions.py && (cd server && npm run sessions)
 ```
 
+## Deploy (Render) and install on a phone
+
+`render.yaml` defines one free web service: it builds `client/` and the Express
+server serves it beside the API, so the app and API share one HTTPS URL.
+
+1. Render dashboard → **New → Blueprint** → pick this repo and branch.
+2. Fill in `MONGODB_URI` (MongoDB Atlas; allow `0.0.0.0/0` in Network Access),
+   `GOOGLE_CLIENT_ID` and `DEMO_DOCTOR_EMAIL`. `JWT_SECRET` is generated.
+3. Load the data into Atlas once, from this machine:
+   `cd server && MONGODB_URI='<atlas uri>' npm run seed && MONGODB_URI='<atlas uri>' npm run sessions`
+4. For Google sign-in, add the `https://<name>.onrender.com` URL to the OAuth
+   client's Authorised JavaScript origins.
+
+The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_URL`
+is set, which Render does) so the free instance doesn't sleep.
+
+On a phone, open the onrender.com URL: Android Chrome → menu → **Install app**;
+iPhone Safari → Share → **Add to Home Screen**. It opens full-screen like an app.
+Uploaded past reports live on the instance's disk and are lost on each redeploy.
+
 ## Environment
 
 `server/.env` — see `server/.env.example`.
