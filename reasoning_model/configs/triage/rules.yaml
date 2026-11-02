@@ -1,0 +1,119 @@
+# Ordered triage rule table: the FIRST matching rule sets the level. DRAFT until a clinician signs it off.
+# Levels: URGENT | SEE_DOCTOR_SOON | SELF_CARE | RETAKE, plus the internal REMEASURE (rest 5 min, measure once more,
+# decide again with the `remeasured` flag set).
+# `when` is built only from the fixed condition functions in src/triage/rules_engine.py (CONDITIONS); nothing is
+# eval'd. A string starting with `$` refers to another config: `$red_flags.urgent_items`, `$ranges.min_quality`.
+# Actions (e.g. show_crisis_contacts) are collected from EVERY matching rule, not only the one that sets the level,
+# so the crisis contacts are shown even when another URGENT rule matches first.
+version: v0.1
+status: draft            # draft | approved
+reviewed_by: null
+review_date: null
+
+draft: &draft {status: draft, reviewed_by: null, review_date: null}
+
+rules:
+  - id: R01_red_flag
+    level: URGENT
+    when:
+      # an unconfirmed "yes" still counts: when in doubt, refer
+      any_answer_in: {items: $red_flags.urgent_items, value: "yes", include_unconfirmed: true}
+    reason: "A symptom that needs prompt medical attention was reported."
+    review: *draft
+
+  - id: R02_self_harm
+    level: URGENT
+    when:
+      any_answer_in: {items: [self_harm], value: "yes", include_unconfirmed: true}
+    action: show_crisis_contacts
+    reason: "An answer showed that talking to someone for support right away could help."
+    review: *draft
+
+  - id: R03_quality
+    level: RETAKE
+    when:
+      any_of:
+        - any_low_quality: {min_quality: $ranges.min_quality}
+        - missing_measurement: {names: $ranges.required}
+        - flag: {name: face_not_found}
+    reason: "The measurement was not clear enough to use."
+    review: *draft
+
+  - id: R04_recent_exercise_borderline
+    level: REMEASURE
+    when:
+      all_of:
+        - answer_equals: {item: exercise_last_30min, value: "yes"}
+        - not: {flag: {name: remeasured}}
+        - any_outside_range: {range: normal, margin: false, confirmed_repeat: false}
+    reason: "A reading was outside the usual range shortly after exercise, so it is measured again after a rest."
+    review: *draft
+
+  - id: R05_vital_far_out
+    level: URGENT
+    when:
+      any_outside_range: {range: urgent, margin: false, confirmed_repeat: true}
+    reason: "A reading was far outside the usual range on repeated measurement."
+    review: *draft
+
+  - id: R06_vital_out
+    level: SEE_DOCTOR_SOON
+    when:
+      any_outside_range: {range: normal, margin: true, confirmed_repeat: true}
+    reason: "A reading was outside the usual range on repeated measurement."
+    review: *draft
+
+  # Not in the first brief: a reading outside the range that is not confirmed out (within the error margin of the
+  # limit, a single reading, or repeats that disagree) is measured again once, never ignored; if it is still
+  # outside after that, refer ("when in doubt, refer").
+  - id: R06b_vital_unconfirmed
+    level: REMEASURE
+    when:
+      all_of:
+        - not: {flag: {name: remeasured}}
+        - any_unconfirmed_outside_range: {range: normal}
+    reason: "A reading was close to or outside the usual range but not clearly, so it is measured again."
+    review: *draft
+
+  - id: R06c_vital_unconfirmed_after_remeasure
+    level: SEE_DOCTOR_SOON
+    when:
+      all_of:
+        - flag: {name: remeasured}
+        - any_unconfirmed_outside_range: {range: normal}
+    reason: "A reading stayed outside the usual range in some of the repeated measurements."
+    review: *draft
+
+  - id: R07_mood_screen
+    level: SEE_DOCTOR_SOON
+    when:
+      any_of:
+        - score_at_least: {name: PHQ2, value: 3}
+        - score_at_least: {name: GAD2, value: 3}
+    wording_key: talk_to_professional
+    reason: "Your answers about mood and worry suggest that talking to a professional could help."
+    review: *draft
+
+  - id: R08_persistent_symptom
+    level: SEE_DOCTOR_SOON
+    when:
+      answer_at_least: {item: symptom_duration_days, value: $questionnaire.persistent_days, include_unconfirmed: true}
+    reason: "A symptom has lasted for several days."
+    review: *draft
+
+  - id: R99_default
+    level: SELF_CARE
+    when: {always: {}}
+    reason: "No warning signs were found by this check."
+    review: *draft
+
+# Fixed user-facing text, inserted by code (never written by the LLM). The SELF_CARE line is fixed by safety rule 4.
+advice:
+  URGENT: "Please get medical help now: go to an emergency department or call the emergency number below."
+  SEE_DOCTOR_SOON: "Please see a doctor in the next few days."
+  SELF_CARE: "No warning signs were found by this check. If you feel unwell, see a doctor anyway."
+  RETAKE: "The check could not get a clear reading. Please sit still, face the camera and try again."
+  REMEASURE: "Please rest quietly for 5 minutes. The measurement will then be repeated."
+wording:
+  talk_to_professional: "Please consider talking to a doctor or counsellor about how you have been feeling."
+disclaimer: "This check is informational and is not a medical diagnosis."

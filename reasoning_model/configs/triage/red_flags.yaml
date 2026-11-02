@@ -1,0 +1,40 @@
+# Red-flag symptoms. DRAFT: list, wording, synonyms and regexes must be reviewed by a clinician.
+# A "yes" to any `urgent_items` entry -> URGENT (rule R01), whatever the sensors say.
+# `synonyms` help the LLM map a free-text answer to an item (the user must still confirm it);
+# `complaint_regex` maps an ED chief complaint to the item in the P5 benchmark (mimic_ed.py, yale.py).
+version: v0.1
+status: draft
+reviewed_by: null
+review_date: null
+
+urgent_items: [chest_pain, severe_breathlessness, fainting, confusion, sudden_weakness_numbness, severe_headache]
+
+items:
+  chest_pain:
+    question: "Do you have pain, pressure or tightness in your chest right now?"
+    synonyms: [chest pain, chest tightness, chest pressure, heavy chest]
+    complaint_regex: "chest (pain|tight|pressure)|\\bcp\\b|angina"
+  severe_breathlessness:
+    question: "Are you so short of breath that it is hard to speak or walk?"
+    synonyms: [can't breathe, cannot breathe, gasping, breathless]
+    complaint_regex: "\\bsob\\b|short(ness)? of breath|dyspn|resp(iratory)? distress"
+  fainting:
+    question: "Have you fainted or nearly fainted today?"
+    synonyms: [passed out, blacked out, collapsed]
+    complaint_regex: "syncope|faint|collapse|\\bloc\\b"
+  confusion:
+    question: "Are you, or does anyone with you think you are, newly confused or unusually drowsy?"
+    synonyms: [confused, disoriented, can't think straight]
+    complaint_regex: "confus|altered mental|\\bams\\b|disorient|letharg"
+  sudden_weakness_numbness:
+    question: "Have you had sudden weakness, numbness, a drooping face or trouble speaking?"
+    synonyms: [face drooping, slurred speech, arm weakness, numb on one side]
+    complaint_regex: "stroke|\\bcva\\b|\\btia\\b|weakness|numb|facial droop|slurred|aphasia"
+  severe_headache:
+    question: "Do you have a sudden, very severe headache, the worst you have ever had?"
+    synonyms: [worst headache, thunderclap headache]
+    complaint_regex: "worst headache|thunderclap|severe headache"
+  self_harm:              # handled by rule R02 (URGENT + crisis contacts), not by urgent_items
+    question: "In the last two weeks, have you had thoughts of hurting yourself or that you would be better off dead?"
+    synonyms: [want to hurt myself, end my life, suicidal thoughts]
+    complaint_regex: "suicid|\\bsi\\b|self[- ]?harm|overdose"

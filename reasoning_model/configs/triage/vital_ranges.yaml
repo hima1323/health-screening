@@ -1,0 +1,58 @@
+# Reference ranges for the triage rule engine. DRAFT: every number here must be reviewed by a clinician.
+# A range [lo, hi] is inclusive: a value v is inside when lo <= v <= hi.
+# `normal`: outside it -> SEE A DOCTOR SOON (rule R06). `urgent`: outside it -> URGENT (rule R05).
+# Starting points: adult resting reference values; urgent bands informed by NEWS2 (Royal College of Physicians,
+# 2017), i.e. the values that score 3 points there. NEWS2 is hospital-validated, not kiosk-validated.
+version: v0.1
+status: draft            # draft | approved
+reviewed_by: null
+review_date: null
+
+min_quality: 0.5         # a measurement below this quality is not used -> RETAKE (rule R03)
+required: [heart_rate]   # missing or unusable -> RETAKE (rule R03)
+
+measures:                # measured_by: kiosk (camera / thermal) or device (optional cuff / oximeter)
+  heart_rate:
+    unit: bpm
+    measured_by: kiosk
+    normal: [60, 100]
+    urgent: [41, 130]
+    adjust:              # answers that change the range (first match wins)
+      - when: {answer: athlete, equals: "yes"}
+        normal: [45, 100]
+        note: "regular endurance training can lower the resting heart rate"
+  resp_rate:
+    unit: /min
+    measured_by: kiosk
+    normal: [12, 20]
+    urgent: [9, 24]
+  temperature:
+    unit: C
+    measured_by: kiosk
+    normal: [35.5, 37.9]   # fever cut-off 38.0 C after the thermal calibration offset (P6)
+    urgent: [35.1, 39.0]
+  spo2:                    # clip oximeter only ("with devices" arm)
+    unit: "%"
+    measured_by: device
+    normal: [95, null]     # null = no limit on that side (100% is never "too high")
+    urgent: [92, null]
+  sbp:                     # BP cuff only
+    unit: mmHg
+    measured_by: device
+    normal: [100, 139]     # NEWS2 already scores 101-110
+
+    urgent: [91, 179]
+  dbp:
+    unit: mmHg
+    measured_by: device
+    normal: [60, 89]
+    urgent: [40, 119]
+
+# 95% absolute error per source and measure. PLACEHOLDERS: they must be replaced by the measured Layer-1 values
+# (P6, measurement_bench.py) before any user test. A measurement's own `error_margin` in the evidence record wins.
+error_margins:
+  status: placeholder      # placeholder | measured
+  rppg: {heart_rate: 5}
+  thermal_canthus: {temperature: 0.5}
+  thermal_nostril: {resp_rate: 3}
+  device: {heart_rate: 2, spo2: 2, sbp: 5, dbp: 5, temperature: 0.2, resp_rate: 1}

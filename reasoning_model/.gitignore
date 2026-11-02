@@ -2,4 +2,7 @@
 data/adabase/
 __pycache__/
 data/features/
+# triage track: MIMIC-derived data stays on the approved machine; public downloads are not committed either
+data/restricted/
+data/public/
 results/*

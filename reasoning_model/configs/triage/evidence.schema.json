@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Triage evidence record",
+  "type": "object",
+  "required": ["session_id", "version", "measurements", "answers", "scores", "flags", "decision", "chain"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {"type": "string", "minLength": 1},
+    "version": {
+      "type": "object",
+      "required": ["rules", "ranges", "code"],
+      "properties": {"rules": {"type": "string"}, "ranges": {"type": "string"}, "code": {"type": "string"}}
+    },
+    "measurements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "value", "unit", "quality", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^M[0-9]+$"},
+          "name": {"type": "string"},
+          "value": {"type": ["number", "null"]},
+          "unit": {"type": "string"},
+          "error_margin": {"type": ["number", "null"], "minimum": 0},
+          "quality": {"type": "number", "minimum": 0, "maximum": 1},
+          "n_readings": {"type": "integer", "minimum": 0},
+          "source": {"type": "string"},
+          "repeat_values": {"type": "array", "items": {"type": "number"}}
+        }
+      }
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "item", "answer", "confirmed"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^Q[0-9]+$"},
+          "item": {"type": "string"},
+          "answer": {"type": ["string", "number"]},
+          "confirmed": {"type": "boolean"}
+        }
+      }
+    },
+    "scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^S[0-9]+$"},
+          "name": {"type": "string"},
+          "value": {"type": "number"}
+        }
+      }
+    },
+    "flags": {"type": "array", "items": {"type": "string"}},
+    "decision": {"type": ["object", "null"]},
+    "chain": {"type": ["array", "null"]},
+    "wellness": {"type": ["object", "null"], "description": "optional Level-2 module output; never read by rules_engine.py"}
+  }
+}

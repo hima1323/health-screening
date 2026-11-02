@@ -1,0 +1,67 @@
+# Fixed kiosk questionnaire. DRAFT wording. Answers are stored as strings ("yes"/"no": always quoted here,
+# because YAML would read a bare yes/no as a boolean) or numbers.
+# PHQ-2: Kroenke, Spitzer & Williams, Med Care 2003. GAD-2: Kroenke et al., Ann Intern Med 2007.
+# Both are free to use (Pfizer, no permission needed); the team re-checks the terms before use. Cut-off >= 3.
+version: v0.1
+status: draft
+reviewed_by: null
+review_date: null
+
+persistent_days: 7        # symptom_duration_days >= this -> SEE A DOCTOR SOON (rule R08)
+
+yes_no: &yes_no ["yes", "no"]
+phq_options: &phq_options
+  - {text: "Not at all", value: 0}
+  - {text: "Several days", value: 1}
+  - {text: "More than half the days", value: 2}
+  - {text: "Nearly every day", value: 3}
+
+order: [red_flags, context, duration, mood]
+
+sections:
+  red_flags:              # wording in red_flags.yaml
+    items: [chest_pain, severe_breathlessness, fainting, confusion, sudden_weakness_numbness, severe_headache]
+    options: *yes_no
+  context:                # answers that change how a measurement is read (shown in the reasoning chain)
+    items:
+      exercise_last_30min:
+        question: "Have you exercised or hurried in the last 30 minutes?"
+        options: *yes_no
+        explains: [heart_rate, resp_rate, temperature]
+        effect: "recent exercise can raise heart rate, breathing rate and skin temperature"
+      caffeine_last_2h:
+        question: "Have you had coffee, tea, an energy drink or a cigarette in the last 2 hours?"
+        options: *yes_no
+        explains: [heart_rate]
+        effect: "caffeine and nicotine can raise heart rate"
+      feeling_ill:
+        question: "Are you feeling unwell today?"
+        options: *yes_no
+        explains: [heart_rate, temperature, resp_rate]
+        effect: "feeling unwell can go with a raised temperature or heart rate"
+      athlete:
+        question: "Do you do endurance sport (for example running or cycling) several times a week?"
+        options: *yes_no
+        explains: [heart_rate]
+        effect: "regular endurance training can lower the resting heart rate"
+  duration:
+    items:
+      has_symptom:
+        question: "Do you have a health problem or symptom that is bothering you?"
+        options: *yes_no
+      symptom_duration_days:
+        question: "For how many days have you had it?"
+        type: number
+        ask_if: {answer: has_symptom, equals: "yes"}
+  mood:                   # "Over the last 2 weeks, how often have you been bothered by the following problems?"
+    items:
+      phq2_1: {question: "Little interest or pleasure in doing things", options: *phq_options}
+      phq2_2: {question: "Feeling down, depressed, or hopeless", options: *phq_options}
+      gad2_1: {question: "Feeling nervous, anxious, or on edge", options: *phq_options}
+      gad2_2: {question: "Not being able to stop or control worrying", options: *phq_options}
+      self_harm:          # wording in red_flags.yaml; asked last in the mood block
+        options: *yes_no
+
+scores:
+  PHQ2: {items: [phq2_1, phq2_2], cutoff: 3}
+  GAD2: {items: [gad2_1, gad2_2], cutoff: 3}
