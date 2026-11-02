@@ -1,0 +1,12 @@
+- id: R07_vital_out_hr
+  condition: "resting HR > 100 bpm by more than the device margin, confirmed on a repeat reading"
+  level: SEE_DOCTOR_SOON
+  sources: [ESI danger-zone HR>100, NEWS2 HR bands, Nanchen 2018 Heart]
+  data_check: {mimic_dev: "<urgent rate by HR band, by age>", nhanes: "<% healthy adults above cut-off>", kiosk_error: "<rPPG MAE>"}
+  rule_learning_suggestion: "<e.g. tree split at 102 bpm>"
+  delphi: {round: null, agreement: null}
+  exceptions: [athlete lowers the low-HR bound only]
+  version: v0.1
+  status: draft
+  reviewed_by: null
+  review_date: null

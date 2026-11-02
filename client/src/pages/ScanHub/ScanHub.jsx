@@ -43,7 +43,13 @@ export default function ScanHub() {
   if (step === 'qr') {
     return (
       <Layout eyebrow="Aura Screen" title="Scan to begin" showTabs={false}>
-        <QrScanner onScanned={() => setStep('scanning')} onCancel={returnToHub} />
+        <QrScanner
+          // a demo kiosk code carries a sample data file: run the reasoning model on it (/demo)
+          onScanned={(text, verified) =>
+            verified?.sample ? navigate(`/demo?sample=${encodeURIComponent(verified.sample)}`) : setStep('scanning')
+          }
+          onCancel={returnToHub}
+        />
       </Layout>
     );
   }

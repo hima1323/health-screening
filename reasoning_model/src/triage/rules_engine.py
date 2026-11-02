@@ -28,7 +28,7 @@ import yaml
 
 from triage.evidence import CONFIG
 
-LEVELS = ["URGENT", "SEE_DOCTOR_SOON", "SELF_CARE", "RETAKE", "REMEASURE"]
+LEVELS = ["URGENT", "SEE_DOCTOR_SOON", "SELF_CARE", "RETAKE", "REMEASURE", "NOT_SUITABLE"]
 CONFIG_FILES = {"rules": "rules.yaml", "ranges": "vital_ranges.yaml", "red_flags": "red_flags.yaml",
                 "questionnaire": "questionnaire.yaml", "contacts": "contacts.yaml"}
 
@@ -36,8 +36,9 @@ CONFIG_FILES = {"rules": "rules.yaml", "ranges": "vital_ranges.yaml", "red_flags
 # ---------------------------------------------------------------- config
 
 def load_config(folder=CONFIG):
+    from triage.schema import validate_config
     cfg = {k: yaml.safe_load((Path(folder) / f).read_text(encoding="utf-8")) for k, f in CONFIG_FILES.items()}
-    errs = check_config(cfg)
+    errs = validate_config(cfg) or check_config(cfg)
     if errs:
         raise ValueError("invalid triage config:\n  " + "\n  ".join(errs))
     return cfg
@@ -170,6 +171,32 @@ def answer_at_least(rec, cfg, item, value, include_unconfirmed=False):
     return bool(hits), hits
 
 
+def answer_below(rec, cfg, item, value, include_unconfirmed=False):
+    hits = [a["id"] for a in _answers(rec, item, include_unconfirmed)
+            if isinstance(a["answer"], (int, float)) and a["answer"] < value]
+    return bool(hits), hits
+
+
+def answer_above(rec, cfg, item, value, include_unconfirmed=False):
+    hits = [a["id"] for a in _answers(rec, item, include_unconfirmed)
+            if isinstance(a["answer"], (int, float)) and a["answer"] > value]
+    return bool(hits), hits
+
+
+def measure_at_least(rec, cfg, name, value, margin, confirmed_repeat):
+    """A named measurement >= value (+ its error margin when `margin`); with `confirmed_repeat`, on >= 2 readings,
+    all of them."""
+    hits = []
+    for m in _usable(rec):
+        if m["name"] != name:
+            continue
+        cut = value + (margin_for(m, cfg) if margin else 0)
+        vals = readings(m) if confirmed_repeat else [m["value"]]
+        if all(v >= cut for v in vals) and (len(vals) >= 2 or not confirmed_repeat):
+            hits.append(m["id"])
+    return bool(hits), hits
+
+
 def score_at_least(rec, cfg, name, value):
     hits = [s["id"] for s in rec["scores"] if s["name"] == name and s["value"] >= value]
     return bool(hits), hits
@@ -221,10 +248,10 @@ def always(rec, cfg):
     return True, []
 
 
-CONDITIONS = {f.__name__: f for f in (any_answer_in, answer_equals, answer_at_least, score_at_least, flag,
-                                      any_low_quality, missing_measurement, any_outside_range,
-                                      any_unconfirmed_outside_range, always)}
-ACTIONS = {"show_crisis_contacts"}
+CONDITIONS = {f.__name__: f for f in (any_answer_in, answer_equals, answer_at_least, answer_below, answer_above,
+                                      score_at_least, flag, any_low_quality, missing_measurement, any_outside_range,
+                                      any_unconfirmed_outside_range, measure_at_least, always)}
+ACTIONS = {"show_crisis_contacts", "show_emergency_contacts"}
 
 
 def evaluate(cond, rec, cfg):
@@ -295,6 +322,11 @@ def describe(cond, cfg):
         "any_answer_in": lambda: f"answer '{p.get('value')}' to any of {', '.join(p.get('items', []))}{unconf}",
         "answer_equals": lambda: f"{p.get('item')} = '{p.get('value')}' (all confirmed answers)",
         "answer_at_least": lambda: f"{p.get('item')} >= {p.get('value')}{unconf}",
+        "answer_below": lambda: f"{p.get('item')} < {p.get('value')}{unconf}",
+        "answer_above": lambda: f"{p.get('item')} > {p.get('value')}{unconf}",
+        "measure_at_least": lambda: (f"{p.get('name')} >= {p.get('value')}"
+                                     + (" + error margin" if p.get("margin") else "")
+                                     + (" on >= 2 readings, all of them" if p.get("confirmed_repeat") else "")),
         "score_at_least": lambda: f"{p.get('name')} >= {p.get('value')}",
         "flag": lambda: f"flag '{p.get('name')}'",
         "any_low_quality": lambda: f"any measurement quality < {p.get('min_quality')}",

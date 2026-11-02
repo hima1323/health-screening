@@ -61,12 +61,12 @@ const FAILURES = {
 };
 
 /** Live camera viewfinder that decodes the station QR code. */
-export default function QrScanner({ station = 'Station 2', onScanned, onCancel }) {
+export default function QrScanner({ station = 'Station 2', onScanned, onCancel, verify = verifyStationCode }) {
   const { t } = usePrefs();
   // only codes our own kiosks generate are accepted — the server checks the signature
   const { state, failure, rejection, videoRef, canvasRef, retry, skip } = useQrScanner({
     onDecode: onScanned,
-    verify: verifyStationCode,
+    verify,
   });
   const [dialogOpen, setDialogOpen] = useState(false);
 

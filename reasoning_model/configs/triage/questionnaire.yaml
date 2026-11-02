@@ -2,7 +2,10 @@
 # because YAML would read a bare yes/no as a boolean) or numbers.
 # PHQ-2: Kroenke, Spitzer & Williams, Med Care 2003. GAD-2: Kroenke et al., Ann Intern Med 2007.
 # Both are free to use (Pfizer, no permission needed); the team re-checks the terms before use. Cut-off >= 3.
-version: v0.1
+# The PHQ-2 / GAD-2 item wording must be the EXACT official wording (starter kit; checked in E1.1 source_check).
+# LLM: it may rephrase a question and map a free-text answer to an option; the user must confirm the mapped option,
+# otherwise the answer buttons are used (questionnaire.py).
+version: v0.2
 status: draft
 reviewed_by: null
 review_date: null
@@ -16,31 +19,51 @@ phq_options: &phq_options
   - {text: "More than half the days", value: 2}
   - {text: "Nearly every day", value: 3}
 
-order: [red_flags, context, duration, mood]
+order: [consent, scope, red_flags, context, duration, mood]
 
 sections:
+  consent:                # no consent -> the session ends before anything is measured or stored
+    items:
+      consent:
+        question: "This check uses the camera to estimate your heart rate, breathing and temperature, and asks some
+          questions. It is not a medical diagnosis. Your answers are stored without your name. Do you agree to continue?"
+        options: *yes_no
+  scope:                  # who the check is for: vital_ranges.yaml `scope` (rule R00)
+    items:
+      age:
+        question: "How old are you (in years)?"
+        type: number
+      pregnant:
+        question: "Are you pregnant, or could you be pregnant?"
+        options: ["yes", "no", "not sure"]
   red_flags:              # wording in red_flags.yaml
-    items: [chest_pain, severe_breathlessness, fainting, confusion, sudden_weakness_numbness, severe_headache]
+    items: [chest_pain, severe_breathlessness, fainting, stroke_signs, confusion, worst_headache, severe_bleeding,
+            severe_allergy]
     options: *yes_no
   context:                # answers that change how a measurement is read (shown in the reasoning chain)
     items:
       exercise_last_30min:
-        question: "Have you exercised or hurried in the last 30 minutes?"
+        question: "Have you climbed stairs, run or exercised in the last 30 minutes?"
         options: *yes_no
         explains: [heart_rate, resp_rate, temperature]
         effect: "recent exercise can raise heart rate, breathing rate and skin temperature"
       caffeine_last_2h:
-        question: "Have you had coffee, tea, an energy drink or a cigarette in the last 2 hours?"
+        question: "Have you had coffee, tea, energy drinks or smoked in the last 2 hours?"
         options: *yes_no
         explains: [heart_rate]
         effect: "caffeine and nicotine can raise heart rate"
-      feeling_ill:
-        question: "Are you feeling unwell today?"
+      feeling_unwell:
+        question: "Do you feel unwell today?"
         options: *yes_no
         explains: [heart_rate, temperature, resp_rate]
         effect: "feeling unwell can go with a raised temperature or heart rate"
+      fever_feeling:
+        question: "Do you feel feverish or have chills?"
+        options: *yes_no
+        explains: [temperature, heart_rate]
+        effect: "a fever can raise temperature and heart rate"
       athlete:
-        question: "Do you do endurance sport (for example running or cycling) several times a week?"
+        question: "Do you do regular endurance training (for example running several times a week)?"
         options: *yes_no
         explains: [heart_rate]
         effect: "regular endurance training can lower the resting heart rate"
@@ -54,6 +77,7 @@ sections:
         type: number
         ask_if: {answer: has_symptom, equals: "yes"}
   mood:                   # "Over the last 2 weeks, how often have you been bothered by the following problems?"
+    intro: "Over the last 2 weeks, how often have you been bothered by the following problems?"
     items:
       phq2_1: {question: "Little interest or pleasure in doing things", options: *phq_options}
       phq2_2: {question: "Feeling down, depressed, or hopeless", options: *phq_options}

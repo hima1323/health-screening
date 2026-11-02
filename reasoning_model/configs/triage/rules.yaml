@@ -1,11 +1,13 @@
 # Ordered triage rule table: the FIRST matching rule sets the level. DRAFT until a clinician signs it off.
 # Levels: URGENT | SEE_DOCTOR_SOON | SELF_CARE | RETAKE, plus the internal REMEASURE (rest 5 min, measure once more,
-# decide again with the `remeasured` flag set).
+# decide again with the `remeasured` flag set) and NOT_SUITABLE (outside the population the check is for).
+# Rules and ids follow the triage starter kit, written as structured conditions instead of the kit's `when:` strings
+# (the kit allows either); the kit's message_key texts are the `reason` / `advice` / `wording` entries here.
 # `when` is built only from the fixed condition functions in src/triage/rules_engine.py (CONDITIONS); nothing is
 # eval'd. A string starting with `$` refers to another config: `$red_flags.urgent_items`, `$ranges.min_quality`.
 # Actions (e.g. show_crisis_contacts) are collected from EVERY matching rule, not only the one that sets the level,
 # so the crisis contacts are shown even when another URGENT rule matches first.
-version: v0.1
+version: v0.2
 status: draft            # draft | approved
 reviewed_by: null
 review_date: null
@@ -27,6 +29,21 @@ rules:
       any_answer_in: {items: [self_harm], value: "yes", include_unconfirmed: true}
     action: show_crisis_contacts
     reason: "An answer showed that talking to someone for support right away could help."
+    review: *draft
+
+  # Starter kit R00. Placed AFTER the red-flag and self-harm rules (the kit lists it first), so an out-of-scope user
+  # who reports a red flag is still told to get help now (safety rule 3: red flags override everything). The
+  # NOT_SUITABLE card also shows the emergency number. Clinician to confirm the order.
+  - id: R00_out_of_scope
+    level: NOT_SUITABLE
+    when:
+      any_of:
+        - answer_below: {item: age, value: $ranges.scope.min_age, include_unconfirmed: true}
+        - answer_above: {item: age, value: $ranges.scope.max_age, include_unconfirmed: true}
+        - any_answer_in: {items: [pregnant], value: "yes", include_unconfirmed: true}
+        - any_answer_in: {items: [pregnant], value: "not sure", include_unconfirmed: true}
+    action: show_emergency_contacts
+    reason: "This check is designed for adults aged 18 to 65 who are not pregnant."
     review: *draft
 
   - id: R03_quality
@@ -54,6 +71,18 @@ rules:
     when:
       any_outside_range: {range: urgent, margin: false, confirmed_repeat: true}
     reason: "A reading was far outside the usual range on repeated measurement."
+    review: *draft
+
+  # Starter kit R06: temperature at or above the fever cut-off by more than the error margin on every reading, and
+  # feeling unwell (confirmed).
+  - id: R06a_fever_unwell
+    level: SEE_DOCTOR_SOON
+    when:
+      all_of:
+        - measure_at_least: {name: temperature, value: $ranges.measures.temperature.fever, margin: true,
+                             confirmed_repeat: true}
+        - answer_equals: {item: feeling_unwell, value: "yes"}
+    reason: "Your temperature was raised on repeated measurement and you said you feel unwell."
     review: *draft
 
   - id: R06_vital_out
@@ -114,6 +143,7 @@ advice:
   SELF_CARE: "No warning signs were found by this check. If you feel unwell, see a doctor anyway."
   RETAKE: "The check could not get a clear reading. Please sit still, face the camera and try again."
   REMEASURE: "Please rest quietly for 5 minutes. The measurement will then be repeated."
+  NOT_SUITABLE: "This check is not designed for you. Please ask a doctor, nurse or pharmacist instead. If you feel very unwell, call the emergency number below."
 wording:
   talk_to_professional: "Please consider talking to a doctor or counsellor about how you have been feeling."
 disclaimer: "This check is informational and is not a medical diagnosis."

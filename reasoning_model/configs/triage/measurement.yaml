@@ -1,0 +1,22 @@
+# Measurement agents: how raw recordings become value + quality. PLACEHOLDERS until the P6 measurement benchmark
+# calibrates them on many recordings with references (e.g. MCD-rPPG ppg_sync, BIDMC, own calibration session).
+status: placeholder
+
+rppg:                         # src/triage/measure/hr_rppg.py
+  min_half_seconds: 10        # two readings = two halves when each half is at least this long
+  snr_db_ramp: [-5.0, 5.0]    # SNR score 0 at the first value, 1 at the second
+  agreement_bpm_ramp: [5.0, 15.0]   # POS vs CHROM difference: score 1 at <= first value, 0 at >= second
+  combine: mean               # quality = mean(SNR score, agreement score) x share of frames with a face
+
+thermal:                      # src/triage/measure/thermal_vitals.py
+  canthus_offset_c: 0.0       # added to the hottest-face-pixel temperature (calibrate against a contact thermometer)
+  face_min_c: 30.0            # pixels at or above this count as skin
+  hot_pixel_fraction: 0.005   # canthus proxy = mean of the hottest 0.5% of skin pixels
+  stability_ramp_c: [0.5, 0.1]      # temperature score from the SD over time: 0 at the first, 1 at the second
+  resp_min_seconds: 20        # breathing rate needs at least this much recording
+  resp_prominence_ramp: [0.2, 0.6]  # share of breathing-band power near the peak: score 0 .. 1
+
+contact:                      # src/triage/measure/devices.py (ECG / finger PPG files)
+  min_half_seconds: 10
+  plausible_ibi_s: [0.33, 2.0]
+  regular_share_ramp: [0.6, 0.9]    # share of beat intervals within 20% of the median: score 0 .. 1

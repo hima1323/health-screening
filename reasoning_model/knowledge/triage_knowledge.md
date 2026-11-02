@@ -1,13 +1,8 @@
-# Triage knowledge (DRAFT: not yet written or reviewed by a clinician)
+---
+status: none_approved
+---
+# Triage knowledge (APPROVED copy)
 
-Plain-language text that the follow-up Q&A (P3, `src/triage/followup_qa.py`) may quote, retrieved by these section
-headings. Nothing here may name a diagnosis, a disorder, a medicine or a dose. Status: draft; reviewed_by: none.
-
-## What the check measures
-## Why a reading can be outside the usual range
-## Why a measurement is repeated
-## What to do after an URGENT result
-## What to do after a SEE A DOCTOR SOON result
-## What to do after a SELF-CARE result
-## Talking to someone about mood and worry
-## What this check cannot tell you
+Nothing is approved yet. At the E1.6 lock the clinician-approved sections of `triage_knowledge_DRAFT.md` are copied here
+with `status: approved`, `reviewed_by` and `review_date`. Until then the follow-up Q&A uses the DRAFT text only in demo
+mode (followup_qa.py).

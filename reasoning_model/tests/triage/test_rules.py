@@ -23,7 +23,7 @@ def remeasure(rec, **vitals):
 # ---------------------------------------------------------------- R01 red flags
 
 @pytest.mark.parametrize("item", ["chest_pain", "severe_breathlessness", "fainting", "confusion",
-                                  "sudden_weakness_numbness", "severe_headache"])
+                                  "stroke_signs", "worst_headache", "severe_bleeding", "severe_allergy"])
 def test_red_flag_with_normal_vitals_is_urgent(cfg, run, item):
     d = run(session(cfg, answers={item: "yes"}))
     assert (d["level"], d["rule_id"]) == ("URGENT", "R01_red_flag")
@@ -89,7 +89,7 @@ def test_no_heart_rate_measurement_at_all_is_retake(cfg, run):
 
 
 def test_quality_exactly_at_minimum_is_used(cfg, run):
-    assert run(session(cfg, {"heart_rate": {"repeat": [72, 72], "quality": 0.5}}))["level"] == "SELF_CARE"
+    assert run(session(cfg, {"heart_rate": {"repeat": [72, 72], "quality": 0.6}}))["level"] == "SELF_CARE"
 
 
 def test_missing_optional_measurement_is_not_retake(cfg, run):

@@ -72,7 +72,7 @@ def test_athlete_adjustment_is_shown(cfg, run):
     rec = session(cfg, {"heart_rate": {"repeat": [50, 50], "margin": 3}}, {"athlete": "yes"})
     run(rec)
     hr = next(i for i in rec["chain"][1]["items"] if i["name"] == "heart_rate")
-    assert hr["normal"] == [45, 100] and "range_adjusted" in hr
+    assert hr["normal"] == [50, 100] and "range_adjusted" in hr
 
 
 def test_draft_status_and_placeholder_margins_are_disclosed(cfg, run):

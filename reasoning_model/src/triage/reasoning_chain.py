@@ -73,7 +73,7 @@ def uncertainty(rec, cfg, interp, ctx, decision):
                       "text": f"{i['name']} is outside the range by no more than the measurement error"})
         elif i["status"] in ("out", "borderline") and not i.get("confirmed"):
             u.append({"kind": "unconfirmed", "refs": [i["ref"]],
-                      "text": f"{i['name']} was outside the range on only some readings"})
+                      "text": f"{i['name']} was not clearly outside the range on every reading"})
         if i["status"] == "not_usable":
             u.append({"kind": "low_quality", "refs": [i["ref"]], "text": f"{i['name']} reading was not clear enough"})
     measured = {m["name"] for m in rec["measurements"] if m["value"] is not None}
@@ -99,7 +99,7 @@ def advice(cfg, decision):
     contacts = []
     if "show_crisis_contacts" in decision["actions"]:
         contacts += cfg["contacts"]["crisis"]
-    if decision["level"] == "URGENT" or contacts:
+    if decision["level"] == "URGENT" or contacts or "show_emergency_contacts" in decision["actions"]:
         contacts = cfg["contacts"]["emergency"] + contacts
     return {"level": decision["level"], "text": text, "contacts": contacts,
             "contacts_verified": bool(cfg["contacts"].get("verified")), "disclaimer": r["disclaimer"]}

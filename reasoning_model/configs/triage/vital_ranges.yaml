@@ -8,40 +8,51 @@ status: draft            # draft | approved
 reviewed_by: null
 review_date: null
 
-min_quality: 0.5         # a measurement below this quality is not used -> RETAKE (rule R03)
+# who the check is for (starter kit); out of scope -> NOT_SUITABLE (rule R00)
+population: "adults 18-65, seated rest >= 2 min, not pregnant"
+scope: {min_age: 18, max_age: 65}
+repeat_rule: "second reading after 60 s; confirmed out only if both readings are outside the range by more than the error margin"
+
+min_quality: 0.6         # a measurement below this quality is not used -> RETAKE (rule R03). Starter kit: 0.6
 required: [heart_rate]   # missing or unusable -> RETAKE (rule R03)
 
 measures:                # measured_by: kiosk (camera / thermal) or device (optional cuff / oximeter)
   heart_rate:
     unit: bpm
     measured_by: kiosk
-    normal: [60, 100]
-    urgent: [41, 130]
+    normal: [60, 100]      # convention (resting HR); Heart 2018 notes no consensus (typical 50-90)
+    urgent: [41, 130]      # NEWS2 3-point bands: HR <= 40 or >= 131 (verify on the official chart)
     adjust:              # answers that change the range (first match wins)
       - when: {answer: athlete, equals: "yes"}
-        normal: [45, 100]
+        normal: [50, 100]  # starter kit: lower bound 50 (clinician to confirm)
         note: "regular endurance training can lower the resting heart rate"
+    sources: [ESI danger-zone HR>100 (consider uptriage), NEWS2 HR bands, Nanchen 2018 Heart (resting HR)]
   resp_rate:
     unit: /min
     measured_by: kiosk
     normal: [12, 20]
-    urgent: [9, 24]
+    urgent: [9, 24]        # NEWS2 3-point bands: RR <= 8 or >= 25 (verify)
+    sources: [ESI danger-zone RR>20, NEWS2 RR bands]
   temperature:
     unit: C
     measured_by: kiosk
     normal: [35.5, 37.9]   # fever cut-off 38.0 C after the thermal calibration offset (P6)
-    urgent: [35.1, 39.0]
+    urgent: [35.1, 39.0]   # NEWS2 3-point bands: <= 35.0 or >= 39.1 C (verify)
+    fever: 38.0            # core-temperature convention (rule R06a); the skin reading must be calibrated (Zhou 2020)
+    sources: [NEWS2 temperature bands, Zhou 2020 J Biomed Opt (inner canthus), Protsiv 2020 eLife (normal mean < 37.0)]
   spo2:                    # clip oximeter only ("with devices" arm)
     unit: "%"
     measured_by: device
-    normal: [95, null]     # null = no limit on that side (100% is never "too high")
-    urgent: [92, null]
+    normal: [95, null]     # null = no limit on that side (100% is never "too high"). Kit: NEWS2 94-95 = 1 point;
+                           # the clinician sets the kiosk cut-off
+    urgent: [92, null]     # NEWS2 scale 1 <= 91 = 3 points; ESI danger zone < 92 (verify)
+    sources: [NEWS2 SpO2 scale 1, ESI danger zone SpO2<92]
   sbp:                     # BP cuff only
     unit: mmHg
     measured_by: device
-    normal: [100, 139]     # NEWS2 already scores 101-110
-
-    urgent: [91, 179]
+    normal: [100, 139]     # NEWS2 already scores 101-110; 140 = hypertension convention (clinician picks the guideline)
+    urgent: [91, 179]      # NEWS2 <= 90 = 3 points; >= 180 severe hypertension convention (clinician to confirm)
+    sources: [NEWS2 SBP bands, national hypertension guideline (to be chosen by the clinician)]
   dbp:
     unit: mmHg
     measured_by: device
@@ -56,3 +67,5 @@ error_margins:
   thermal_canthus: {temperature: 0.5}
   thermal_nostril: {resp_rate: 3}
   device: {heart_rate: 2, spo2: 2, sbp: 5, dbp: 5, temperature: 0.2, resp_rate: 1}
+  ecg: {heart_rate: 2}                 # heart rate from an uploaded ECG file
+  ppg_contact: {heart_rate: 3}         # heart rate from an uploaded finger-PPG file

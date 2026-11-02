@@ -1,12 +1,13 @@
 """
-Streamlit dashboard for live rPPG measurement with PhysFormer.
+Streamlit dashboard for live rPPG measurement with the models trained by
+bench/ (CVPR Lab P4 and PhysFormer, see bench/infer.py for the list).
 
 Capture and inference run on a background thread (see engine.py) at the
 camera's native frame rate. The UI updates through st.fragment, so only the
 live panels re-render -- the previous st.rerun()-per-frame approach
 re-rendered the whole page each frame, which is what caused the flicker.
 
-Run with: streamlit run streamlit_app.py
+Run with: start_live.bat  (or: streamlit run webapp/streamlit_app.py, from rppg1/)
 """
 import base64
 import os
@@ -20,10 +21,10 @@ import torch
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from model import PhysFormer
+from bench.infer import DEFAULT, MODELS, Predictor
 from engine import RPPGEngine
 
-st.set_page_config(page_title="PhysFormer Live rPPG", page_icon="💓", layout="wide")
+st.set_page_config(page_title="Live rPPG", page_icon="💓", layout="wide")
 
 st.markdown("""
 <style>
@@ -45,23 +46,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CKPT = os.path.join(ROOT, "checkpoints_mcd", "physformer_last.pt")
-
-
-@st.cache_resource(show_spinner="Loading PhysFormer checkpoint…")
-def load_model(ckpt_path, clip_len, norm_type):
-    model = PhysFormer(dim=48, ff_hidden=72, depth=6, heads=4, theta=0.7, tau=2.0,
-                        tube_size=(4, 4, 4), frames=clip_len, norm_type=norm_type)
-    model.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
-    model.eval()
-    return model
+@st.cache_resource(show_spinner="Loading model checkpoint…")
+def load_model(name):
+    return Predictor(name)
 
 
 if "engine" not in st.session_state:
     st.session_state.engine = None
 
-st.title("💓 PhysFormer Live rPPG")
+st.title("💓 Live rPPG")
 st.caption("Contactless physiological measurement from webcam video")
 
 engine = st.session_state.engine
@@ -70,17 +63,19 @@ is_running = engine is not None and engine.running
 with st.sidebar:
     st.header("Capture settings")
     camera_index = st.number_input("Camera index", 0, 5, 0, disabled=is_running)
-    clip_len = st.select_slider("Model window (frames)", [64, 96, 128], value=96,
-                                 disabled=is_running)
+    model_name = st.selectbox("Model", list(MODELS), index=list(MODELS).index(DEFAULT),
+                              format_func=lambda k: f"{k} — {MODELS[k][2].split(' - ')[0]}",
+                              disabled=is_running)
     stride = st.slider("Inference every N frames", 5, 30, 15, disabled=is_running)
     window_s = st.select_slider("Analysis window (seconds)", [30, 60, 90, 120], value=60,
                                  disabled=is_running)
     st.caption("Settings apply when you press Start.")
     st.divider()
-    st.markdown(
-        "**Model** PhysFormer · dim 48 · depth 6  \n"
-        "**Checkpoint** MCD-rPPG, 18 subjects, 23 epochs"
-    )
+    st.caption(MODELS[model_name][2])
+    st.caption("Window: 160 frames of 128×128 face crops (DiffNormalized), "
+               "trained on MCD-rPPG (64 subjects). Face box is fixed at Start — "
+               "keep still; press Stop / Start after moving.")
+    st.caption(f"Device: {'GPU' if torch.cuda.is_available() else 'CPU'}")
 
 col_a, col_b = st.columns([3, 2], gap="large")
 
@@ -93,9 +88,8 @@ with col_b:
                                help="Clear the accumulated waveform and restart measurement")
 
 if start_clicked:
-    model = load_model(CKPT, clip_len, "bn")
-    eng = RPPGEngine(model, camera_index=camera_index, clip_len=clip_len,
-                     img_size=96, stride=stride, waveform_seconds=window_s)
+    eng = RPPGEngine(load_model(model_name), camera_index=camera_index,
+                     stride=stride, waveform_seconds=window_s)
     eng.start()
     st.session_state.engine = eng
     st.rerun()
@@ -139,9 +133,11 @@ def video_panel():
         f'<img class="cam" src="data:image/jpeg;base64,{b64}" alt="live camera">',
         unsafe_allow_html=True,
     )
+    face = ('<span class="pill"><span class="dot warn"></span>no face found — whole frame used; '
+            'face the camera and press Stop / Start</span>' if snap["face_found"] is False else "")
     st.markdown(
         f'<span class="pill"><span class="dot live"></span>{snap["fps"]:.0f} fps capture</span>'
-        f'<span class="pill">{snap["buffer_seconds"]:.0f}s analysed</span>',
+        f'<span class="pill">{snap["buffer_seconds"]:.0f}s analysed</span>' + face,
         unsafe_allow_html=True,
     )
 
@@ -161,7 +157,9 @@ def vitals_panel():
     snr = v.get("snr_db")
 
     st.markdown('<div class="hero">', unsafe_allow_html=True)
-    st.metric("Heart rate", f'{fmt(v.get("hr_bpm"))} bpm')
+    st.metric("Heart rate", f'{fmt(v.get("hr_bpm"))} bpm',
+              help="Spectral peak of the last analysis window. Readings settle after "
+                   "~30 s; the first ones can be off by 20 bpm or more.")
     st.markdown('</div>', unsafe_allow_html=True)
 
     if snr is None:
@@ -181,7 +179,8 @@ def vitals_panel():
     c2.metric("Beats detected", f'{v.get("n_beats", 0)}')
 
     if secs < 20:
-        st.progress(min(secs / 20.0, 1.0), text=f"Respiration unlocks at 20 s ({secs:.0f}s)")
+        st.progress(min(secs / 20.0, 1.0),
+                    text=f"Heart rate still settling; respiration unlocks at 20 s ({secs:.0f}s)")
     elif v.get("lf_nu") is None:
         st.progress(min(secs / 60.0, 1.0), text=f"HRV frequency metrics need ~60 s ({secs:.0f}s)")
 
@@ -242,8 +241,9 @@ hrv_panel()
 
 st.markdown(
     '<div class="note">All measures are derived from the model\'s predicted rPPG '
-    'waveform, so they inherit its accuracy. This checkpoint was trained on 18 '
-    'subjects for 23 epochs and is <b>not clinically valid</b> — use the SNR '
+    'waveform, so they inherit its accuracy. The models were trained on 64 '
+    'MCD-rPPG subjects; the first reading needs 160 frames (~5 s). This is a '
+    'research demo and <b>not clinically valid</b> — use the SNR '
     'indicator above as the honest confidence signal, and treat HRV and '
     'respiration as demonstrations of the pipeline rather than real readings.</div>',
     unsafe_allow_html=True,

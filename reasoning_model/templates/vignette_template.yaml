@@ -1,0 +1,13 @@
+# One vignette per file or a list. Reference labels come from 2-3 clinicians, blind to the rules.
+- id: V001
+  age: 34
+  sex: F
+  measurements: {heart_rate: [108, 107], resp_rate: 16, temperature: 36.8, spo2: null, systolic_bp: null}
+  quality: {heart_rate: 0.9, resp_rate: 0.8, temperature: 0.85}
+  answers: {chest_pain: no, severe_breathlessness: no, fainting: no, stroke_signs: no, confusion: no,
+            worst_headache: no, severe_bleeding: no, severe_allergy: no, self_harm: no,
+            exercise_last_30min: no, caffeine_last_2h: yes, feeling_unwell: no, athlete: no, symptom_duration_days: 0}
+  scores: {PHQ2: 1, GAD2: 2}
+  narrative: "Office worker, two coffees this morning, feels fine."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}   # URGENT | SEE_DOCTOR_SOON | SELF_CARE | RETAKE
+  tags: [borderline, caffeine]

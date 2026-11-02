@@ -18,3 +18,18 @@ __pycache__/
 
 # cached source downloads for analysis/build_sessions.py
 analysis/sources/
+
+# rPPG benchmark: caches and logs stay local; the best.pt weights and the report are tracked
+rppg1/data/
+rppg1/runs/*
+!rppg1/runs/*/
+rppg1/runs/*/*
+!rppg1/runs/*/best.pt
+!rppg1/runs/REPORT.md
+!rppg1/runs/comparison_tables*.png
+
+# tool caches (pip, Ollama models, Hugging Face, torch) kept on D: with the project
+.cache/
+
+# reasoning-model demo sample files (built from MIMIC / Yale / rPPG results; never publish)
+reasoning_model/demo_samples/

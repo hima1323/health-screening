@@ -18,8 +18,8 @@ SOURCES = {"heart_rate": "rppg", "resp_rate": "thermal_nostril", "temperature": 
            "spo2": "device", "sbp": "device", "dbp": "device"}
 NORMAL_VITALS = {"heart_rate": 72, "resp_rate": 14, "temperature": 36.6}
 NO_ANSWERS = {i: "no" for i in ["chest_pain", "severe_breathlessness", "fainting", "confusion",
-                                "sudden_weakness_numbness", "severe_headache", "exercise_last_30min",
-                                "caffeine_last_2h", "feeling_ill", "athlete", "has_symptom", "self_harm"]}
+                                "stroke_signs", "worst_headache", "severe_bleeding", "severe_allergy", "exercise_last_30min",
+                                "caffeine_last_2h", "feeling_unwell", "athlete", "has_symptom", "self_harm"]}
 
 
 @pytest.fixture(scope="session")

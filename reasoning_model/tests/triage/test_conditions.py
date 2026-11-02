@@ -11,7 +11,8 @@ from triage.rules_engine import (CONDITIONS, approval_problems, check_config, ev
 
 def test_every_condition_function_is_tested():
     tested = {"any_answer_in", "answer_equals", "answer_at_least", "score_at_least", "flag", "any_low_quality",
-              "missing_measurement", "any_outside_range", "any_unconfirmed_outside_range", "always"}
+              "missing_measurement", "any_outside_range", "any_unconfirmed_outside_range", "always",
+              "answer_below", "answer_above", "measure_at_least"}          # last three: test_kit.py
     assert set(CONDITIONS) == tested
 
 
@@ -155,7 +156,7 @@ def test_combinators(cfg):
 
 
 def test_resolve(cfg):
-    assert resolve(cfg, "$ranges.min_quality") == 0.5
+    assert resolve(cfg, "$ranges.min_quality") == 0.6
     assert "chest_pain" in resolve(cfg, "$red_flags.urgent_items")
     assert resolve(cfg, "plain") == "plain"
     with pytest.raises(KeyError):
@@ -176,9 +177,10 @@ def test_shipped_config_is_valid(cfg):
 
 def test_check_config_rejects_bad_tables(cfg):
     rules = lambda c: c["rules"]["rules"]
+    rule = lambda c, i: next(r for r in rules(c) if r["id"] == i)
     assert any("unknown condition" in e for e in _bad(cfg, lambda c: rules(c)[0].update(when={"eval": "1"})))
     assert any("boolean" in e for e in _bad(cfg, lambda c: rules(c)[0]["when"]["any_answer_in"].update(value=True)))
-    assert any("does not resolve" in e for e in _bad(cfg, lambda c: rules(c)[2]["when"]["any_of"][0]
+    assert any("does not resolve" in e for e in _bad(cfg, lambda c: rule(c, "R03_quality")["when"]["any_of"][0]
                                                      ["any_low_quality"].update(min_quality="$ranges.nope")))
     assert any("unknown level" in e for e in _bad(cfg, lambda c: rules(c)[0].update(level="MAYBE")))
     assert any("last rule" in e for e in _bad(cfg, lambda c: rules(c).pop()))
