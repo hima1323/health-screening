@@ -1,0 +1,16 @@
+# Render's free plan sleeps a service after 15 min without traffic. The server already pings itself every 5 min
+# (server/index.js keepAwake); this outside ping also wakes it if it ever does fall asleep.
+name: Keep the site awake
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # GitHub runs scheduled jobs at most every 5 min, sometimes later
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /api/health
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 https://aura-screen.onrender.com/api/health
