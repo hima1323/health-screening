@@ -72,4 +72,4 @@ async function health() {
   }
 }
 
-module.exports = { start, nextSample, predict, health };
+module.exports = { start, nextSample, predict, health, pythonPath };

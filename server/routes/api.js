@@ -73,7 +73,8 @@ router.get('/sessions/:sessionId/report', async (req, res) => {
 router.get('/stations/:stationId/code', async (req, res) => {
   const station = await Station.findOne({ stationId: req.params.stationId }).select('stationId').lean();
   if (!station) return res.status(404).json({ error: 'Station not found' });
-  const { code, expiresAt } = issueStationCode(station.stationId);
+  // ?sample=<demo sample id>: the code also carries a demo data file for the reasoning model (routes/triage.js)
+  const { code, expiresAt } = issueStationCode(station.stationId, req.query.sample && String(req.query.sample));
   const svg = await QRCode.toString(code, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
   res.set('Cache-Control', 'no-store');
   res.json({ stationId: station.stationId, code, expiresAt, svg });
@@ -81,11 +82,11 @@ router.get('/stations/:stationId/code', async (req, res) => {
 
 // POST /api/stations/verify — is a scanned QR one of our kiosk codes? { code } → { stationId }
 router.post('/stations/verify', async (req, res) => {
-  const { stationId, error } = readStationCode(req.body?.code);
+  const { stationId, sample, error } = readStationCode(req.body?.code);
   if (error) return res.status(400).json({ error });
   const station = await Station.exists({ stationId });
   if (!station) return res.status(400).json({ error: 'This station is no longer in service.' });
-  res.json({ stationId });
+  res.json({ stationId, sample: sample || null });
 });
 
 // GET /api/study-sessions — the past sessions list, with an overview sketch of each track

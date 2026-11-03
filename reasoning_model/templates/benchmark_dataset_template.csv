@@ -1,0 +1,9 @@
+case_id,age,sex,hr,hr_2,hr_rest,rr,temp_c,spo2,sbp,chest_pain,severe_breathlessness,fainting,self_harm,exercise_last_30min,caffeine_last_2h,feeling_unwell,athlete,symptom_duration_days,phq2,gad2,complaint,expected_level
+S001,34,F,72,74,,14,36.6,,,no,no,no,no,no,no,no,no,0,0,1,,SELF_CARE
+S002,52,M,84,86,,18,36.7,,,yes,no,no,no,no,no,no,no,0,0,0,chest pressure,URGENT
+S003,41,M,120,118,,26,39.5,,,no,no,no,no,no,no,yes,no,2,1,0,fever,URGENT
+S004,23,M,106,104,79,19,37.0,,,no,no,no,no,yes,no,no,no,0,0,0,,SELF_CARE
+S005,45,F,112,110,111,17,36.9,,,no,no,no,no,yes,no,no,no,0,0,1,,SEE_DOCTOR_SOON
+S006,38,M,70,71,,14,36.6,,,no,no,no,no,no,no,no,no,0,4,3,,SEE_DOCTOR_SOON
+S007,30,F,76,78,,15,36.6,,,no,no,no,yes,no,no,no,no,0,5,4,,URGENT
+S008,50,M,82,84,,15,36.6,91,128,no,no,no,no,no,no,no,no,0,0,0,,SEE_DOCTOR_SOON

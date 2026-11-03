@@ -5,6 +5,48 @@ QR-triggered scan, and the report and timeline that come out of it. React +
 Vite on the front, Express + Mongoose on the back — every screen reads its data
 from MongoDB, nothing is hardcoded in the client.
 
+## Links
+
+| What | Link |
+|------|------|
+| Code | https://github.com/hima1323/health-screening |
+| Presentation (PPT) | _add link here_ |
+| Demo video | _add link here_ |
+| Live site | _add link here after deployment_ |
+
+## Project components
+
+| Part | Folder | What it does |
+|------|--------|--------------|
+| Patient app | `client/`, `server/` | React app + Express/MongoDB API: QR-started scan, reports, timeline, doctor portal |
+| rPPG model | `rppg1/`, `cvprlab/` | Heart rate from a face video. Trained model **CVPR Lab P4** (4.8M parameters); weights are in `rppg1/runs/*/best.pt` |
+| Reasoning model | `reasoning_model/` | Expert triage system: ordered rules decide the level, a local LLM only words the explanation, a verifier checks it |
+| Triage Lab | `reasoning_model/src/triage/lab_app.py` | Streamlit page to pick a ready-made sample and see input and output, benchmark a dataset, or measure heart rate from a video |
+
+### Reasoning model in one picture
+
+```
+sensors (rPPG, thermal, devices) -> session flow (consent, scope, questions)
+  -> evidence record -> rule engine (rules.yaml, first match wins)
+  -> reasoning chain (cited evidence, uncertainty) -> explainer (LLM or template) -> verifier
+  -> card: level, reasons, advice, contacts
+```
+
+The LLM never decides the level. Rules are data in `reasoning_model/configs/triage/*.yaml` and are marked **draft**
+until a clinician signs them off, so the triage output is for demonstration and is not medical advice. Details:
+`reasoning_model/TRIAGE_EXPERT_SYSTEM_STATUS.md`.
+
+### rPPG model and weights
+
+| Weights (`rppg1/runs/<run>/best.pt`) | Model | Note |
+|------|-------|------|
+| `CVPR_P4_e30_MCD` | CVPR Lab P4, 4 blocks, 30 epochs | default; MAE 1.96 (MCD) / 4.48 (UBFC) / 3.52 (MPSC) bpm |
+| `CVPR_P4_d12_e30_aug_MCD`, `CVPR_P4_d12_e30_MCD` | P4, 12 blocks | best on MCD / UBFC |
+| `MCD_MCD` | plain PhysFormer | baseline |
+| `CVPR_phase1..4_*` | ablation ladder | phase 1 PhysFormer to phase 4 frequency |
+
+Benchmark tables: `rppg1/runs/REPORT.md`. Datasets (MCD-rPPG, UBFC-rPPG, MPSC) are not in the repository.
+
 ## Problem statement
 
 Routine health checks need a clinic visit, a trained operator and contact
@@ -39,7 +81,8 @@ This project designs and builds that patient-facing side.
 |-------|-------|
 | Frontend | React 19, Vite, React Router, CSS Modules, lucide-react, jsQR (QR scanning) |
 | Backend | Node.js, Express 5, MongoDB with Mongoose, JWT auth, Google sign-in, Multer (uploads) |
-| Signal analysis | Python, NumPy; rPPG with POS/CHROM and a PhysFormer model in PyTorch (`rppg1/`) |
+| Signal analysis | Python, NumPy; rPPG with POS/CHROM, PhysFormer and the CVPR Lab model in PyTorch (`rppg1/`, `cvprlab/`) |
+| Triage reasoning | Python, YAML rule tables, Streamlit lab, local LLM (Ollama) for wording only (`reasoning_model/`) |
 | Tooling | Git and GitHub, oxlint |
 
 ## Workflow
@@ -106,6 +149,7 @@ The project is tracked with Git and hosted on GitHub:
 | Branch | Purpose |
 |--------|---------|
 | `main` | Stable code. This is what the GitHub page and the README show. |
+| `reasoning-model` | Reasoning model, Triage Lab, CVPR Lab rPPG model and weights, Aura demo screens. |
 | `merge/device-frame` | Working branch for the phone/kiosk device frame and later features. Merged into `main` through pull request #1. |
 
 New work goes on a branch. It reaches `main` through a pull request, so every change to `main` can be reviewed and traced:
@@ -125,11 +169,10 @@ gh pr create --base main              # open a pull request into main
 - The subject line says what the change does for the user, in the imperative
   ("Explain camera errors and accept only our kiosk's QR codes"), not which
   files changed.
-- Code, docs and screenshots are committed. Secrets, build output and large
-  data are not. `.gitignore` excludes `.env`, `node_modules/`, `dist/`,
-  uploaded patient reports (`server/uploads/`), the rPPG datasets and model
-  weights (`rppg1/data/`, `rppg1/checkpoints_mcd/`), screen recordings and
-  voice notes.
+- Code, docs, screenshots and the trained rPPG weights (`rppg1/runs/*/best.pt`) are committed. Secrets, build
+  output and large data are not. `.gitignore` excludes `.env`, `node_modules/`, `dist/`, uploaded patient reports
+  (`server/uploads/`), the rPPG datasets and caches (`rppg1/data/`), clinical data (`reasoning_model/data/`),
+  screen recordings and voice notes.
 
 <img src="docs/screenshots/github-commits.png" alt="Commit history on GitHub" width="760">
 
@@ -158,22 +201,69 @@ Then follow [Run it](#run-it) below.
 ## Structure
 
 ```
-webapp/
-├── client/                 Vite React app (see client/README.md)
+health-screening/
+├── client/                 Vite React app (patient screens, kiosk, demo scan, doctor portal)
+├── server/                 Express + Mongoose API (auth, screening data, live scans, doctor, /api/triage proxy)
 ├── model_service/          the reasoning model as an HTTP service (Python), its fold models and samples
-└── server/                 Express + Mongoose API
-    ├── index.js            app entry — mounts the routers, connects, listens
-    ├── db.js               mongoose connection
-    ├── lib/                token.js (JWT), google.js (ID-token verification)
-    ├── middleware/         requireUser.js — bearer token → req.user
-    ├── models/             User, Patient, Station, ScreeningSession,
-    │                       Report, VitalTimeline, ScreeningLog
-    ├── routes/             api.js (screening data), auth.js (accounts)
-    ├── scripts/seed.js     demo patient + session S-8841
-    └── uploads/            past reports patients attach (gitignored)
+├── rppg1/                  rPPG training, benchmark and live dashboard
+│   ├── model/              PhysFormer
+│   ├── bench/              preprocessing, training harness, infer.py (Predictor), benchmark
+│   ├── webapp/             live webcam dashboard (Streamlit)
+│   └── runs/               trained weights best.pt + REPORT.md
+├── cvprlab/                CVPR Lab model (the one used: phase4_frequency)
+├── reasoning_model/        expert triage system
+│   ├── configs/triage/     rules, ranges, red flags, questionnaire, contacts (YAML)
+│   ├── src/triage/         rules_engine, reasoning_chain, explainer, verify, session,
+│   │                       lab_app (Triage Lab), kiosk_app, demo_service, bench/, derive/, measure/
+│   ├── vignettes/ templates/ evidence/   sample cases and clinician templates
+│   └── tests/              244 tests
+├── docs/                   diagrams, screenshots
+└── render.yaml             Render deployment
 ```
 
-## Run it
+## Setup and steps to execute
+
+Tested on Windows 11 with Python 3.13/3.14 and Node 24. Everything below runs from a fresh clone.
+
+### A. Triage Lab (reasoning model and rPPG model) - no database needed
+
+```bash
+git clone https://github.com/hima1323/health-screening.git
+cd health-screening/reasoning_model
+python -m venv .venv
+.venv\Scripts\activate                 # macOS/Linux: source .venv/bin/activate
+pip install -r requirements-lab.txt
+python -m pytest -q                     # expect: 244 passed
+streamlit run src/triage/lab_app.py     # opens http://localhost:8501
+```
+
+1. Tab **0 - Try a sample**: choose "Draft vignettes" (or "Template sample"), pick a case. Section 1 shows the input,
+   section 2 the triage level, the reason and the advice. Open "Show full detail" for the reasoning chain.
+2. Tab **1 - Benchmark a dataset**: choose "Template sample", press **Run the benchmark** (metrics vs the baselines).
+3. Tab **3 - Face video**: upload a 30-60 s face video, pick model `p4` and press **Measure heart rate**. It uses the
+   committed weights `rppg1/runs/CVPR_P4_e30_MCD/best.pt`. Picking a dataset sample there needs the datasets
+   (`rppg1/data/cache`), which are not in the repository.
+4. The Yale and MIMIC-IV-ED sets in tabs 0 and 1 need their data downloaded into `reasoning_model/data/public`; the
+   vignettes and the template work without it.
+
+The explanation text uses fixed templates by default. To use the local LLM, install Ollama, run
+`ollama pull qwen2.5:3b-instruct`, and switch on "Write the explanation with the local LLM".
+
+### B. Patient app
+
+```bash
+cd server && npm install && cp .env.example .env     # set MONGODB_URI (local MongoDB or Atlas)
+npm run seed && npm start                             # API on http://localhost:4000
+cd ../client && npm install && npm run dev            # http://localhost:5173
+```
+
+### C. Patient app with the triage demo (QR -> sample -> result)
+
+Start the reasoning service, then the app: `cd reasoning_model/src && python -m triage.demo_service` (port 5055), and
+run section B with `DEMO_WITHOUT_DB=1` if no database is available. Open `/kiosk?demo=1` on the laptop and `/demo` on a
+phone. `start_aura_demo.bat` does all of this on Windows.
+
+## Run it (patient app, detail)
 
 Needs MongoDB on `mongodb://127.0.0.1:27017`, or set `MONGODB_URI`.
 
@@ -230,10 +320,10 @@ probabilities; `model_service/export_samples.py` rebuilds the samples and copies
 Scans rotate through the samples (3-back high, 1-back low, 3-back dual high), so a second scan shows a
 different result.
 
-## Deploy (Render) and install on a phone
+## Deploy (Render)
 
 `render.yaml` defines one free Docker web service (`Dockerfile`): the built client, the Express API and the
-Python model service, all on one HTTPS URL. The image build runs the model self-check, so a broken model
+Python model service and the triage reasoning service, all on one HTTPS URL. The image build runs the model self-check, so a broken model
 fails the deploy instead of the demo.
 
 1. Render dashboard → **New → Blueprint** → pick this repo and branch.
@@ -248,23 +338,12 @@ The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_UR
 is set, which Render does) so the free instance doesn't sleep. `/api/health` also reports whether the model
 service is up (`"model": true`) — check it before presenting.
 
-On a phone, open the onrender.com URL: Android Chrome → menu → **Install app**;
-iPhone Safari → Share → **Add to Home Screen**. It opens full-screen like an app.
+The site works in any phone or laptop browser at the onrender.com URL.
 Uploaded past reports live on the instance's disk and are lost on each redeploy.
 
-### Native Android app
-
-`client/android/` is a Capacitor project (open it in Android Studio). The app
-bundles the client and calls the Render API named in `client/.env.android`.
-Needs JDK 21 and the Android SDK.
-
-```bash
-cd client && npm run build:android            # bundle the client into android/
-cd android && ./gradlew assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
-```
-
-Google sign-in doesn't work inside the app (Google blocks embedded web views);
-email + password does.
+The triage demo runs on the hosted site too: open `/kiosk?demo=1` on a laptop and scan its code from `/demo` on a
+phone. The image builds its demo cases with `python -m triage.demo_samples --build`; without the MIMIC/Yale/rPPG
+data in the image that gives the draft vignette cases only, and explanations use the fixed templates (no Ollama).
 
 ## Environment
 

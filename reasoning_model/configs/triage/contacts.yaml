@@ -1,0 +1,11 @@
+# Emergency and crisis numbers shown by the kiosk. The team must verify every number before any user test and then
+# set `verified: true` with the name and date.
+region: IN
+verified: false
+verified_by: null
+verified_date: null
+
+emergency:
+  - {name: "Emergency services", number: "112"}
+crisis:
+  - {name: "Tele-MANAS (mental health helpline, 24x7)", number: "14416"}

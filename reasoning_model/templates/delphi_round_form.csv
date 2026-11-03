@@ -1,0 +1,4 @@
+rule_id,rule_text,sources,data_check_summary,rating(agree/modify/remove),suggested_change,comment
+R05_vital_urgent,"Any vital far outside range (urgent bands) confirmed on repeat -> URGENT","NEWS2 3-point bands","<fill from MIMIC dev analysis>",,,
+R07_vital_out,"Any vital outside normal range by more than device error, confirmed on repeat -> SEE DOCTOR SOON","ESI danger zone; reference ranges","<fill>",,,
+R08_mood_screen,"PHQ-2 >= 3 or GAD-2 >= 3 -> SEE DOCTOR SOON (talk to a professional)","Levis 2020; Kroenke 2007","n/a",,,

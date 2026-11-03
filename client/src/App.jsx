@@ -16,6 +16,7 @@ import VersionA from './pages/SessionAnalysis/VersionA.tmp';
 // TEMPORARY: VITE_VARIANT=a serves version A (A/B screenshots)
 const SessionPage = import.meta.env.VITE_VARIANT === 'a' ? VersionA : SessionAnalysis;
 import Kiosk from './pages/Kiosk';
+import DemoScan from './pages/DemoScan';
 import {
   DoctorLogin,
   DoctorOverview,
@@ -45,6 +46,8 @@ export default function App() {
 
             {/* the station's own screen — shows the signed QR code, needs no account */}
             <Route path="/kiosk" element={<Kiosk />} />
+            {/* reasoning-model demo: scan /kiosk?demo=1, sample data only — needs no account or database */}
+            <Route path="/demo" element={<DemoScan />} />
 
             {/* the clinician side — its own sign-in; a doctor sees only reports patients shared with them */}
             <Route path="/doctor/login" element={<DoctorLogin />} />

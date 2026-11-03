@@ -1,9 +1,14 @@
 **/node_modules
 **/.env
 client/dist
-client/android
-client/assets
+**/__pycache__
+# the triage demo service needs only its code, configs, knowledge text and vignettes
 reasoning_model
+!reasoning_model/src
+!reasoning_model/configs
+!reasoning_model/knowledge
+!reasoning_model/vignettes
+!reasoning_model/evidence
 rppg1
 analysis
 docs

@@ -1,0 +1,59 @@
+.banner {
+  border-radius: var(--radius-card);
+  padding: 18px 22px;
+  color: var(--on-ink);
+  background: var(--steel);
+}
+.banner.crit { background: var(--rose-deep); }
+.banner.warn { background: var(--amber); color: var(--amber-ink); }
+.banner.ok { background: var(--calm); color: var(--calm-ink); }
+.bannerLabel {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.bannerAdvice { margin-top: 6px; }
+
+.contacts { display: flex; gap: 12px; align-items: flex-start; color: var(--rose-deep); }
+
+.sampleTitle { margin: 4px 0 2px; text-transform: capitalize; }
+.reference { display: flex; align-items: center; gap: 6px; margin: 8px 0; font-size: 0.92rem; }
+.reference.match { color: var(--calm-ink); }
+.reference.differ { color: var(--amber-ink); }
+
+.readings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr));
+  gap: 10px;
+  margin: 8px 0;
+}
+.reading { align-items: flex-start; text-align: left; min-width: 0; }
+.unit { font-size: 0.8rem; color: var(--ink-3); }
+.readingStatus { font-size: 0.82rem; font-weight: 600; }
+.readingStatus.ok { color: var(--calm-ink); }
+.readingStatus.warn { color: var(--amber-ink); }
+.readingStatus.crit { color: var(--rose-deep); }
+.readingStatus.quiet { color: var(--ink-3); }
+
+.summary { font-weight: 600; margin: 4px 0 6px; }
+.reasons { margin: 0 0 8px 18px; display: grid; gap: 4px; }
+.rule { margin-top: 8px; }
+
+.qa { margin: 8px 0; }
+.q { font-weight: 600; color: var(--ink-2); }
+.ask { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 10px 0 6px; }
+.askButton { width: auto; padding: 11px 20px; }
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-pill);
+  padding: 10px 14px;
+  font: inherit;
+  background: var(--glass-solid);
+  color: var(--ink);
+}
+
+/* long dataset notes and sample titles wrap instead of widening the column */
+.banner, .sampleTitle, .reference { overflow-wrap: anywhere; }

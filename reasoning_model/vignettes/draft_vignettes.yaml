@@ -1,0 +1,200 @@
+# DRAFT starter vignettes written by the developer to cover the case mix the starter kit asks for (borderline values,
+# conflicts, missing values, contradictory answers). NOT clinician-written and NOT labelled: clinicians edit or replace
+# them and label each one blind to the rules (rater1..3, then consensus). Format: templates/vignette_template.yaml.
+# Answers not listed = not asked; a measurement as one number = two equal readings.
+- id: V001
+  age: 34
+  sex: F
+  measurements: {heart_rate: [108, 107], resp_rate: 16, temperature: 36.8, spo2: null, systolic_bp: null}
+  quality: {heart_rate: 0.9, resp_rate: 0.8, temperature: 0.85}
+  answers: {chest_pain: no, severe_breathlessness: no, fainting: no, stroke_signs: no, confusion: no,
+            worst_headache: no, severe_bleeding: no, severe_allergy: no, self_harm: no,
+            exercise_last_30min: no, caffeine_last_2h: yes, feeling_unwell: no, athlete: no, symptom_duration_days: 0}
+  scores: {PHQ2: 1, GAD2: 2}
+  narrative: "Office worker, two coffees this morning, feels fine."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [borderline, caffeine, from_kit_template]
+- id: V002
+  age: 52
+  sex: M
+  measurements: {heart_rate: [84, 86], resp_rate: 18, temperature: 36.7}
+  answers: {chest_pain: yes, severe_breathlessness: no, fainting: no, exercise_last_30min: no}
+  scores: {PHQ2: 0, GAD2: 1}
+  narrative: "Pressure in the chest since an hour ago, came in to check; vitals unremarkable."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [red_flag, normal_vitals, conflict]
+- id: V003
+  age: 27
+  sex: F
+  measurements: {heart_rate: [72, 70], resp_rate: 14, temperature: 36.5}
+  answers: {chest_pain: no, severe_breathlessness: no, self_harm: no, has_symptom: no}
+  scores: {PHQ2: 0, GAD2: 0}
+  narrative: "Healthy student on her way to class."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [normal]
+- id: V004
+  age: 41
+  sex: M
+  measurements: {heart_rate: [118, 121], resp_rate: [26, 27], temperature: [39.4, 39.5]}
+  answers: {chest_pain: no, confusion: no, feeling_unwell: yes, fever_feeling: yes}
+  scores: {PHQ2: 1, GAD2: 0}
+  narrative: "Fever and chills for two days, feels very unwell, breathing fast."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [several_vitals_out]
+- id: V005
+  age: 23
+  sex: M
+  measurements: {heart_rate: [106, 104], resp_rate: [19, 20], temperature: 37.0}
+  measurements_after_rest: {heart_rate: [80, 78], resp_rate: 15, temperature: 36.8}
+  answers: {exercise_last_30min: yes, chest_pain: no}
+  scores: {PHQ2: 0, GAD2: 0}
+  narrative: "Ran up three flights of stairs to the kiosk; fine after resting."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [exercise, remeasure, borderline]
+- id: V006
+  age: 45
+  sex: F
+  measurements: {heart_rate: [112, 110], resp_rate: 17, temperature: 36.9}
+  measurements_after_rest: {heart_rate: [111, 113], resp_rate: 17, temperature: 36.9}
+  answers: {exercise_last_30min: yes, chest_pain: no}
+  scores: {PHQ2: 0, GAD2: 1}
+  narrative: "Walked fast to the kiosk; heart rate stays raised after five minutes of rest."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [exercise, remeasure, persistent]
+- id: V007
+  age: 30
+  sex: F
+  measurements: {heart_rate: [76, 78], resp_rate: 15, temperature: 36.6}
+  answers: {self_harm: yes}
+  scores: {PHQ2: 5, GAD2: 4}
+  narrative: "Feels hopeless for weeks, has had thoughts of not wanting to live."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [self_harm, crisis]
+- id: V008
+  age: 38
+  sex: M
+  measurements: {heart_rate: [70, 71], resp_rate: 14, temperature: 36.6}
+  answers: {self_harm: no}
+  scores: {PHQ2: 4, GAD2: 3}
+  narrative: "Low mood and constant worry since losing his job."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [mood_screen]
+- id: V009
+  age: 60
+  sex: F
+  measurements: {heart_rate: null, resp_rate: 15, temperature: 36.7}
+  answers: {chest_pain: no}
+  narrative: "Camera could not find her face (scarf); other readings fine."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [missing_value, retake]
+- id: V010
+  age: 35
+  sex: M
+  measurements: {heart_rate: [52, 53], resp_rate: 13, temperature: 36.4}
+  answers: {athlete: yes}
+  scores: {PHQ2: 0, GAD2: 0}
+  narrative: "Marathon runner, feels well."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [athlete, borderline]
+- id: V011
+  age: 64
+  sex: M
+  measurements: {heart_rate: [52, 53], resp_rate: 13, temperature: 36.4}
+  answers: {athlete: no, fainting: no}
+  scores: {PHQ2: 0, GAD2: 0}
+  narrative: "Feels a little tired lately; not physically active."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [low_hr, borderline]
+- id: V012
+  age: 29
+  sex: F
+  measurements: {heart_rate: [88, 90], resp_rate: 16, temperature: [38.6, 38.7]}
+  answers: {feeling_unwell: yes, fever_feeling: yes}
+  scores: {PHQ2: 0, GAD2: 1}
+  narrative: "Sore throat and feverish since yesterday."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [fever]
+- id: V013
+  age: 33
+  sex: M
+  measurements: {heart_rate: [103, 99], resp_rate: 16, temperature: 36.8}
+  measurements_after_rest: {heart_rate: [102, 104], resp_rate: 16, temperature: 36.8}
+  answers: {caffeine_last_2h: no, exercise_last_30min: no}
+  narrative: "No known reason for a slightly fast pulse; readings disagree."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [borderline, disagreeing_repeats]
+- id: V014
+  age: 48
+  sex: F
+  measurements: {heart_rate: [74, 76], resp_rate: 15, temperature: 36.6}
+  answers: {has_symptom: yes, symptom_duration_days: 14}
+  scores: {PHQ2: 1, GAD2: 1}
+  narrative: "Cough for two weeks, otherwise well."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [persistent_symptom]
+- id: V015
+  age: 17
+  sex: M
+  measurements: {heart_rate: [80, 82], resp_rate: 15, temperature: 36.7}
+  answers: {chest_pain: no}
+  narrative: "Teenager trying the kiosk with friends."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [out_of_scope]
+- id: V016
+  age: 26
+  sex: F
+  measurements: {heart_rate: [96, 98], resp_rate: 18, temperature: 36.8}
+  answers: {pregnant: yes, severe_bleeding: yes}
+  narrative: "Pregnant, heavy bleeding since this morning."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [out_of_scope, red_flag]
+- id: V017
+  age: 55
+  sex: M
+  measurements: {heart_rate: [150, 148], resp_rate: 22, temperature: 36.9}
+  answers: {chest_pain: no, fainting: no}
+  narrative: "Palpitations, otherwise feels okay."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [vital_far_out]
+- id: V018
+  age: 42
+  sex: F
+  measurements: {heart_rate: [78, 80], resp_rate: 16, temperature: 36.7}
+  answers: {severe_allergy: yes}
+  narrative: "Lips swelling after eating peanuts."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [red_flag, normal_vitals]
+- id: V019
+  age: 39
+  sex: M
+  measurements: {heart_rate: [99, 101], resp_rate: 20, temperature: 37.8}
+  answers: {exercise_last_30min: no, caffeine_last_2h: yes, feeling_unwell: no}
+  scores: {PHQ2: 2, GAD2: 2}
+  narrative: "Several values just at the upper limit; coffee an hour ago."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [borderline, multiple_near_limit]
+- id: V020
+  age: 31
+  sex: F
+  measurements: {heart_rate: [74, 75], resp_rate: 15, temperature: 36.6}
+  quality: {heart_rate: 0.4}
+  answers: {chest_pain: no}
+  narrative: "Moved and talked during the measurement."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [low_quality, retake]
+- id: V021
+  age: 50
+  sex: M
+  measurements: {heart_rate: [82, 84], resp_rate: 15, temperature: 36.6, spo2: [91, 92], systolic_bp: [128, 130]}
+  answers: {severe_breathlessness: no}
+  narrative: "Smoker, kiosk with clip oximeter; feels a bit short of breath on stairs."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [devices, spo2]
+- id: V022
+  age: 58
+  sex: F
+  measurements: {heart_rate: [76, 78], resp_rate: 15, temperature: 36.6, systolic_bp: [186, 184]}
+  answers: {worst_headache: no}
+  narrative: "Kiosk with BP cuff; very high blood pressure, no symptoms."
+  clinician_labels: {rater1: null, rater2: null, rater3: null, consensus: null}
+  tags: [devices, bp]

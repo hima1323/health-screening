@@ -16,17 +16,20 @@ import numpy as np
 import torch
 
 import vitals
+from bench.infer import pulse
+from bench.preprocess import face_box
 
 
 class RPPGEngine:
-    def __init__(self, model, camera_index=0, clip_len=96, img_size=96,
-                 stride=15, waveform_seconds=60, display_width=480,
-                 vitals_interval=1.0, display_fps=15.0, jpeg_quality=70,
-                 infer_threads=2):
-        self.model = model
+    def __init__(self, predictor, camera_index=0, stride=15, waveform_seconds=60,
+                 display_width=480, vitals_interval=1.0, display_fps=15.0,
+                 jpeg_quality=70, infer_threads=2):
+        # predictor: bench.infer.Predictor -- 160-frame windows of 128x128
+        # face crops, DiffNormalized input, exactly as in the benchmark
+        self.predictor = predictor
         self.camera_index = camera_index
-        self.clip_len = clip_len
-        self.img_size = img_size
+        self.clip_len = predictor.clip_len
+        self.img_size = predictor.img_size
         self.stride = stride
         self.waveform_seconds = waveform_seconds
         self.display_width = display_width
@@ -49,14 +52,20 @@ class RPPGEngine:
 
         self.status = "idle"
         self.error = None
+        self.face_found = None
         self._frame_jpeg = None
         self._frame_times = collections.deque(maxlen=60)
         self._fps = 0.0
         self._waveform = collections.deque(maxlen=int(30 * waveform_seconds))
+        # overlap-add of the window predictions, one slot per captured frame
+        self._max_samples = int(30 * waveform_seconds)
+        self._acc = np.zeros(0)
+        self._cnt = np.zeros(0)
         self._vitals = {}
         self._frames_seen = 0
         self._last_vitals_at = 0.0
-        self._buffer = collections.deque(maxlen=clip_len)
+        # one extra frame: the model input is the T frame differences
+        self._buffer = collections.deque(maxlen=self.clip_len + 1)
         self._last_infer_frame = 0
         self._last_encode_at = 0.0
 
@@ -91,6 +100,7 @@ class RPPGEngine:
     def reset_buffers(self):
         with self._lock:
             self._waveform.clear()
+            self._acc, self._cnt = np.zeros(0), np.zeros(0)
             self._vitals = {}
             self._frames_seen = 0
             self._last_infer_frame = 0
@@ -101,6 +111,7 @@ class RPPGEngine:
         with self._lock:
             return {
                 "status": self.status,
+                "face_found": self.face_found,
                 "error": self.error,
                 "frame_jpeg": self._frame_jpeg,
                 "fps": self._fps,
@@ -129,8 +140,6 @@ class RPPGEngine:
         """Camera I/O only -- deliberately free of model inference so the
         capture rate stays at the sensor's native fps (the model window is
         only valid if it is sampled at the rate the model was trained on)."""
-        from preprocess_ubfc import detect_face_bbox
-
         cap, first = self._open_camera()
         if cap is None:
             with self._lock:
@@ -139,9 +148,12 @@ class RPPGEngine:
             self._stop.set()
             return
 
-        x, y, w, h = detect_face_bbox(first)
+        # same crop as training: largest Haar face in the first frame,
+        # box enlarged 1.5x, then fixed (no tracking -- keep still)
+        (x, y, w, h), found = face_box(cv2.cvtColor(first, cv2.COLOR_BGR2RGB))
         with self._lock:
             self.status = "running"
+            self.face_found = found
 
         while not self._stop.is_set():
             ok, frame = cap.read()
@@ -150,7 +162,7 @@ class RPPGEngine:
                 continue
 
             crop = frame[y:y + h, x:x + w]
-            crop = cv2.resize(crop, (self.img_size, self.img_size))
+            crop = cv2.resize(crop, (self.img_size, self.img_size), interpolation=cv2.INTER_AREA)
             rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
 
             # Encode for display at display_fps, not at capture rate: the
@@ -160,6 +172,8 @@ class RPPGEngine:
             if now - self._last_encode_at >= 1.0 / self.display_fps:
                 scale = self.display_width / frame.shape[1]
                 small = cv2.resize(frame, (self.display_width, int(frame.shape[0] * scale)))
+                cv2.rectangle(small, (int(x * scale), int(y * scale)),
+                              (int((x + w) * scale), int((y + h) * scale)), (80, 220, 120), 2)
                 ok_jpg, buf = cv2.imencode(
                     ".jpg", small, [int(cv2.IMWRITE_JPEG_QUALITY), self.jpeg_quality])
                 if ok_jpg:
@@ -184,13 +198,13 @@ class RPPGEngine:
     def _infer_loop(self):
         while not self._stop.is_set():
             with self._lock:
-                ready = (len(self._buffer) == self.clip_len and
+                ready = (len(self._buffer) == self.clip_len + 1 and
                          self._frames_seen - self._last_infer_frame >= self.stride)
                 if ready:
                     clip_frames = list(self._buffer)
                     frame_mark = self._frames_seen
                     advance = min(frame_mark - self._last_infer_frame, self.clip_len)
-                    fps_now = self._fps
+                    fps_now = self._fps if self._fps > 5 else 30.0
                 else:
                     clip_frames = None
 
@@ -198,23 +212,33 @@ class RPPGEngine:
                 time.sleep(0.01)
                 continue
 
-            clip = np.stack(clip_frames, axis=0).astype(np.float32) / 255.0
-            clip = (clip - 0.5) / 0.5
-            clip_t = torch.from_numpy(clip).permute(3, 0, 1, 2).unsqueeze(0)
-            with torch.no_grad():
-                pred = self.model(clip_t).squeeze(0).numpy()
-
-            # Successive windows overlap; normalise each before keeping only
-            # the newest samples so the stitched waveform stays continuous.
+            # The model predicts the pulse derivative. Successive windows
+            # overlap by clip_len - stride frames: normalise each, average
+            # every frame over all windows that saw it, then integrate and
+            # band-pass the whole buffer at once (as the benchmark does per
+            # video). Filtering each window alone and keeping only its newest
+            # (edge) samples made the HR drift.
+            pred = self.predictor.window(np.stack(clip_frames), fps_now)
             std = pred.std()
             if std > 1e-8:
                 pred = (pred - pred.mean()) / std
 
+            with self._lock:
+                n = self._max_samples
+                self._acc = np.concatenate([self._acc, np.zeros(advance)])[-n:]
+                self._cnt = np.concatenate([self._cnt, np.zeros(advance)])[-n:]
+                k = min(len(pred), len(self._acc))
+                self._acc[-k:] += pred[-k:]
+                self._cnt[-k:] += 1
+                raw = self._acc / np.maximum(self._cnt, 1)
+            waveform = pulse(raw, fps_now) if raw.size > 3 * self.stride else raw
+            waveform = waveform / (waveform.std() + 1e-8)
+
             now = time.time()
             with self._lock:
-                self._waveform.extend(pred[-advance:].tolist())
+                self._waveform.clear()
+                self._waveform.extend(waveform.tolist())
                 self._last_infer_frame = frame_mark
-                waveform = np.array(self._waveform, dtype=np.float64)
                 due = (now - self._last_vitals_at) >= self.vitals_interval
 
             if due and fps_now > 1.0 and waveform.size >= fps_now * 3:

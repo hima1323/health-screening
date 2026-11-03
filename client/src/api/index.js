@@ -10,6 +10,14 @@ export const getStationCode = (stationId) => request(`/stations/${stationId}/cod
 export const verifyStationCode = (code) => post('/stations/verify', { code });
 export const studySessionFramesUrl = (key) => `${BASE_URL}/study-sessions/${key}/frames`;
 
+/** Reasoning-model demo (server/routes/triage.js): no database, sample data only. */
+export const getTriageSamples = () => request('/triage/samples');
+export const getTriageCode = (stationId, sample) =>
+  request(`/triage/code?station=${encodeURIComponent(stationId)}&sample=${encodeURIComponent(sample)}`);
+export const verifyTriageCode = (code) => post('/triage/verify', { code });
+export const runTriage = (sample, explain = true) => post('/triage/run', { sample, explain });
+export const askTriage = (runId, question) => post(`/triage/runs/${runId}/ask`, { question });
+
 
 export * from './auth';
 export * from './doctor';

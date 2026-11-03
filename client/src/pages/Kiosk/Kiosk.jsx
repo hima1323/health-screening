@@ -5,16 +5,23 @@ import { getStationCode, getStationLive } from '../../api';
 import Layout from '../../components/Layout';
 import { Card, Spinner, ErrorState } from '../../components/ui';
 import styles from './Kiosk.module.css';
+import DemoKiosk from './DemoKiosk';
 
 /** Fetch a fresh code this long before the current one expires, so the screen never shows a dead code. */
 const REFRESH_EARLY_MS = 60 * 1000;
+
+/** `?demo=1`: the reasoning-model demo kiosk (DemoKiosk.jsx); otherwise the station screen. */
+export default function Kiosk() {
+  const [params] = useSearchParams();
+  return params.get('demo') ? <DemoKiosk /> : <StationKiosk />;
+}
 
 /**
  * The station's own screen: shows the signed QR code patients scan to start.
  * The code is made and signed by the server and expires, so a photo of it stops working.
  * `?station=station-2` picks the station.
  */
-export default function Kiosk() {
+function StationKiosk() {
   const [params] = useSearchParams();
   const stationId = params.get('station') || 'station-2';
   const [data, setData] = useState(null);

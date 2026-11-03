@@ -1,0 +1,8 @@
+# Local LLM for the explainer, the follow-up Q&A and free-text answer mapping. Local Ollama only: never an online
+# model (MIMIC data and session records must not leave this machine).
+model: qwen2.5:3b-instruct
+url: http://localhost:11434/api/chat
+timeout_s: 15          # over this -> the deterministic template is shown (kit E4 example: 10 s; calls take ~5-10 s
+                       # on the RTX 4050 laptop, ~10 s while the rPPG dashboard shares the GPU)
+warmup_timeout_s: 120  # the first call loads the model into memory
+max_retries: 1         # one retry with the verifier's error text, then the template

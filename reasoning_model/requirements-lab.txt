@@ -1,0 +1,12 @@
+# Minimal install to run the Triage Lab, the kiosk demo, the tests and the rPPG model (CPU is enough).
+# requirements.txt is the full ED-benchmark environment (Apple-only mlx etc.); you do not need it for the steps in the README.
+numpy
+pandas
+scipy
+pyyaml
+jsonschema
+openpyxl
+streamlit
+pytest
+opencv-python-headless
+torch
