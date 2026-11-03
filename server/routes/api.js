@@ -73,8 +73,7 @@ router.get('/sessions/:sessionId/report', async (req, res) => {
 router.get('/stations/:stationId/code', async (req, res) => {
   const station = await Station.findOne({ stationId: req.params.stationId }).select('stationId').lean();
   if (!station) return res.status(404).json({ error: 'Station not found' });
-  // ?sample=<demo sample id>: the code also carries a demo data file for the reasoning model (routes/triage.js)
-  const { code, expiresAt } = issueStationCode(station.stationId, req.query.sample && String(req.query.sample));
+  const { code, expiresAt } = issueStationCode(station.stationId);
   const svg = await QRCode.toString(code, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
   res.set('Cache-Control', 'no-store');
   res.json({ stationId: station.stationId, code, expiresAt, svg });

@@ -260,8 +260,9 @@ cd ../client && npm install && npm run dev            # http://localhost:5173
 ### C. Patient app with the triage demo (QR -> sample -> result)
 
 Start the reasoning service, then the app: `cd reasoning_model/src && python -m triage.demo_service` (port 5055), and
-run section B with `DEMO_WITHOUT_DB=1` if no database is available. Open `/kiosk?demo=1` on the laptop and `/demo` on a
-phone. `start_aura_demo.bat` does all of this on Windows.
+run section B. Print the demo QR codes in `docs/demo-qr/` (one per demo case; `cd server && npm run demo-qr` remakes
+them from `reasoning_model/demo_samples`). Sign in, press **Begin contactless scan** on the Scan Hub and scan one: the
+app shows the triage result for that case. The codes never expire.
 
 ## Run it (patient app, detail)
 
@@ -341,8 +342,8 @@ service is up (`"model": true`) — check it before presenting.
 The site works in any phone or laptop browser at the onrender.com URL.
 Uploaded past reports live on the instance's disk and are lost on each redeploy.
 
-The triage demo runs on the hosted site too: open `/kiosk?demo=1` on a laptop and scan its code from `/demo` on a
-phone. The image builds its demo cases with `python -m triage.demo_samples --build`; without the MIMIC/Yale/rPPG
+The triage demo runs on the hosted site too: scan a printed code from `docs/demo-qr/` with **Begin contactless
+scan** on the Scan Hub. The image builds its demo cases with `python -m triage.demo_samples --build`; without the MIMIC/Yale/rPPG
 data in the image that gives the draft vignette cases only, and explanations use the fixed templates (no Ollama).
 
 ## Environment
