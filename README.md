@@ -110,7 +110,7 @@ the repository.
 
 <img src="docs/diagrams/training.png" alt="Training: rPPG data, preprocessing, training, weights, test; triage data, derivation, clinician review, rules, tests and benchmark" width="900">
 
-How to run each step: [Models: setup, training and evaluation](#models-setup-training-and-evaluation).
+How to run each step: [Setup and execution](#setup-and-execution), steps 4 and 5.
 
 ## Screens
 
@@ -180,17 +180,23 @@ health-screening/
 
 ## Setup and execution
 
-Tested on Windows 11 and macOS. Every command runs from a fresh clone; commands are written for macOS/Linux, with
-the Windows form beside them where it differs.
+Every step below runs from a fresh clone, in this order: the Python environment, then the two models (rPPG, then
+the reasoning model), then the Triage Lab that uses both, then the database, and last the web app. Commands are
+written for macOS/Linux with the Windows form beside them where it differs. Tested on Windows 11 and macOS.
+
+The trained rPPG weights and the reasoning model's rules are already in the repository, so steps 4 (training) and
+5.2–5.4 (rule checks on hospital data) can be skipped to run the app; everything else is needed.
 
 ### Prerequisites
 
-| Tool | Version | Used for |
-|------|---------|----------|
+| Tool | Version | Needed for |
+|------|---------|------------|
 | Git | any | cloning |
-| Node.js | 22 or newer (with npm) | the app and the API |
-| Python | 3.12 or 3.13 | the reasoning model and the Triage Lab |
-| MongoDB | 7 or newer, running locally — or a MongoDB Atlas database | the app's data |
+| Python | 3.12 or 3.13 (3.9 or newer works) | both models, the Triage Lab, the reasoning service the app runs |
+| Node.js | 22 or newer, with npm | the web app and its API |
+| MongoDB | 7 or newer, local — or a free MongoDB Atlas database | the web app's data |
+| NVIDIA GPU, 6 GB or more | — | training the rPPG model only (inference and tests run on CPU) |
+| Ollama | optional | explanations written by a local LLM instead of templates |
 
 ### 1. Get the code
 
@@ -199,55 +205,181 @@ git clone https://github.com/hima1323/health-screening.git
 cd health-screening
 ```
 
-### 2. Python environment (once)
+### 2. Python environment
 
-One virtual environment serves the Triage Lab and the reasoning model the app runs. The server finds it at
-`reasoning_model/.venv` by itself.
+One virtual environment serves both models, the Triage Lab and the reasoning service the app starts. The server
+finds it at `reasoning_model/.venv` by itself. Keep it active for steps 3–6.
 
 ```bash
 cd reasoning_model
 python3 -m venv .venv                   # Windows: python -m venv .venv
 source .venv/bin/activate               # Windows: .venv\Scripts\activate
-pip install -r requirements-lab.txt
-cd src && python -m triage.demo_samples --build && cd ..   # the demo cases (one test and the app use them)
-python -m pytest -q                     # expect: 244 passed
+pip install -r requirements-lab.txt     # PyTorch, OpenCV, NumPy, pandas, SciPy, Streamlit, pytest
 cd ..
 ```
 
-### 3. Triage Lab (reasoning model and rPPG model) — no database needed
+### 3. Check both models
+
+```bash
+cd cvprlab && python -m pytest tests -q && cd ..            # rPPG model architecture: expect 18 passed
+cd reasoning_model/src && python -m triage.demo_samples --build && cd ..   # the reasoning model's demo cases
+python -m pytest -q                                         # reasoning model: expect 244 passed
+cd ..
+```
+
+### 4. rPPG model: data, training, evaluation
+
+Heart rate from an ordinary face video. The model the project uses is **CVPR Lab P4** (`cvprlab/`), compared with
+PhysFormer (`rppg1/model/`). Its trained weights are committed in `rppg1/runs/`, so this step is only needed to
+retrain. All commands run from `rppg1/`.
+
+**4.1 Download the datasets** (resumable):
+
+```bash
+cd rppg1
+python -m bench.download_mcd --n 100 --camera IriunWebcam     # MCD-rPPG (Hugging Face, CC-BY-4.0): video + synced PPG
+python -m bench.fetch_ubfc                                    # UBFC-rPPG DATASET_2, cached, raw videos deleted (~4 GB)
+```
+
+UBFC-rPPG is for research use only; faces of subjects 21 and 27 must not appear in any report or presentation.
+
+**4.2 Preprocess** (face crop, 128 × 128, DiffNormalized) into `rppg1/data/cache`:
+
+```bash
+python -m bench.preprocess --dataset mcd --raw data/raw/MCD-rPPG --camera IriunWebcam --max-seconds 60
+```
+
+`fetch_ubfc` already writes UBFC-rPPG to the cache.
+
+**4.3 Train.** Subject-disjoint split (64 train / 16 validation / 20 held-out test subjects); the best epoch is chosen
+by validation heart-rate RMSE and saved as `runs/<name>/best.pt`.
+
+```bash
+# the model the project uses: CVPR Lab phase 4 (frequency), 30 epochs
+python -m bench.run train --arch cvprlab:phase4_frequency --train mcd_IriunWebcam --test mcd_IriunWebcam \
+    --epochs 30 --name CVPR_P4_e30_MCD
+# the PhysFormer baseline
+python -m bench.run train --train mcd_IriunWebcam --test mcd_IriunWebcam --name MCD_MCD
+# optional: the ablation ladder (phase 1 -> 4) and the longer, deeper runs
+python -m bench.ladder
+python -m bench.campaign
+```
+
+**4.4 Evaluate:**
+
+```bash
+python -m bench.run test --arch cvprlab:phase4_frequency --ckpt runs/CVPR_P4_e30_MCD/best.pt --test ubfc
+python -m bench.run pos --test ubfc        # classical POS baseline, no training
+python -m bench.run report                 # -> runs/REPORT.md, every run vs the rPPG-Toolbox published numbers
+python -m bench.tables_figure              # -> runs/comparison_tables*.png
+```
+
+**4.5 Use it:**
+
+```bash
+python -m bench.infer --list                          # the trained models
+python -m bench.infer --video my_face.mp4             # heart rate from a 30-60 s face video (P4 by default)
+streamlit run webapp/streamlit_app.py                 # live webcam heart rate in the browser
+cd ..
+```
+
+### 5. Reasoning model: rules, checks, benchmark
+
+A triage expert system: ordered rules in `reasoning_model/configs/triage/rules.yaml` decide the level, ranges come
+from `vital_ranges.yaml` and red flags from `red_flags.yaml`. Nothing is fitted; hospital data is used to **check and
+tune** the draft rules and to **benchmark** them. All commands run from `reasoning_model/src`.
+
+**5.1 Try it on the draft cases** (no data needed):
+
+```bash
+cd reasoning_model/src
+python -m triage.bench.vignettes          # every draft vignette through the rules
+```
+
+**5.2 Get the open hospital data** into `reasoning_model/data/public/` (not committed):
+
+| Dataset | Source | Put it at |
+|---------|--------|-----------|
+| MIMIC-IV-ED Demo v2.2 | https://physionet.org/content/mimic-iv-ed-demo/2.2/ (open) | `data/public/mimic_iv_ed_demo/mimic-iv-ed-demo-2.2/ed/*.csv.gz` |
+| Yale ED triage (Hong et al. 2018) | Zenodo 1308993 (repository `yaleemmlc/admissionprediction`) | `data/public/yale_triage/yaleemmlc-admissionprediction-5cf50bc/Results/5v_cleandf.RData` |
+| NHANES 2017-2018 (DEMO_J, BPX_J) | CDC | fetched by `--download` in 5.3 |
+
+```bash
+python -m triage.bench.yale --build       # streams the large RData file -> cases.parquet
+```
+
+**5.3 Check and tune the rules** (development split only; outputs are aggregates in `results/triage/derive/`):
+
+```bash
+python -m triage.derive.mimic_dev_bands                # urgent-visit rates per vital-sign band and cut-off
+python -m triage.derive.nhanes_overreferral --download # how many healthy adults each cut-off would flag
+python -m triage.derive.rule_learning --yale           # small decision tree: rule suggestions for the clinician
+python -m triage.derive.source_check                   # every range and score against its official source
+python -m triage.derive.delphi --round 1               # Delphi pack for clinicians to rate the rules
+```
+
+A rule changes only in `configs/triage/rules.yaml`, after review; rerun the tests from step 3 afterwards.
+
+**5.4 Benchmark** on the held-out data (Yale test split, MIMIC-IV-ED Demo) against NEWS2, always-refer and learned
+baselines:
+
+```bash
+python -m triage.bench.run_bench          # -> results/triage/REPORT.md, bench_results.json
+```
+
+**5.5 Rebuild the app's cases and their QR codes** (after 5.2, the cases include MIMIC, Yale and rPPG examples):
+
+```bash
+python -m triage.demo_samples --build     # -> reasoning_model/demo_samples/
+cd ../..
+```
+
+The QR images are remade in step 8 (`npm run demo-qr`).
+
+**5.6 Optional: explanations from a local LLM.** Install Ollama and run `ollama pull qwen2.5:3b-instruct`. The LLM
+only words the explanation; the verifier rejects any number that is not in the record, and the fixed templates are
+used whenever Ollama is not running.
+
+### 6. Triage Lab (both models together)
 
 ```bash
 cd reasoning_model
-streamlit run src/triage/lab_app.py     # opens http://localhost:8501 (venv from step 2 active)
+streamlit run src/triage/lab_app.py       # opens http://localhost:8501
+cd ..
 ```
 
-1. Tab **0 - Try a sample**: choose "Draft vignettes" (or "Template sample"), pick a case. Section 1 shows the input,
+1. Tab **0 · Try a sample**: choose "Draft vignettes" (or "Template sample"), pick a case. Section 1 shows the input,
    section 2 the triage level, the reason and the advice. Open "Show full detail" for the reasoning chain.
-2. Tab **1 - Benchmark a dataset**: choose "Template sample", press **Run the benchmark** (metrics vs the baselines).
-3. Tab **3 - Face video**: upload a 30-60 s face video, pick model `p4` and press **Measure heart rate**. It uses the
-   committed weights `rppg1/runs/CVPR_P4_e30_MCD/best.pt`. Picking a dataset sample there needs the datasets
-   (`rppg1/data/cache`), which are not in the repository.
-4. The Yale and MIMIC-IV-ED sets in tabs 0 and 1 need their data downloaded into `reasoning_model/data/public`; the
-   vignettes and the template work without it.
+2. Tab **1 · Benchmark a dataset**: choose "Template sample", press **Run the benchmark** (metrics vs the baselines).
+3. Tab **3 · Face video → heart rate**: upload a 30-60 s face video, pick model `p4` and press
+   **Measure heart rate**. It uses the weights `rppg1/runs/CVPR_P4_e30_MCD/best.pt` (committed, or from step 4).
+4. The MIMIC-IV-ED and Yale sets in tabs 0 and 1 appear once their data is in place (step 5.2).
 
-The explanation text uses fixed templates by default. To use the local LLM, install Ollama, run
-`ollama pull qwen2.5:3b-instruct`, and switch on "Write the explanation with the local LLM".
+### 7. Database
 
-### 4. Patient app
+The web app keeps accounts, patients, scans and reports in MongoDB. Use either:
 
-**Terminal 1 — API** (MongoDB must be running):
+- **Local MongoDB** on `mongodb://127.0.0.1:27017`. Install MongoDB Community Server
+  (macOS: `brew tap mongodb/brew && brew install mongodb-community && brew services start mongodb-community`;
+  Windows: the MSI installer from mongodb.com, which runs it as a service). Nothing else to configure.
+- **MongoDB Atlas** (free tier): create a cluster and a database user, allow your IP (or `0.0.0.0/0`) under
+  **Network Access**, and copy the connection string for step 8, with `/aura_screen` as the database name.
+
+### 8. Web app
+
+**Terminal 1 — API.** It also starts the reasoning model from step 2's environment.
 
 ```bash
 cd server
 npm install
 cp .env.example .env                    # Windows: copy .env.example .env
-npm run seed                            # demo patient, station, past sessions, demo doctor
-npm start                               # http://localhost:4000 — also starts the reasoning model
+# Atlas only: in .env set MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/aura_screen
+npm run seed                            # demo patient, kiosk station, past sessions, demo doctor
+npm run demo-qr                         # printable case QR codes -> docs/demo-qr/
+npm start                               # http://localhost:4000
 ```
 
-`.env` works as copied for a local MongoDB. For Atlas, set `MONGODB_URI` in it (see [Environment](#environment)).
-
-**Terminal 2 — app:**
+**Terminal 2 — client:**
 
 ```bash
 cd client
@@ -255,158 +387,40 @@ npm install
 npm run dev                             # open http://localhost:5173
 ```
 
-### 5. Try it
+The other `.env` settings (Google sign-in, the demo doctor's email) are in [Environment](#environment).
+
+### 9. Try it
 
 1. Open http://localhost:5173, step through the introduction (or **Skip the introduction**), choose
    **Create account** and fill in the details.
-2. **Triage demo:** on the Scan Hub press **Begin contactless scan** and scan a printed code from
-   [`docs/demo-qr/`](docs/demo-qr/) (or show it on a second screen). The app shows the triage result for that case:
-   level, reason, readings against their ranges and the explanation.
+2. **Printed case QR:** on the Scan Hub press **Begin contactless scan** and scan a code from
+   [`docs/demo-qr/`](docs/demo-qr/) (printed, or on a second screen). The reasoning model's result appears: level,
+   reasons, readings against their ranges and the advice.
 3. **Live scan:** open http://localhost:5173/kiosk on a second screen and scan its QR from the Scan Hub. After the
-   capture countdown the model answers and **View session report** opens the report
+   capture countdown the reasoning model answers and **View session report** opens the report
    ([details](#live-scan-and-the-reasoning-model)).
 4. **Doctor:** http://localhost:5173/doctor/login. With `DEMO_DOCTOR_EMAIL` left empty the demo doctor is
-   `doctor@aura.test`, password `aura-5e9394ee` (from `server/scripts/seed.js`); with your Google address there,
-   sign in with Google.
+   `doctor@aura.test`, password `aura-5e9394ee` (from `server/scripts/seed.js`); with your Google address there, sign
+   in with Google. Add the patient's share code to open their report.
 
-A phone allows the camera only on https or localhost. To scan from a phone on the same Wi-Fi, start the app with
+A phone allows the camera only on https or localhost. To scan from a phone on the same Wi-Fi, start the client with
 `HTTPS=1 npm run dev` (Windows: `set HTTPS=1&& npm run dev`) and open `https://<laptop IP>:5173`, accepting the
-certificate warning once. `start_aura_demo.bat` starts all three terminals on Windows.
+certificate warning once. On Windows, `start_aura_demo.bat` starts the API and the client together.
 
-### Rebuilding data
+### 10. Rebuilding data (when the analysis changes)
 
-After changing the analysis, rebuild the study sessions and reload just those —
-`npm run sessions` leaves user accounts alone, so nobody gets signed out.
-`npm run seed` also resets the demo patient, and keeps accounts too.
+`npm run sessions` reloads the past sessions and leaves accounts alone, so nobody is signed out; `npm run seed` also
+resets the demo patient and keeps accounts too.
 
 ```bash
 python3 analysis/build_sessions.py && (cd server && npm run sessions)
 ```
 
-`cd server && npm run demo-qr` remakes the printable QR codes after the demo cases change.
+### Earlier stress model (ADABase; kept for the report, not run by the app)
 
-## Models: setup, training and evaluation
-
-The app needs none of this: the trained rPPG weights are committed and the triage rules are plain YAML. This is how
-to rebuild or retrain each model. Every command assumes the venv from [step 2](#2-python-environment-once) is active.
-
-| Model | Folder | Used by the app | What "training" means |
-|-------|--------|-----------------|-----------------------|
-| rPPG (heart rate from a face video) | `rppg1/`, `cvprlab/` | Triage Lab face-video tab, live webcam dashboard | Deep learning (PyTorch) on MCD-rPPG, tested on UBFC-rPPG |
-| Triage reasoning model | `reasoning_model/src/triage/`, `configs/triage/` | Live scans and the printed QR codes | No fitting: rules are written, checked against ED data and benchmarked |
-| Earlier stress model | `reasoning_model/src/*.py`, `model_service/` | No longer (kept for the report) | LightGBM + fusion, leave-one-subject-out on ADABase |
-
-### A. rPPG model (CVPR Lab P4 and PhysFormer)
-
-**Setup.** `requirements-lab.txt` (step 2) already has PyTorch, OpenCV and SciPy. Training needs an NVIDIA GPU with
-6 GB or more (runs use fp16); inference and the tests run on CPU.
-
-**1. Get the data** (from `rppg1/`; each script is resumable):
-
-```bash
-cd rppg1
-python -m bench.download_mcd --n 100 --camera IriunWebcam     # MCD-rPPG (Hugging Face, CC-BY-4.0): video + synced PPG
-python -m bench.fetch_ubfc                                    # UBFC-rPPG DATASET_2, cached and raw deleted (~4 GB)
-```
-
-UBFC-rPPG is for research use; faces of subjects 21 and 27 must not appear in any report or presentation.
-
-**2. Preprocess** (face crop, 128 × 128, DiffNormalized) into `rppg1/data/cache`:
-
-```bash
-python -m bench.preprocess --dataset mcd --raw data/raw/MCD-rPPG --camera IriunWebcam --max-seconds 60
-```
-
-(`fetch_ubfc` already writes UBFC-rPPG to the cache.)
-
-**3. Train.** Subject-disjoint split: 64 train / 16 validation / 20 held-out test subjects; best epoch by validation
-heart-rate RMSE. Weights go to `rppg1/runs/<name>/best.pt`.
-
-```bash
-# the model the app uses: CVPR Lab phase 4 (frequency), 30 epochs
-python -m bench.run train --arch cvprlab:phase4_frequency --train mcd_IriunWebcam --test mcd_IriunWebcam \
-    --epochs 30 --name CVPR_P4_e30_MCD
-# the PhysFormer baseline (rppg1/model/physformer.py)
-python -m bench.run train --train mcd_IriunWebcam --test mcd_IriunWebcam --name MCD_MCD
-
-python -m bench.ladder       # ablation: CVPR Lab phase 1 -> 2 -> 3 -> 4, each also tested on UBFC-rPPG
-python -m bench.campaign     # the longer / deeper runs (30 epochs, depth 12, augmentation)
-```
-
-**4. Evaluate:**
-
-```bash
-python -m bench.run test --arch cvprlab:phase4_frequency --ckpt runs/CVPR_P4_e30_MCD/best.pt --test ubfc
-python -m bench.run pos --test ubfc        # classical POS baseline, no training
-python -m bench.run report                 # -> runs/REPORT.md (every run vs rPPG-Toolbox published numbers)
-python -m bench.tables_figure              # -> runs/comparison_tables*.png
-```
-
-**5. Use a trained model:**
-
-```bash
-python -m bench.infer --list                          # the trained models
-python -m bench.infer --video my_face.mp4             # heart rate from a 30-60 s face video (best model, P4)
-streamlit run webapp/streamlit_app.py                 # live webcam heart rate in the browser
-```
-
-**Tests:** `cd cvprlab && python -m pytest tests -q` (18 tests: the architecture's claims, not just shapes).
-Results so far are in [`rppg1/runs/REPORT.md`](rppg1/runs/REPORT.md); the architecture is described in
-[`cvprlab/README.md`](cvprlab/README.md).
-
-### B. Triage reasoning model (the one the app runs)
-
-It is an expert system, so there is nothing to fit: ordered rules in `configs/triage/rules.yaml` decide the level,
-ranges come from `vital_ranges.yaml`, red flags from `red_flags.yaml`. The data is used to **check and tune** the
-draft rules and to **benchmark** them. All commands run from `reasoning_model/src`.
-
-**1. Tests** (no data needed): `cd reasoning_model && python -m pytest -q` (244 tests).
-
-**2. Get the open ED data** into `reasoning_model/data/public/` (not committed):
-
-| Dataset | Source | Put it at |
-|---------|--------|-----------|
-| MIMIC-IV-ED Demo v2.2 | https://physionet.org/content/mimic-iv-ed-demo/2.2/ (open) | `data/public/mimic_iv_ed_demo/mimic-iv-ed-demo-2.2/ed/*.csv.gz` |
-| Yale ED triage (Hong et al. 2018) | Zenodo 1308993 (repo `yaleemmlc/admissionprediction`) | `data/public/yale_triage/yaleemmlc-admissionprediction-5cf50bc/Results/5v_cleandf.RData` |
-| NHANES 2017-2018 (DEMO_J, BPX_J) | CDC | fetched by `--download` below |
-
-```bash
-cd reasoning_model/src
-python -m triage.bench.yale --build                    # streams the 972-column RData -> cases.parquet
-```
-
-**3. Check and tune the rules** (dev split only; outputs are aggregates in `results/triage/derive/`):
-
-```bash
-python -m triage.derive.mimic_dev_bands                # urgent-visit rates per vital-sign band, per cut-off
-python -m triage.derive.nhanes_overreferral --download # how many healthy adults each cut-off would flag
-python -m triage.derive.rule_learning --yale           # small decision tree: rule suggestions for the clinician
-python -m triage.derive.source_check                   # every range and score against its official source
-python -m triage.derive.delphi --round 1               # Delphi pack for the clinicians to rate the rules
-```
-
-A rule changes only in `configs/triage/rules.yaml`, after review; the tests then pin its behaviour.
-
-**4. Benchmark** on the held-out data (Yale test split and MIMIC-IV-ED Demo) against NEWS2, always-refer and
-learned baselines:
-
-```bash
-python -m triage.bench.run_bench                       # -> results/triage/REPORT.md, bench_results.json
-python -m triage.bench.vignettes                       # the draft vignettes
-```
-
-**5. Explanations with the local LLM** (optional; templates otherwise): install Ollama, `ollama pull
-qwen2.5:3b-instruct`. The model only words the explanation; the verifier rejects any number not in the record.
-
-**6. The app's cases:** `python -m triage.demo_samples --build` writes `reasoning_model/demo_samples/` (MIMIC, Yale
-and rPPG cases when that data is present, else the draft vignettes); `cd server && npm run demo-qr` prints their QR
-codes. The server builds the cases by itself on first start.
-
-### C. Earlier stress model (ADABase; kept for the report, not run by the app)
-
-Predicts high vs low mental load from physiological signals with per-modality LightGBM agents and a fusion model,
-leave-one-subject-out over 30 ADABase subjects, with SHAP evidence and an LLM explanation checked by a verifier.
-Details in [`reasoning_model/CLAUDE.md`](reasoning_model/CLAUDE.md).
+Before the triage model, the project predicted high vs low mental load from physiological signals: per-modality
+LightGBM agents and a fusion model, leave-one-subject-out over 30 ADABase subjects, with SHAP evidence and an LLM
+explanation checked by a verifier. Details in [`reasoning_model/CLAUDE.md`](reasoning_model/CLAUDE.md).
 
 ```bash
 cd reasoning_model
