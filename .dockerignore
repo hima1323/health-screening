@@ -2,8 +2,9 @@
 **/.env
 client/dist
 **/__pycache__
-# the triage demo service needs only its code, configs, knowledge text and vignettes
+# the reasoning model needs only its requirements, code, configs, knowledge text and vignettes
 reasoning_model
+!reasoning_model/requirements-service.txt
 !reasoning_model/src
 !reasoning_model/configs
 !reasoning_model/knowledge
