@@ -1,4 +1,4 @@
-import { Brain, Database, Send } from 'lucide-react';
+import { Brain, Send } from 'lucide-react';
 import { Card, CardRow, CardHeading, IconBadge, StatusPill } from '../ui';
 import styles from './ModelResult.module.css';
 
@@ -11,7 +11,7 @@ const signed = (x) => (Math.abs(x) < 0.005 ? '0.00' : `${x > 0 ? '+' : '−'}${M
  * features behind it, and where the data came from.
  */
 export default function ModelResult({ model }) {
-  const { summary, windows, sample, transfer, trainedOnSubjects } = model;
+  const { summary, windows, transfer, trainedOnSubjects } = model;
   const call = summary.abstain ? 'No clear reading' : `${summary.label === 'high' ? 'High' : 'Low'} mental load`;
   const agents = summary.agents.filter((a) => a.windows > 0);
   const off = summary.agents.filter((a) => a.windows === 0);
@@ -130,13 +130,6 @@ export default function ModelResult({ model }) {
       </section>
 
       <div className={styles.provenance}>
-        <p className="muted small icon-line">
-          <Database size={13} aria-hidden="true" />
-          <span>
-            Demo station sample: {sample.dataset}, subject {sample.subject}, {sample.task} — what the person was really
-            doing: <strong>{sample.truth} load</strong>. The fold model never saw this person.
-          </span>
-        </p>
         <p className="muted small icon-line">
           <Send size={13} aria-hidden="true" />
           <span>

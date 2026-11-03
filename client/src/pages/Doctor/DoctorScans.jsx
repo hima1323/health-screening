@@ -17,7 +17,7 @@ function detail(report) {
   }
   const { summary, sample } = report.model;
   const matched = !summary.abstain && summary.label === sample.truth;
-  return `${Math.round(summary.confidence * 100)}% confidence · sample: ${sample.task} (really ${sample.truth} load) · ${
+  return `${Math.round(summary.confidence * 100)}% confidence · ${sample.task} · ${
     matched ? 'call matches' : summary.abstain ? 'model abstained' : 'call does not match'
   }`;
 }
