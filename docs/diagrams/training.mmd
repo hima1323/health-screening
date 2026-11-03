@@ -1,0 +1,10 @@
+flowchart TB
+    subgraph R ["rPPG model · rppg1/ + cvprlab/"]
+        direction LR
+        R1["MCD-rPPG ·<br/>UBFC-rPPG"] --> R2["Preprocess<br/>face crop,<br/>DiffNormalized"] --> R3["Train<br/>64 / 16 / 20<br/>subjects"] --> R4["best.pt"] --> R5["Test + report<br/>vs published"]
+    end
+    subgraph T ["Triage reasoning model · reasoning_model/"]
+        direction LR
+        T1["MIMIC-IV-ED ·<br/>Yale ED · NHANES"] --> T2["Derive<br/>bands, over-referral,<br/>rule suggestions"] --> T3["Clinician<br/>review"] --> T4["rules.yaml"] --> T5["Tests +<br/>benchmark"]
+    end
+    R ~~~ T

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, KeyRound, Lock } from 'lucide-react';
+import { ArrowLeft, KeyRound, Lock, Stethoscope } from 'lucide-react';
 import { getProviders, rememberedEmail } from '../../api';
 import useAuth from '../../hooks/useAuth';
 import useResource from '../../hooks/useResource';
@@ -137,6 +137,9 @@ export default function SignIn() {
 
           <Button variant="link" className={styles.back} onClick={() => navigate('/welcome')}>
             <ArrowLeft size={15} aria-hidden="true" /> Back to the introduction
+          </Button>
+          <Button variant="link" className={styles.back} onClick={() => navigate('/doctor/login')}>
+            <Stethoscope size={15} aria-hidden="true" /> I’m a doctor — clinician sign-in
           </Button>
         </Card>
 

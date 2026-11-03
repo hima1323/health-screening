@@ -21,6 +21,19 @@ const TONE_BY_STATUS = {
   poor: 'crit',
   'needs attention': 'crit',
   review: 'warn',
+  'above range': 'warn',
+  'below range': 'warn',
+  'low mental load': 'ok',
+  'high mental load': 'warn',
+  // the reasoning model's triage levels
+  urgent: 'crit',
+  'see a doctor soon': 'warn',
+  'self-care': 'ok',
+  remeasure: 'warn',
+  linked: 'warn',
+  uploading: 'warn',
+  done: 'ok',
+  failed: 'crit',
 };
 
 /** A status chip whose colour is carried by the dot rather than a tinted box. */

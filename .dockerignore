@@ -1,0 +1,22 @@
+**/node_modules
+**/.env
+client/dist
+**/__pycache__
+# the reasoning model needs only its requirements, code, configs, knowledge text and vignettes
+reasoning_model
+!reasoning_model/requirements-service.txt
+!reasoning_model/src
+!reasoning_model/configs
+!reasoning_model/knowledge
+!reasoning_model/vignettes
+!reasoning_model/evidence
+model_service
+rppg1
+analysis
+docs
+results
+server/uploads/*
+*.opus
+*.mov
+.git
+!server/uploads/.gitkeep

@@ -19,16 +19,17 @@ const CAPTURE_ICONS = { video: Video, thermal: Thermometer, ecg: HeartPulse };
 /** The patient's home screen, and the entry point into a contactless scan. */
 export default function ScanHub() {
   const { t } = usePrefs();
-  const { patientId, sessionId } = usePrimary();
+  const { patientId, reload } = usePrimary();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data, error } = useResource(() => getScanHub(patientId), [patientId]);
 
   const [step, setStep] = useState('hub'); // hub | qr | scanning
-  const [scanPhase, setScanPhase] = useState('Capturing');
+  const [code, setCode] = useState(null); // the kiosk code the phone read; it starts the scan
+  const [scanPhase, setScanPhase] = useState('Linked');
 
   const returnToHub = () => {
-    setScanPhase('Capturing');
+    setScanPhase('Linked');
     setStep('hub');
   };
 
@@ -44,10 +45,12 @@ export default function ScanHub() {
     return (
       <Layout eyebrow="Aura Screen" title="Scan to begin" showTabs={false}>
         <QrScanner
-          // a demo kiosk code carries a sample data file: run the reasoning model on it (/demo)
-          onScanned={(text, verified) =>
-            verified?.sample ? navigate(`/demo?sample=${encodeURIComponent(verified.sample)}`) : setStep('scanning')
-          }
+          // a printed case code names one of the reasoning model's cases: show its result (/result)
+          onScanned={(text, verified) => {
+            if (verified?.sample) return navigate('/result', { state: { sample: verified.sample } });
+            setCode(text);
+            setStep('scanning');
+          }}
           onCancel={returnToHub}
         />
       </Layout>
@@ -57,14 +60,14 @@ export default function ScanHub() {
   if (step === 'scanning') {
     return (
       <Layout
-        eyebrow={`Session ${sessionId} · Station 2`}
+        eyebrow="Live scan · Station 2"
         title="Active session"
         badge={<StatusPill>{scanPhase}</StatusPill>}
         showTabs={false}
       >
         <ActiveScanPanel
-          sessionId={sessionId}
-          onComplete={() => navigate('/report')}
+          code={code}
+          onComplete={() => reload().then(() => navigate('/report'))}
           onPhaseChange={setScanPhase}
           onBack={returnToHub}
         />
@@ -90,8 +93,10 @@ export default function ScanHub() {
       <div className={`grid-two ${styles.hubGrid}`}>
         <Card className={styles.auraCard}>
           <StatusPill>{`Biometric aura · ${aura.status}`}</StatusPill>
-          {lastScreeningReport && (
+          {lastScreeningReport?.pulse ? (
             <AuraOrb size={184} value={lastScreeningReport.pulse} caption="bpm · last read" />
+          ) : (
+            <AuraOrb size={184} value="—" caption="no reading yet" />
           )}
           <p className={styles.note}>{t(aura.note)}</p>
           <Button onClick={() => setStep('qr')}>
@@ -116,15 +121,15 @@ export default function ScanHub() {
 
               <StatTile.Row className={styles.lastTiles}>
                 <StatTile>
-                  <StatTile.Value>{lastScreeningReport.pulse}</StatTile.Value>
+                  <StatTile.Value>{lastScreeningReport.pulse ?? '—'}</StatTile.Value>
                   <StatTile.Label>{t('Pulse')}</StatTile.Label>
                 </StatTile>
                 <StatTile>
-                  <StatTile.Value>{lastScreeningReport.temp}°</StatTile.Value>
+                  <StatTile.Value>{lastScreeningReport.temp == null ? '—' : `${lastScreeningReport.temp}°`}</StatTile.Value>
                   <StatTile.Label>{t('Temp')}</StatTile.Label>
                 </StatTile>
                 <StatTile>
-                  <StatTile.Value>{lastScreeningReport.breath}</StatTile.Value>
+                  <StatTile.Value>{lastScreeningReport.breath ?? '—'}</StatTile.Value>
                   <StatTile.Label>{t('Resp')}</StatTile.Label>
                 </StatTile>
               </StatTile.Row>

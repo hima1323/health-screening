@@ -1,12 +1,11 @@
-# Render Blueprint: one web service that builds the client and serves it with the API.
+# Render Blueprint: one Docker web service — the Express API, the built client and the Python model service.
 # Render dashboard > New > Blueprint > pick this repo; it asks for the sync: false values.
 services:
   - type: web
     name: aura-screen
-    runtime: node
+    runtime: docker
     plan: free
-    buildCommand: cd client && npm ci && npm run build && cd ../server && npm ci
-    startCommand: cd server && npm start
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
@@ -18,3 +17,6 @@ services:
         sync: false
       - key: DEMO_DOCTOR_EMAIL
         sync: false
+      # seconds the demo station takes to "capture" before sending its sample to the model
+      - key: DEMO_CAPTURE_SECONDS
+        value: "12"

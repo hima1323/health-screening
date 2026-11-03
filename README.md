@@ -1,42 +1,101 @@
-# Aura Screen — Patient App
+# Aura Screen
 
-Contactless biometric screening for patients: an introduction, an account, a
-QR-triggered scan, and the report and timeline that come out of it. React +
-Vite on the front, Express + Mongoose on the back — every screen reads its data
-from MongoDB, nothing is hardcoded in the client.
+### 🌐 Live website: **[aura-screen.onrender.com](https://aura-screen.onrender.com)**
 
-## Links
-
-| What | Link |
-|------|------|
-| Code | https://github.com/hima1323/health-screening |
-| Presentation (PPT) | _add link here_ |
-| Demo video | _add link here_ |
-| Live site | _add link here after deployment_ |
-
-## Project components
+A contactless health pre-screening app. A patient scans the QR code at a screening station with their phone; the
+station reads their vital signs without touching them, a **reasoning model** decides how urgently they should see a
+doctor and explains why, and the patient gets a plain-language report they can track over time and share with their
+doctor.
 
 | Part | Folder | What it does |
-|------|--------|--------------|
-| Patient app | `client/`, `server/` | React app + Express/MongoDB API: QR-started scan, reports, timeline, doctor portal |
-| rPPG model | `rppg1/`, `cvprlab/` | Heart rate from a face video. Trained model **CVPR Lab P4** (4.8M parameters); weights are in `rppg1/runs/*/best.pt` |
-| Reasoning model | `reasoning_model/` | Expert triage system: ordered rules decide the level, a local LLM only words the explanation, a verifier checks it |
-| Triage Lab | `reasoning_model/src/triage/lab_app.py` | Streamlit page to pick a ready-made sample and see input and output, benchmark a dataset, or measure heart rate from a video |
+|---|---|---|
+| **Patient app** | `client/`, `server/` | React app + Express/MongoDB API: QR-started scan, report, timeline, doctor portal |
+| **Reasoning model** | `reasoning_model/src/triage/` | Triage expert system: ordered rules decide the level, the explainer words it, a verifier checks every number |
+| **rPPG model** | `rppg1/`, `cvprlab/` | Heart rate from an ordinary face video. Trained model **CVPR Lab P4** (4.8M parameters), weights in `rppg1/runs/*/best.pt` |
+| **Triage Lab** | `reasoning_model/src/triage/lab_app.py` | Streamlit page: try a case, benchmark a dataset, measure heart rate from a video |
 
-### Reasoning model in one picture
+| Link | |
+|---|---|
+| **Live website (hosted on Render)** | **[https://aura-screen.onrender.com](https://aura-screen.onrender.com)** |
+| Code | https://github.com/hima1323/health-screening |
+| Presentation (PPT) | [Google Drive folder](https://drive.google.com/drive/folders/1_JIU5m7tUj5NBQN36SzoFNGy4ilYeFui?usp=sharing) |
+| Demo video | [YouTube](https://youtu.be/e6dh0Q-tbj0) |
+| Case QR codes | [`docs/demo-qr/`](docs/demo-qr/): print one and scan it from the Scan Hub |
 
-```
-sensors (rPPG, thermal, devices) -> session flow (consent, scope, questions)
-  -> evidence record -> rule engine (rules.yaml, first match wins)
-  -> reasoning chain (cited evidence, uncertainty) -> explainer (LLM or template) -> verifier
-  -> card: level, reasons, advice, contacts
-```
+The live site runs on Render's free plan: the first visit after a quiet spell can take about 50 seconds.
 
-The LLM never decides the level. Rules are data in `reasoning_model/configs/triage/*.yaml` and are marked **draft**
-until a clinician signs them off, so the triage output is for demonstration and is not medical advice. Details:
-`reasoning_model/TRIAGE_EXPERT_SYSTEM_STATUS.md`.
+## Problem statement
 
-### rPPG model and weights
+Routine health checks need a clinic visit, a trained operator and contact sensors, so most people are only screened
+when something is already wrong. A self-service kiosk can measure vital signs without touching the patient: a camera
+reads the pulse from the face (rPPG) and a thermal camera reads skin temperature. The measurements are only useful if
+a patient with no medical training can start a scan, understand what the numbers mean and what to do next, and track
+them over time. This project designs and builds that patient-facing side, and the reasoning model that turns
+readings into advice.
+
+## Objectives
+
+1. **Start a scan from the phone** by scanning the station's QR code, with no operator present.
+2. **Explain, don't just measure:** a reasoning model gives a clear level (urgent, see a doctor soon, self-care) with
+   the reasons, every reading against its normal range, and advice.
+3. **Trustworthy explanations:** rules decide, the language model only words the result, and a verifier rejects any
+   number that is not in the record.
+4. **Track over time:** a timeline of past sessions, with a step-by-step explanation of each.
+5. **Share with a doctor** through a share code; the doctor sees only what patients share.
+6. **Apply HCI methods throughout:** build (Lab 6), user testing (Lab 7) and improvements from the findings (Lab 8).
+
+## Team members
+
+| Name | Entry number |
+|------|--------------|
+| Himanshu Patel | 2024AIB1007 |
+| Nongmaithem Hans | 2024AIB1011 |
+
+CVPR Lab & ACAI Lab, School of AI & Data Engineering, IIT Ropar.
+
+## Technologies used
+
+| Layer | Tools |
+|-------|-------|
+| Frontend | React 19, Vite, React Router, CSS Modules, lucide-react, jsQR (QR scanning) |
+| Backend | Node.js, Express 5, MongoDB with Mongoose, JWT auth, Google sign-in, Multer (uploads) |
+| Reasoning model | Python, YAML rule tables, NumPy, pandas, SciPy; local LLM (Ollama, Qwen2.5-3B) for wording only |
+| rPPG model | Python, PyTorch, OpenCV, SciPy; CVPR Lab model and PhysFormer (`rppg1/`, `cvprlab/`) |
+| Lab tools | Streamlit (Triage Lab, live webcam heart rate), pytest |
+| Hosting | Render (one Docker service), MongoDB Atlas, GitHub Actions (keep-awake ping) |
+
+## Workflow
+
+### Architecture
+
+<img src="docs/diagrams/architecture.png" alt="Architecture: browsers, the Render web service with the Express API, built client and reasoning model, MongoDB Atlas and the GitHub Actions ping" width="900">
+
+Everything runs as one web service on Render: Express serves the built React client and the API, and starts the
+reasoning model (Python) beside it. Patients, the kiosk screen and doctors all use the same site in a browser. Data
+lives in MongoDB Atlas. A GitHub Actions job pings the site every 5 minutes so the free instance never sleeps.
+
+### Patient journey
+
+<img src="docs/diagrams/patient-journey.png" alt="Patient journey from the welcome screen to the report, timeline and doctor portal" width="520">
+
+### Starting a scan
+
+<img src="docs/diagrams/scan-sequence.png" alt="Sequence: kiosk code, phone verifies it, scan starts, the reasoning model answers, the report is saved" width="900">
+
+The kiosk's QR code is signed by the server and expires after 10 minutes, so a photo of an old code stops working.
+A printed case QR code skips the station and opens the result straight away.
+
+### Reasoning model
+
+<img src="docs/diagrams/reasoning-model.png" alt="Reasoning model: case, evidence record, rule engine, reasoning chain, explainer, verifier, result card" width="900">
+
+The rules decide the level; the language model never does. Rules are data in `reasoning_model/configs/triage/*.yaml`
+and are marked **draft** until a clinician signs them off, so the output is a prototype and not medical advice.
+Details: `reasoning_model/TRIAGE_EXPERT_SYSTEM_STATUS.md`.
+
+### rPPG model
+
+<img src="docs/diagrams/rppg-model.png" alt="rPPG model: face crop, video and STMap branches, DCEB, frequency stages, GTCN, decoder, waveform, heart rate" width="900">
 
 | Weights (`rppg1/runs/<run>/best.pt`) | Model | Note |
 |------|-------|------|
@@ -45,59 +104,14 @@ until a clinician signs them off, so the triage output is for demonstration and 
 | `MCD_MCD` | plain PhysFormer | baseline |
 | `CVPR_phase1..4_*` | ablation ladder | phase 1 PhysFormer to phase 4 frequency |
 
-Benchmark tables: `rppg1/runs/REPORT.md`. Datasets (MCD-rPPG, UBFC-rPPG, MPSC) are not in the repository.
+Benchmark tables: [`rppg1/runs/REPORT.md`](rppg1/runs/REPORT.md). The datasets (MCD-rPPG, UBFC-rPPG, MPSC) are not in
+the repository.
 
-## Problem statement
+### Training and evaluation
 
-Routine health checks need a clinic visit, a trained operator and contact
-sensors, so most people only get screened when something is already wrong.
-A self-service kiosk can measure vitals without touching the patient: a camera
-reads the pulse from the face (rPPG) and a thermal camera reads skin
-temperature. The measurements are only useful if a patient with no medical
-training can start a scan, understand the results and track them over time.
-This project designs and builds that patient-facing side.
+<img src="docs/diagrams/training.png" alt="Training: rPPG data, preprocessing, training, weights, test; triage data, derivation, clinician review, rules, tests and benchmark" width="900">
 
-## Objectives
-
-- Let a patient start a kiosk scan from their phone by scanning a QR code,
-  with no operator present.
-- Present each session's results (heart rate, temperature, ECG, EMG) in plain
-  language, with a step-by-step explanation of how each value was measured.
-- Show a timeline of past sessions so patients can see trends.
-- Let patients share a report with their doctor.
-- Apply HCI methods throughout: build (Lab 6), user testing (Lab 7), and
-  improvements based on the test findings (Lab 8).
-
-## Team members
-
-| Name | Roll number |
-|------|-------------|
-| Himanshu | 2024AIB1007 |
-| Hans | 2024AIB1011 |
-
-## Technologies used
-
-| Layer | Tools |
-|-------|-------|
-| Frontend | React 19, Vite, React Router, CSS Modules, lucide-react, jsQR (QR scanning) |
-| Backend | Node.js, Express 5, MongoDB with Mongoose, JWT auth, Google sign-in, Multer (uploads) |
-| Signal analysis | Python, NumPy; rPPG with POS/CHROM, PhysFormer and the CVPR Lab model in PyTorch (`rppg1/`, `cvprlab/`) |
-| Triage reasoning | Python, YAML rule tables, Streamlit lab, local LLM (Ollama) for wording only (`reasoning_model/`) |
-| Tooling | Git and GitHub, oxlint |
-
-## Workflow
-
-### Patient journey
-
-<img src="docs/diagrams/patient-journey.png" alt="Patient journey" width="420">
-
-### System architecture
-
-<img src="docs/diagrams/architecture.png" alt="System architecture" width="760">
-
-### Starting a scan
-
-<img src="docs/diagrams/scan-sequence.png" alt="Starting a scan" width="620">
+How to run each step: [Setup and execution](#setup-and-execution), steps 4 and 5.
 
 ## Screens
 
@@ -139,71 +153,14 @@ Captured from the running app, in the order a patient meets them.
 
 A doctor signs in separately and sees only the reports patients have shared with them, by share code.
 
-## Version control
-
-The project is tracked with Git and hosted on GitHub:
-**https://github.com/hima1323/health-screening** (public).
-
-### Branches
-
-| Branch | Purpose |
-|--------|---------|
-| `main` | Stable code. This is what the GitHub page and the README show. |
-| `reasoning-model` | Reasoning model, Triage Lab, CVPR Lab rPPG model and weights, Aura demo screens. |
-| `merge/device-frame` | Working branch for the phone/kiosk device frame and later features. Merged into `main` through pull request #1. |
-
-New work goes on a branch. It reaches `main` through a pull request, so every change to `main` can be reviewed and traced:
-
-```bash
-git switch -c feature/<name>          # start a branch
-git add <files> && git commit         # one logical change per commit
-git push -u origin feature/<name>     # publish it
-gh pr create --base main              # open a pull request into main
-```
-
-<img src="docs/screenshots/github-pull-request.png" alt="Pull request #1 merging merge/device-frame into main" width="760">
-
-### Commit conventions
-
-- One logical change per commit, so any commit can be reverted on its own.
-- The subject line says what the change does for the user, in the imperative
-  ("Explain camera errors and accept only our kiosk's QR codes"), not which
-  files changed.
-- Code, docs, screenshots and the trained rPPG weights (`rppg1/runs/*/best.pt`) are committed. Secrets, build
-  output and large data are not. `.gitignore` excludes `.env`, `node_modules/`, `dist/`, uploaded patient reports
-  (`server/uploads/`), the rPPG datasets and caches (`rppg1/data/`), clinical data (`reasoning_model/data/`),
-  screen recordings and voice notes.
-
-<img src="docs/screenshots/github-commits.png" alt="Commit history on GitHub" width="760">
-
-### History
-
-| Date | What changed | Commits |
-|------|--------------|---------|
-| 8 Sep 2026 | Initial patient app: React client, Express API, MongoDB models | `9923f1e`, `1d42a08` |
-| 22 Sep 2026 | Patient accounts, onboarding and Google sign-in | `af8de42` |
-| 29 Sep 2026 | Multimodal timeline dashboard, phone/kiosk device frame, PhysFormer rPPG project, past-session analysis with zoomable signal graphs, thermal frames | `9af4291` … `8efb1a1` (16 commits) |
-| 30 Sep 2026 | Fewer sample reports, dates on session cards | `0b00956` |
-| 5 Oct 2026 | Clearer camera errors, only the kiosk's own QR codes accepted, shorter session report with working sharing, step-by-step explanation of each past session | `a1dce8d`, `ed9dcd7`, `21886b9` |
-| 6 Oct 2026 | Doctor portal for shared reports; README with problem statement, objectives, workflow diagrams and screenshots | `5bb5c98`, `71b1edb` … `d8e71a4` |
-
-Run `git log --oneline` for the full list.
-
-### Getting the code
-
-```bash
-git clone https://github.com/hima1323/health-screening.git
-cd health-screening
-```
-
-Then follow [Run it](#run-it) below.
-
 ## Structure
 
 ```
 health-screening/
-├── client/                 Vite React app (patient screens, kiosk, demo scan)
-├── server/                 Express + Mongoose API (auth, screening data, /api/triage proxy)
+├── client/                 Vite React app (patient screens, kiosk, triage result, doctor portal)
+├── server/                 Express + Mongoose API (auth, screening data, live scans, doctor, /api/triage proxy)
+│   └── scripts/            seed.js (demo data), load-sessions.js, demo-qr.js (printable demo QR codes)
+├── model_service/          the earlier stress model (LightGBM + fusion on ADABase); no longer run by the app
 ├── rppg1/                  rPPG training, benchmark and live dashboard
 │   ├── model/              PhysFormer
 │   ├── bench/              preprocessing, training harness, infer.py (Predictor), benchmark
@@ -216,108 +173,335 @@ health-screening/
 │   │                       lab_app (Triage Lab), kiosk_app, demo_service, bench/, derive/, measure/
 │   ├── vignettes/ templates/ evidence/   sample cases and clinician templates
 │   └── tests/              244 tests
-├── docs/                   diagrams, screenshots
+├── docs/                   diagrams, screenshots, demo-qr/ (printable QR codes for the triage demo)
+├── .github/workflows/      keep-awake.yml: pings the live site every 5 min so it never sleeps
+├── Dockerfile              one image: built client + API + both Python services
 └── render.yaml             Render deployment
 ```
 
-## Setup and steps to execute
+## Setup and execution
 
-Tested on Windows 11 with Python 3.13/3.14 and Node 24. Everything below runs from a fresh clone.
+Every step below runs from a fresh clone, in this order: the Python environment, then the two models (rPPG, then
+the reasoning model), then the Triage Lab that uses both, then the database, and last the web app. Commands are
+written for macOS/Linux with the Windows form beside them where it differs. Tested on Windows 11 and macOS.
 
-### A. Triage Lab (reasoning model and rPPG model) - no database needed
+The trained rPPG weights and the reasoning model's rules are already in the repository, so steps 4 (training) and
+5.2–5.4 (rule checks on hospital data) can be skipped to run the app; everything else is needed.
+
+### Prerequisites
+
+| Tool | Version | Needed for |
+|------|---------|------------|
+| Git | any | cloning |
+| Python | 3.12 or 3.13 (3.9 or newer works) | both models, the Triage Lab, the reasoning service the app runs |
+| Node.js | 22 or newer, with npm | the web app and its API |
+| MongoDB | 7 or newer, local — or a free MongoDB Atlas database | the web app's data |
+| NVIDIA GPU, 6 GB or more | — | training the rPPG model only (inference and tests run on CPU) |
+| Ollama | optional | explanations written by a local LLM instead of templates |
+
+### 1. Get the code
 
 ```bash
 git clone https://github.com/hima1323/health-screening.git
-cd health-screening/reasoning_model
-python -m venv .venv
-.venv\Scripts\activate                 # macOS/Linux: source .venv/bin/activate
-pip install -r requirements-lab.txt
-python -m pytest -q                     # expect: 244 passed
-streamlit run src/triage/lab_app.py     # opens http://localhost:8501
+cd health-screening
 ```
 
-1. Tab **0 - Try a sample**: choose "Draft vignettes" (or "Template sample"), pick a case. Section 1 shows the input,
+### 2. Python environment
+
+One virtual environment serves both models, the Triage Lab and the reasoning service the app starts. The server
+finds it at `reasoning_model/.venv` by itself. Keep it active for steps 3–6.
+
+```bash
+cd reasoning_model
+python3 -m venv .venv                   # Windows: python -m venv .venv
+source .venv/bin/activate               # Windows: .venv\Scripts\activate
+pip install -r requirements-lab.txt     # PyTorch, OpenCV, NumPy, pandas, SciPy, Streamlit, pytest
+cd ..
+```
+
+### 3. Check both models
+
+```bash
+cd cvprlab && python -m pytest tests -q && cd ..            # rPPG model architecture: expect 18 passed
+cd reasoning_model/src && python -m triage.demo_samples --build && cd ..   # the reasoning model's demo cases
+python -m pytest -q                                         # reasoning model: expect 244 passed
+cd ..
+```
+
+### 4. rPPG model: data, training, evaluation
+
+Heart rate from an ordinary face video. The model the project uses is **CVPR Lab P4** (`cvprlab/`), compared with
+PhysFormer (`rppg1/model/`). Its trained weights are committed in `rppg1/runs/`, so this step is only needed to
+retrain. All commands run from `rppg1/`.
+
+**4.1 Download the datasets** (resumable):
+
+```bash
+cd rppg1
+python -m bench.download_mcd --n 100 --camera IriunWebcam     # MCD-rPPG (Hugging Face, CC-BY-4.0): video + synced PPG
+python -m bench.fetch_ubfc                                    # UBFC-rPPG DATASET_2, cached, raw videos deleted (~4 GB)
+```
+
+UBFC-rPPG is for research use only; faces of subjects 21 and 27 must not appear in any report or presentation.
+
+**4.2 Preprocess** (face crop, 128 × 128, DiffNormalized) into `rppg1/data/cache`:
+
+```bash
+python -m bench.preprocess --dataset mcd --raw data/raw/MCD-rPPG --camera IriunWebcam --max-seconds 60
+```
+
+`fetch_ubfc` already writes UBFC-rPPG to the cache.
+
+**4.3 Train.** Subject-disjoint split (64 train / 16 validation / 20 held-out test subjects); the best epoch is chosen
+by validation heart-rate RMSE and saved as `runs/<name>/best.pt`.
+
+```bash
+# the model the project uses: CVPR Lab phase 4 (frequency), 30 epochs
+python -m bench.run train --arch cvprlab:phase4_frequency --train mcd_IriunWebcam --test mcd_IriunWebcam \
+    --epochs 30 --name CVPR_P4_e30_MCD
+# the PhysFormer baseline
+python -m bench.run train --train mcd_IriunWebcam --test mcd_IriunWebcam --name MCD_MCD
+# optional: the ablation ladder (phase 1 -> 4) and the longer, deeper runs
+python -m bench.ladder
+python -m bench.campaign
+```
+
+**4.4 Evaluate:**
+
+```bash
+python -m bench.run test --arch cvprlab:phase4_frequency --ckpt runs/CVPR_P4_e30_MCD/best.pt --test ubfc
+python -m bench.run pos --test ubfc        # classical POS baseline, no training
+python -m bench.run report                 # -> runs/REPORT.md, every run vs the rPPG-Toolbox published numbers
+python -m bench.tables_figure              # -> runs/comparison_tables*.png
+```
+
+**4.5 Use it:**
+
+```bash
+python -m bench.infer --list                          # the trained models
+python -m bench.infer --video my_face.mp4             # heart rate from a 30-60 s face video (P4 by default)
+streamlit run webapp/streamlit_app.py                 # live webcam heart rate in the browser
+cd ..
+```
+
+### 5. Reasoning model: rules, checks, benchmark
+
+A triage expert system: ordered rules in `reasoning_model/configs/triage/rules.yaml` decide the level, ranges come
+from `vital_ranges.yaml` and red flags from `red_flags.yaml`. Nothing is fitted; hospital data is used to **check and
+tune** the draft rules and to **benchmark** them. All commands run from `reasoning_model/src`.
+
+**5.1 Try it on the draft cases** (no data needed):
+
+```bash
+cd reasoning_model/src
+python -m triage.bench.vignettes          # every draft vignette through the rules
+```
+
+**5.2 Get the open hospital data** into `reasoning_model/data/public/` (not committed):
+
+| Dataset | Source | Put it at |
+|---------|--------|-----------|
+| MIMIC-IV-ED Demo v2.2 | https://physionet.org/content/mimic-iv-ed-demo/2.2/ (open) | `data/public/mimic_iv_ed_demo/mimic-iv-ed-demo-2.2/ed/*.csv.gz` |
+| Yale ED triage (Hong et al. 2018) | Zenodo 1308993 (repository `yaleemmlc/admissionprediction`) | `data/public/yale_triage/yaleemmlc-admissionprediction-5cf50bc/Results/5v_cleandf.RData` |
+| NHANES 2017-2018 (DEMO_J, BPX_J) | CDC | fetched by `--download` in 5.3 |
+
+```bash
+python -m triage.bench.yale --build       # streams the large RData file -> cases.parquet
+```
+
+**5.3 Check and tune the rules** (development split only; outputs are aggregates in `results/triage/derive/`):
+
+```bash
+python -m triage.derive.mimic_dev_bands                # urgent-visit rates per vital-sign band and cut-off
+python -m triage.derive.nhanes_overreferral --download # how many healthy adults each cut-off would flag
+python -m triage.derive.rule_learning --yale           # small decision tree: rule suggestions for the clinician
+python -m triage.derive.source_check                   # every range and score against its official source
+python -m triage.derive.delphi --round 1               # Delphi pack for clinicians to rate the rules
+```
+
+A rule changes only in `configs/triage/rules.yaml`, after review; rerun the tests from step 3 afterwards.
+
+**5.4 Benchmark** on the held-out data (Yale test split, MIMIC-IV-ED Demo) against NEWS2, always-refer and learned
+baselines:
+
+```bash
+python -m triage.bench.run_bench          # -> results/triage/REPORT.md, bench_results.json
+```
+
+**5.5 Rebuild the app's cases and their QR codes** (after 5.2, the cases include MIMIC, Yale and rPPG examples):
+
+```bash
+python -m triage.demo_samples --build     # -> reasoning_model/demo_samples/
+cd ../..
+```
+
+The QR images are remade in step 8 (`npm run demo-qr`).
+
+**5.6 Optional: explanations from a local LLM.** Install Ollama and run `ollama pull qwen2.5:3b-instruct`. The LLM
+only words the explanation; the verifier rejects any number that is not in the record, and the fixed templates are
+used whenever Ollama is not running.
+
+### 6. Triage Lab (both models together)
+
+```bash
+cd reasoning_model
+streamlit run src/triage/lab_app.py       # opens http://localhost:8501
+cd ..
+```
+
+1. Tab **0 · Try a sample**: choose "Draft vignettes" (or "Template sample"), pick a case. Section 1 shows the input,
    section 2 the triage level, the reason and the advice. Open "Show full detail" for the reasoning chain.
-2. Tab **1 - Benchmark a dataset**: choose "Template sample", press **Run the benchmark** (metrics vs the baselines).
-3. Tab **3 - Face video**: upload a 30-60 s face video, pick model `p4` and press **Measure heart rate**. It uses the
-   committed weights `rppg1/runs/CVPR_P4_e30_MCD/best.pt`. Picking a dataset sample there needs the datasets
-   (`rppg1/data/cache`), which are not in the repository.
-4. The Yale and MIMIC-IV-ED sets in tabs 0 and 1 need their data downloaded into `reasoning_model/data/public`; the
-   vignettes and the template work without it.
+2. Tab **1 · Benchmark a dataset**: choose "Template sample", press **Run the benchmark** (metrics vs the baselines).
+3. Tab **3 · Face video → heart rate**: upload a 30-60 s face video, pick model `p4` and press
+   **Measure heart rate**. It uses the weights `rppg1/runs/CVPR_P4_e30_MCD/best.pt` (committed, or from step 4).
+4. The MIMIC-IV-ED and Yale sets in tabs 0 and 1 appear once their data is in place (step 5.2).
 
-The explanation text uses fixed templates by default. To use the local LLM, install Ollama, run
-`ollama pull qwen2.5:3b-instruct`, and switch on "Write the explanation with the local LLM".
+### 7. Database
 
-### B. Patient app
+The web app keeps accounts, patients, scans and reports in MongoDB. Use either:
 
-```bash
-cd server && npm install && cp .env.example .env     # set MONGODB_URI (local MongoDB or Atlas)
-npm run seed && npm start                             # API on http://localhost:4000
-cd ../client && npm install && npm run dev            # http://localhost:5173
-```
+- **Local MongoDB** on `mongodb://127.0.0.1:27017`. Install MongoDB Community Server
+  (macOS: `brew tap mongodb/brew && brew install mongodb-community && brew services start mongodb-community`;
+  Windows: the MSI installer from mongodb.com, which runs it as a service). Nothing else to configure.
+- **MongoDB Atlas** (free tier): create a cluster and a database user, allow your IP (or `0.0.0.0/0`) under
+  **Network Access**, and copy the connection string for step 8, with `/aura_screen` as the database name.
 
-### C. Patient app with the triage demo (QR -> sample -> result)
+### 8. Web app
 
-Start the reasoning service, then the app: `cd reasoning_model/src && python -m triage.demo_service` (port 5055), and
-run section B with `DEMO_WITHOUT_DB=1` if no database is available. Open `/kiosk?demo=1` on the laptop and `/demo` on a
-phone. `start_aura_demo.bat` does all of this on Windows.
-
-## Run it (patient app, detail)
-
-Needs MongoDB on `mongodb://127.0.0.1:27017`, or set `MONGODB_URI`.
+**Terminal 1 — API.** It also starts the reasoning model from step 2's environment.
 
 ```bash
-# 1. configure and seed (once)
-cd server && npm install && cp .env.example .env && npm run seed
-
-# 2. API
-npm start                       # http://localhost:4000
-
-# 3. client, in a second terminal
-cd ../client && npm install && npm run dev    # http://localhost:5173
+cd server
+npm install
+cp .env.example .env                    # Windows: copy .env.example .env
+# Atlas only: in .env set MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/aura_screen
+npm run seed                            # demo patient, kiosk station, past sessions, demo doctor
+npm run demo-qr                         # printable case QR codes -> docs/demo-qr/
+npm start                               # http://localhost:4000
 ```
 
-After changing the analysis, rebuild the study sessions and reload just those —
-`npm run sessions` leaves user accounts alone, so nobody gets signed out.
-`npm run seed` also resets the demo patient, and keeps accounts too.
+**Terminal 2 — client:**
+
+```bash
+cd client
+npm install
+npm run dev                             # open http://localhost:5173
+```
+
+The other `.env` settings (Google sign-in, the demo doctor's email) are in [Environment](#environment).
+
+### 9. Try it
+
+1. Open http://localhost:5173, step through the introduction (or **Skip the introduction**), choose
+   **Create account** and fill in the details.
+2. **Printed case QR:** on the Scan Hub press **Begin contactless scan** and scan a code from
+   [`docs/demo-qr/`](docs/demo-qr/) (printed, or on a second screen). The reasoning model's result appears: level,
+   reasons, readings against their ranges and the advice.
+3. **Live scan:** open http://localhost:5173/kiosk on a second screen and scan its QR from the Scan Hub. After the
+   capture countdown the reasoning model answers and **View session report** opens the report
+   ([details](#live-scan-and-the-reasoning-model)).
+4. **Doctor:** http://localhost:5173/doctor/login. With `DEMO_DOCTOR_EMAIL` left empty the demo doctor is
+   `doctor@aura.test`, password `aura-5e9394ee` (from `server/scripts/seed.js`); with your Google address there, sign
+   in with Google. Add the patient's share code to open their report.
+
+A phone allows the camera only on https or localhost. To scan from a phone on the same Wi-Fi, start the client with
+`HTTPS=1 npm run dev` (Windows: `set HTTPS=1&& npm run dev`) and open `https://<laptop IP>:5173`, accepting the
+certificate warning once. On Windows, `start_aura_demo.bat` starts the API and the client together.
+
+### 10. Rebuilding data (when the analysis changes)
+
+`npm run sessions` reloads the past sessions and leaves accounts alone, so nobody is signed out; `npm run seed` also
+resets the demo patient and keeps accounts too.
 
 ```bash
 python3 analysis/build_sessions.py && (cd server && npm run sessions)
 ```
 
-## Deploy (Render) and install on a phone
+### Earlier stress model (ADABase; kept for the report, not run by the app)
 
-`render.yaml` defines one free web service: it builds `client/` and the Express
-server serves it beside the API, so the app and API share one HTTPS URL.
+Before the triage model, the project predicted high vs low mental load from physiological signals: per-modality
+LightGBM agents and a fusion model, leave-one-subject-out over 30 ADABase subjects, with SHAP evidence and an LLM
+explanation checked by a verifier. Details in [`reasoning_model/CLAUDE.md`](reasoning_model/CLAUDE.md).
+
+```bash
+cd reasoning_model
+pip install -r requirements.txt                          # full set (mlx / mlx-lm only on Apple Silicon)
+export ADABASE_PASSWORD='<share password>'               # from the ADABase authors; never commit it
+python src/features.py --all --delete-raw                # download -> features -> delete raw, one subject at a time
+python src/train.py --task binary --tune                 # LightGBM, LOSO, isotonic calibration, SHAP
+python src/fusion.py                                     # modality agents + fusion
+python src/evidence.py --all --fusion                    # evidence records
+python src/reasoner.py --subject 0 --fusion              # explanation (Ollama, else template) + verifier
+python src/evaluate.py --ablations                       # metrics, ablations, calibration, faithfulness
+sh run_pipeline.sh                                       # all of the above, plus the LoRA fine-tune
+```
+
+## Live scan and the reasoning model
+
+A scan runs end to end on real requests, and the reasoning model is the triage expert system in
+`reasoning_model/src/triage/` (rules decide the level, the explainer words it, the verifier checks it):
+
+1. The kiosk (`/kiosk`) shows a QR code the server signed; it changes every 10 minutes.
+2. The phone scans it (**Begin contactless scan**); the server checks the signature and starts a scan
+   (`POST /api/scans`). The kiosk screen follows along (`GET /api/stations/:id/live`).
+3. The station "captures". This demo station has no sensors, so it sends one of the reasoning model's demo cases
+   (readings and answers, `reasoning_model/demo_samples/`), in turn.
+4. The server runs the triage on that case (`server/lib/reasoning.js` → `python -m triage.demo_service`). It returns
+   the level (Urgent / See a doctor soon / Self-care / …), the rule that fired and why, every reading against its
+   normal and urgent range, and the explanation card.
+5. The answer becomes a report with its own share code. The patient sees the result screen; a doctor who enters the
+   code sees the same, and it lists under **Model results**.
+
+The server starts the reasoning model itself (Python from `reasoning_model/.venv`, else `python3`, or `MODEL_PYTHON`),
+building the demo cases first if they are missing. Reports from before this change carry the earlier stress model's
+output (`model_service/`) and still display.
+
+### Presentation run-through
+
+For the reasoning-model triage demo instead, scan a printed code from `docs/demo-qr/` in step 2; the result shows
+straight away.
+
+1. Laptop / projector: open `https://<app>/kiosk` — the QR code.
+2. Phone (app or browser): create an account, fill in details, **Begin contactless scan**, point at the QR.
+   If the camera won't start, **Continue without camera** links to the same station.
+3. Watch both screens: capture countdown → case sent → the reasoning model answers (about 15 s).
+   **View session report**.
+4. On the report, **Share with doctor** shows the code.
+5. Doctor: `/doctor/login` (or **I'm a doctor** on the sign-in screen) → **Add shared report** → the code.
+   The report shows the reasoning model's result; **Model results** lists every scan with its level and the rule
+   that fired. Add a note on the patient page. The dashboard refreshes every 10 s.
+
+Scans rotate through the demo cases (self-care, urgent, see a doctor soon, not suitable), so a second scan shows a
+different result.
+
+## Deployment
+
+Live on Render at **[https://aura-screen.onrender.com](https://aura-screen.onrender.com)** (service `aura-screen`, free plan, deploys from this
+repository's `reasoning-model` branch on every push).
+
+`render.yaml` defines one free Docker web service (`Dockerfile`): the built client, the Express API and the
+reasoning model, all on one HTTPS URL. The image build makes the demo cases with the model's own code, so a broken
+model fails the deploy instead of the demo.
 
 1. Render dashboard → **New → Blueprint** → pick this repo and branch.
 2. Fill in `MONGODB_URI` (MongoDB Atlas; allow `0.0.0.0/0` in Network Access),
    `GOOGLE_CLIENT_ID` and `DEMO_DOCTOR_EMAIL`. `JWT_SECRET` is generated.
-3. Load the data into Atlas once, from this machine:
-   `cd server && MONGODB_URI='<atlas uri>' npm run seed && MONGODB_URI='<atlas uri>' npm run sessions`
+3. Load the demo data into Atlas once, from this machine:
+   `cd server && MONGODB_URI='<atlas uri>' npm run seed`
 4. For Google sign-in, add the `https://<name>.onrender.com` URL to the OAuth
    client's Authorised JavaScript origins.
 
-The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_URL`
-is set, which Render does) so the free instance doesn't sleep.
+The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_URL` is set, which Render does), and a
+GitHub Actions job (`.github/workflows/keep-awake.yml`) pings https://aura-screen.onrender.com/api/health every 5
+minutes too, so the free instance doesn't sleep. `/api/health` also reports whether the reasoning model is up
+(`"model": true`) — check it before presenting.
 
-On a phone, open the onrender.com URL: Android Chrome → menu → **Install app**;
-iPhone Safari → Share → **Add to Home Screen**. It opens full-screen like an app.
+The site works in any phone or laptop browser at [https://aura-screen.onrender.com](https://aura-screen.onrender.com).
 Uploaded past reports live on the instance's disk and are lost on each redeploy.
 
-### Native Android app
-
-`client/android/` is a Capacitor project (open it in Android Studio). The app
-bundles the client and calls the Render API named in `client/.env.android`.
-Needs JDK 21 and the Android SDK.
-
-```bash
-cd client && npm run build:android            # bundle the client into android/
-cd android && ./gradlew assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
-```
-
-Google sign-in doesn't work inside the app (Google blocks embedded web views);
-email + password does.
+The triage demo runs on the hosted site too: scan a printed code from `docs/demo-qr/` with **Begin contactless
+scan** on the Scan Hub. The image builds its demo cases with `python -m triage.demo_samples --build`; without the MIMIC/Yale/rPPG
+data in the image that gives the draft vignette cases only, and explanations use the fixed templates (no Ollama).
 
 ## Environment
 
@@ -345,4 +529,14 @@ needed — the browser gets the ID token and the server only verifies it.
 | `POST`/`DELETE` | `/api/auth/me/reports[/:id]` | attach or drop past reports |
 | `GET` | `/api/primary` | resolve the signed-in patient and session ids |
 | `GET` | `/api/patients/:id/scan-hub` · `/timeline` | screen data |
-| `GET` | `/api/sessions/:sessionId/active-scan` · `/report` | screen data |
+| `GET` | `/api/sessions/:sessionId/report` | screen data |
+| `POST` | `/api/scans` | start a live scan from a kiosk code → `GET /api/scans/:id` to follow it |
+| `GET` | `/api/stations/:id/live` | the kiosk's view of its current scan (stage only) |
+| `GET`/`POST`/`DELETE` | `/api/doctor/patients/:id/notes` · `/api/doctor/notes/:id` | a doctor's own notes |
+
+## Related project: MMAC Study Hub
+
+The data-collection side of this work: the website and capture dashboards for the **Multimodal Affective Computing
+(MMAC) study** at IIT Ropar (thermal, ECG, EMG and rPPG recorded together).
+
+**Repository:** https://github.com/h4444n55555/Multimodal-Analysis-Dashboards

@@ -10,26 +10,31 @@ const PREFIX = 'AURA1:';
 const AUDIENCE = 'aura-station'; // keeps station codes and sign-in tokens from standing in for each other
 const TTL_S = 10 * 60;
 
-/**
- * A fresh code for one station, and when it stops working. `sample` (demo only) names the demo data file the scan
- * runs the reasoning model on; it is inside the signed token, so a phone cannot swap it.
+/*
+ * Printed presentation codes: "AURA-DEMO:<sample id>" (server/scripts/demo-qr.js makes them). They never expire and
+ * are not signed — they only pick one of the demo sample files the triage demo runs on, so there is nothing to forge.
  */
-exports.issueStationCode = (stationId, sample) => {
-  const token = jwt.sign({ station: stationId, ...(sample ? { sample } : {}) }, SECRET, {
-    audience: AUDIENCE,
-    expiresIn: TTL_S,
-  });
+const DEMO_PREFIX = 'AURA-DEMO:';
+const DEMO_STATION = 'station-2';
+
+/** A fresh code for one station, and when it stops working. */
+exports.issueStationCode = (stationId) => {
+  const token = jwt.sign({ station: stationId }, SECRET, { audience: AUDIENCE, expiresIn: TTL_S });
   return { code: PREFIX + token, expiresAt: new Date(Date.now() + TTL_S * 1000).toISOString() };
 };
 
 /** The station id inside a scanned code, or an error message a patient can act on. */
 exports.readStationCode = (text) => {
+  if (typeof text === 'string' && text.startsWith(DEMO_PREFIX)) {
+    const sample = text.slice(DEMO_PREFIX.length);
+    if (/^[\w.-]{1,120}$/.test(sample)) return { stationId: DEMO_STATION, sample };
+  }
   if (typeof text !== 'string' || !text.startsWith(PREFIX)) {
     return { error: 'This is not an Aura Screen station code. Scan the code on the kiosk screen.' };
   }
   try {
     const payload = jwt.verify(text.slice(PREFIX.length), SECRET, { audience: AUDIENCE });
-    return { stationId: payload.station, sample: payload.sample };
+    return { stationId: payload.station };
   } catch (err) {
     return {
       error:

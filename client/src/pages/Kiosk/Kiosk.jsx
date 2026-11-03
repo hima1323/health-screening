@@ -1,27 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ScanFace, RefreshCw } from 'lucide-react';
-import { getStationCode } from '../../api';
+import { ScanFace, RefreshCw, Check, Loader } from 'lucide-react';
+import { getStationCode, getStationLive } from '../../api';
 import Layout from '../../components/Layout';
 import { Card, Spinner, ErrorState } from '../../components/ui';
 import styles from './Kiosk.module.css';
-import DemoKiosk from './DemoKiosk';
 
 /** Fetch a fresh code this long before the current one expires, so the screen never shows a dead code. */
 const REFRESH_EARLY_MS = 60 * 1000;
-
-/** `?demo=1`: the reasoning-model demo kiosk (DemoKiosk.jsx); otherwise the station screen. */
-export default function Kiosk() {
-  const [params] = useSearchParams();
-  return params.get('demo') ? <DemoKiosk /> : <StationKiosk />;
-}
 
 /**
  * The station's own screen: shows the signed QR code patients scan to start.
  * The code is made and signed by the server and expires, so a photo of it stops working.
  * `?station=station-2` picks the station.
  */
-function StationKiosk() {
+export default function Kiosk() {
   const [params] = useSearchParams();
   const stationId = params.get('station') || 'station-2';
   const [data, setData] = useState(null);
@@ -53,6 +46,8 @@ function StationKiosk() {
     };
   }, [stationId]);
 
+  const live = useStationLive(stationId);
+
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <Spinner />;
 
@@ -73,9 +68,50 @@ function StationKiosk() {
         <p className="muted small icon-line center">
           <RefreshCw size={12} aria-hidden="true" /> This code changes every few minutes for your security.
         </p>
+        <LiveStatus scan={live} />
       </Card>
     </Layout>
   );
+}
+
+const STAGE_TEXT = {
+  linked: 'Phone linked — starting the capture',
+  capturing: 'Capturing — please hold still',
+  uploading: 'Sending the readings to the model',
+  analysing: 'Model analysing the capture',
+  done: 'Done — the results are on the phone',
+  failed: 'The scan stopped — please scan again',
+};
+
+/** What the station is doing right now: idle, or the stage of the scan a phone started here. */
+function LiveStatus({ scan }) {
+  if (!scan) return <p className={styles.live}>Waiting for a patient to scan</p>;
+  const started = scan.stages?.capturing && new Date(scan.stages.capturing).getTime();
+  const left = scan.stage === 'capturing' && started ? Math.max(0, Math.ceil(scan.captureSeconds - (Date.now() - started) / 1000)) : null;
+  const Icon = scan.stage === 'done' ? Check : scan.stage === 'failed' ? null : Loader;
+  return (
+    <p className={`${styles.live} ${styles[scan.stage] ?? ''}`.trim()} role="status">
+      {Icon && <Icon size={16} aria-hidden="true" />}
+      {STAGE_TEXT[scan.stage]}
+      {left != null && ` · ${left} s`}
+    </p>
+  );
+}
+
+/** Polls the station's live status, so the kiosk follows a scan started from a phone. */
+function useStationLive(stationId) {
+  const [scan, setScan] = useState(null);
+  useEffect(() => {
+    let active = true;
+    const tick = () => getStationLive(stationId).then((r) => active && setScan(r.scan), () => {});
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [stationId]);
+  return scan;
 }
 
 /** "station-2" → "Station 2" */

@@ -4,7 +4,7 @@ const path = require('path');
 const express = require('express');
 const multer = require('multer');
 const User = require('../models/User');
-const Patient = require('../models/Patient');
+const { patientFor } = require('../lib/patient');
 const requireUser = require('../middleware/requireUser');
 const { issueToken } = require('../lib/token');
 const google = require('../lib/google');
@@ -129,17 +129,12 @@ router.put('/me/profile', requireUser, async (req, res) => {
   user.profileCompletedAt = new Date();
 
   try {
-    // The screening history hangs off a Patient record, so link the user to one
-    // and carry the details they just gave us onto it.
-    const patient = user.patientId ? await Patient.findById(user.patientId) : await Patient.findOne();
-    if (patient) {
-      patient.name = user.profile.fullName;
-      patient.age = user.profile.age;
-      await patient.save();
-      user.patientId = patient._id;
-    }
-
+    // The screening history hangs off the account's own Patient record; carry the new details onto it.
     await user.save();
+    const patient = await patientFor(user);
+    patient.name = user.profile.fullName;
+    patient.age = user.profile.age;
+    await patient.save();
     res.json({ user: user.toClient() });
   } catch (err) {
     res.status(400).json({ error: describe(err) });

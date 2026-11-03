@@ -23,6 +23,7 @@ import {
   DoctorPatient,
   DoctorPatients,
   DoctorReport,
+  DoctorScans,
   DoctorSession,
   RequireDoctor,
 } from './pages/Doctor';
@@ -45,14 +46,15 @@ export default function App() {
 
             {/* the station's own screen — shows the signed QR code, needs no account */}
             <Route path="/kiosk" element={<Kiosk />} />
-            {/* reasoning-model demo: scan /kiosk?demo=1, sample data only — needs no account or database */}
-            <Route path="/demo" element={<DemoScan />} />
+            {/* the reasoning model's result for a printed case QR (server/scripts/demo-qr.js), opened by the Scan Hub */}
+            <Route path="/result" element={<DemoScan />} />
 
             {/* the clinician side — its own sign-in; a doctor sees only reports patients shared with them */}
             <Route path="/doctor/login" element={<DoctorLogin />} />
             <Route element={<RequireDoctor />}>
               <Route path="/doctor" element={<DoctorOverview />} />
               <Route path="/doctor/patients" element={<DoctorPatients />} />
+              <Route path="/doctor/scans" element={<DoctorScans />} />
               <Route path="/doctor/patients/:patientId" element={<DoctorPatient />} />
               <Route path="/doctor/reports/:code" element={<DoctorReport />} />
               <Route path="/doctor/patients/:patientId/sessions/:key" element={<DoctorSession />} />

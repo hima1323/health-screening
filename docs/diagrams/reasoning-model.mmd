@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph A ["1 · Decide"]
+        direction LR
+        IN["Case<br/>readings + answers"] --> EV["Evidence record<br/>measurements, answers,<br/>scores"] --> RE["Rule engine<br/>ordered rules,<br/>first match wins"]
+        CFG[("rules.yaml ·<br/>vital_ranges.yaml ·<br/>red_flags.yaml")] --> RE
+        RE -- "REMEASURE" --> RM["Rest and<br/>remeasure once"]
+    end
+    subgraph B ["2 · Explain and check"]
+        direction LR
+        CH["Reasoning chain<br/>reading vs range,<br/>margin, uncertainty"] --> EX["Explainer<br/>template or<br/>local LLM"] --> VF{"Verifier<br/>numbers in<br/>the record?"}
+        VF -- "yes" --> OUT["Result card<br/>level, reasons,<br/>advice"]
+        VF -- "no: template" --> OUT
+    end
+    A --> B

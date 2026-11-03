@@ -5,6 +5,7 @@ const Report = require('../models/Report');
 const ReportShare = require('../models/ReportShare');
 const ScreeningLog = require('../models/ScreeningLog');
 const StudySession = require('../models/StudySession');
+const DoctorNote = require('../models/DoctorNote');
 const requireDoctor = require('../middleware/requireDoctor');
 const { issueDoctorToken } = require('../lib/token');
 const google = require('../lib/google');
@@ -61,7 +62,8 @@ router.use(requireDoctor);
 // GET /api/doctor/me — restore the session the browser remembered
 router.get('/me', (req, res) => res.json({ doctor: req.doctor.toClient() }));
 
-const REPORT_FIELDS = 'sessionId shareCode recordedAt nurseCheck heartRate bodyTemp respiration';
+const REPORT_FIELDS =
+  'sessionId shareCode recordedAt nurseCheck heartRate bodyTemp respiration model.summary model.sample reasoning.level reasoning.label reasoning.rule reasoning.sample';
 
 // GET /api/doctor/patients — everyone who has shared a report with this doctor, with those reports
 router.get('/patients', async (req, res) => {
@@ -142,5 +144,39 @@ router.get('/reports/:shareCode', async (req, res) => {
   const { patientId, ...rest } = report;
   res.json({ report: { ...rest, sharedAt: share.sharedAt }, patient, history });
 });
+
+// GET /api/doctor/patients/:patientId/notes — this doctor's own notes on a patient who shared with them
+router.get('/patients/:patientId/notes', async (req, res) => {
+  const { patientId } = req.params;
+  if (!(await sharedWith(req.doctor, patientId))) return res.status(404).json({ error: 'Patient not found' });
+  const notes = await DoctorNote.find({ doctorId: req.doctor._id, patientId }).sort({ createdAt: -1 }).lean();
+  res.json({ notes });
+});
+
+// POST /api/doctor/patients/:patientId/notes — { text }
+router.post('/patients/:patientId/notes', async (req, res) => {
+  const { patientId } = req.params;
+  const text = String(req.body?.text ?? '').trim();
+  if (!text) return res.status(400).json({ error: 'Write something first' });
+  if (!(await sharedWith(req.doctor, patientId))) return res.status(404).json({ error: 'Patient not found' });
+  try {
+    const note = await DoctorNote.create({ doctorId: req.doctor._id, patientId, text });
+    res.status(201).json({ note });
+  } catch (err) {
+    res.status(400).json({ error: err.errors?.text?.message || 'That note could not be saved' });
+  }
+});
+
+// DELETE /api/doctor/notes/:noteId — only the doctor who wrote it
+router.delete('/notes/:noteId', async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.noteId)) return res.status(404).json({ error: 'Note not found' });
+  const { deletedCount } = await DoctorNote.deleteOne({ _id: req.params.noteId, doctorId: req.doctor._id });
+  if (!deletedCount) return res.status(404).json({ error: 'Note not found' });
+  res.status(204).end();
+});
+
+function sharedWith(doctor, patientId) {
+  return mongoose.isValidObjectId(patientId) && ReportShare.exists({ doctorId: doctor._id, patientId });
+}
 
 module.exports = router;

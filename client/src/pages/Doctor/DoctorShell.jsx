@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Leaf, LayoutDashboard, Users, Search, CalendarDays, FilePlus2, LogOut, KeyRound } from 'lucide-react';
+import { Leaf, LayoutDashboard, Users, Search, CalendarDays, FilePlus2, LogOut, KeyRound, Brain } from 'lucide-react';
 import { getDoctorPatients, getDoctorReport } from '../../api';
 import StillWaterScene from '../../components/StillWaterScene';
 import { Sheet } from '../../components/InfoSheet';
@@ -15,12 +15,14 @@ const ENGLISH = { lang: 'en', vision: 'normal', colourBlind: false, t: (text) =>
 const NAV = [
   { to: '/doctor', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/doctor/patients', label: 'Patients', icon: Users },
+  { to: '/doctor/scans', label: 'Model results', icon: Brain },
 ];
 
 /**
  * The doctor's desktop frame: a sidebar (where to go, who is signed in), a top bar
  * (search, today, add a report) and the page. The patient list loads once here and
- * reaches every page through the outlet context, with `reload` after a new code is added.
+ * reaches every page through the outlet context, with `reload` after a new code is added; it also refreshes
+ * every 10 s.
  */
 export default function DoctorShell({ doctor, signOut }) {
   const [raw, setRaw] = useState(null);
@@ -34,7 +36,12 @@ export default function DoctorShell({ doctor, signOut }) {
       (err) => setError(err.message),
     );
   }, []);
-  useEffect(reload, [reload]);
+  // new scans from shared patients show up without a reload — a demo runs on one screen
+  useEffect(() => {
+    reload();
+    const timer = setInterval(reload, 10000);
+    return () => clearInterval(timer);
+  }, [reload]);
 
   const patients = raw && buildPatients(raw);
   const today = new Intl.DateTimeFormat('en-GB', {

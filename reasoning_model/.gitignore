@@ -6,3 +6,5 @@ data/features/
 data/restricted/
 data/public/
 results/*
+# demo cases are built per machine (python -m triage.demo_samples --build)
+demo_samples/

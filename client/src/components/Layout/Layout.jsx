@@ -16,11 +16,10 @@ const TABS = [
 
 /**
  * The page shell: backdrop, header, tab strip and main column.
- * The onboarding screens pass `showTabs={false}` — there is nowhere to navigate yet;
- * the welcome screen also drops the language / colour toggles (`showPrefs={false}`).
+ * The onboarding screens pass `showTabs={false}` — there is nowhere to navigate yet.
  * On a phone-sized screen the tab strip becomes a bottom tab bar.
  */
-export default function Layout({ eyebrow, title, pageTitle, badge, showTabs = true, showPrefs = true, children }) {
+export default function Layout({ eyebrow, title, pageTitle, badge, showTabs = true, children }) {
   // the tab title: `pageTitle` when the heading alone isn't unique
   const { lang, t } = usePrefs();
   usePageTitle(t(pageTitle ?? (typeof title === 'string' ? title : undefined)), t('Aura Screen'));
@@ -44,11 +43,9 @@ export default function Layout({ eyebrow, title, pageTitle, badge, showTabs = tr
         </div>
         <div className={styles.headerEnd}>
           {badge}
-          {showPrefs && (
-            <div className={styles.prefs}>
-              <PrefsToggles />
-            </div>
-          )}
+          <div className={styles.prefs}>
+            <PrefsToggles />
+          </div>
           <AccountChip />
         </div>
       </header>

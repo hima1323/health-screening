@@ -33,6 +33,10 @@ const reportSchema = new mongoose.Schema({
   },
   shareCode: String,
   encryptionNote: String,
+  // an earlier live scan's model output (model_service/serve.py, no longer run): summary, per-window results, sample
+  model: mongoose.Schema.Types.Mixed,
+  // a live scan's reasoning-model result (reasoning_model triage, lib/reasoning.js): level, rule, readings, card
+  reasoning: mongoose.Schema.Types.Mixed,
 });
 
 module.exports = mongoose.model('Report', reportSchema);

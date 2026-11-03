@@ -17,10 +17,6 @@
 
 .contacts { display: flex; gap: 12px; align-items: flex-start; color: var(--rose-deep); }
 
-.sampleTitle { margin: 4px 0 2px; text-transform: capitalize; }
-.reference { display: flex; align-items: center; gap: 6px; margin: 8px 0; font-size: 0.92rem; }
-.reference.match { color: var(--calm-ink); }
-.reference.differ { color: var(--amber-ink); }
 
 .readings {
   display: grid;
@@ -56,4 +52,4 @@
 }
 
 /* long dataset notes and sample titles wrap instead of widening the column */
-.banner, .sampleTitle, .reference { overflow-wrap: anywhere; }
+.banner { overflow-wrap: anywhere; }

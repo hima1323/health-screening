@@ -7,6 +7,7 @@ import { RESULTS } from '../../utils/results';
 import { initials, matchesSearch } from './doctor';
 import styles from './DoctorPatients.module.css';
 import usePageTitle from '../../hooks/usePageTitle';
+import { modelCall } from '../../utils/reasoning';
 
 /** Every patient who shared a report with this doctor, as cards, most urgent first. A card opens the patient. */
 export default function DoctorPatients() {
@@ -85,6 +86,7 @@ function PatientCard({ entry: { patient, reports, latest } }) {
           latest.nurseCheck?.queueId && 'Nurse check requested',
           latest.triage.outOfRange.length > 0 &&
             `${latest.triage.outOfRange.map((r) => r.label.toLowerCase()).join(' and ')} out of range`,
+          (modelCall(latest)?.urgent || modelCall(latest)?.review) && `Model: ${modelCall(latest).title}`,
         ]
           .filter(Boolean)
           .join(' · ') || 'All latest readings in range'}

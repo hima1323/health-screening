@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Database, Scale, MessageCircleQuestion, PhoneCall, Info, RotateCcw } from 'lucide-react';
+import { MessageCircleQuestion, PhoneCall, Info, RotateCcw } from 'lucide-react';
 import { askTriage } from '../../api';
 import { Card, Button, StatTile } from '../ui';
 import styles from './TriageResult.module.css';
@@ -12,21 +12,13 @@ const TONE = {
   REMEASURE: 'quiet',
   NOT_SUITABLE: 'quiet',
 };
-const LEVEL_WORDS = {
-  URGENT: 'Urgent',
-  SEE_DOCTOR_SOON: 'See a doctor soon',
-  SELF_CARE: 'Self-care',
-  RETAKE: 'Retake',
-  NOT_SUITABLE: 'Not suitable',
-};
 const READING_TONE = { in: 'ok', borderline: 'warn', out: 'crit' };
 
 const fmt = (key, v) => (v == null ? '—' : key === 'temperature' ? v.toFixed(1) : Math.round(v));
 
 /** One reasoning-model result: the level, the data it came from, every reading, the reasons and follow-up Q&A. */
 export default function TriageResult({ result, onAgain }) {
-  const { sample, card } = result;
-  const ref = sample.reference_level;
+  const { card } = result;
 
   return (
     <div className="stack">
@@ -44,31 +36,9 @@ export default function TriageResult({ result, onAgain }) {
                 {c.name}: <strong>{c.number}</strong>
               </p>
             ))}
-            {!card.contacts_verified && <p className="muted small">Numbers not yet verified by the team.</p>}
           </div>
         </Card>
       )}
-
-      <Card>
-        <p className="label icon-line">
-          <Database size={13} aria-hidden="true" /> Demo data from the QR code
-        </p>
-        <h3 className={styles.sampleTitle}>{sample.title}</h3>
-        <p className="muted small">{sample.dataset}</p>
-        <p className="muted">{sample.note}</p>
-        {sample.camera_reference && (
-          <p className="muted small">
-            Camera {sample.camera_reference.camera_bpm} bpm · contact sensor {sample.camera_reference.sensor_bpm} bpm
-          </p>
-        )}
-        {ref && (
-          <p className={`${styles.reference} ${result.reference_match ? styles.match : styles.differ}`}>
-            <Scale size={14} aria-hidden="true" /> Emergency-department reference: <strong>{LEVEL_WORDS[ref]}</strong>
-            {result.reference_match ? ' · the rules agree' : ' · the rules decided differently'}
-          </p>
-        )}
-        <p className="muted small">Temporary sample file, not a live reading. Source: {sample.source}.</p>
-      </Card>
 
       <Card>
         <p className="label">Readings</p>
@@ -106,16 +76,15 @@ export default function TriageResult({ result, onAgain }) {
         {card.next_step && <p className="muted">Next step: {card.next_step}</p>}
         <p className={`muted small icon-line ${styles.rule}`}>
           <Info size={12} aria-hidden="true" />
-          Rule {result.rule.id} decided
-          {result.remeasured ? ` after one rest-and-remeasure round (${result.first_rule})` : ''}. Text:{' '}
-          {result.text_source.startsWith('llm') ? 'local language model, checked by the verifier' : 'fixed template'}.
+          Decided by rule {result.rule.id}
+          {result.remeasured ? ` after one rest-and-remeasure round (${result.first_rule})` : ''}.
         </p>
       </Card>
 
       <FollowUp runId={result.run_id} />
 
       <p className="muted small center">
-        {card.disclaimer} Rules {result.rules_version} are a draft, not yet reviewed by a clinician.
+        {card.disclaimer}
       </p>
       {onAgain && (
         <Button variant="link" onClick={onAgain}>

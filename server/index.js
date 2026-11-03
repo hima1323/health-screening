@@ -6,14 +6,18 @@ const connectDB = require('./db');
 const apiRouter = require('./routes/api');
 const authRouter = require('./routes/auth');
 const doctorRouter = require('./routes/doctor');
+const scans = require('./routes/scans');
 const triageRouter = require('./routes/triage');
+const reasoning = require('./lib/reasoning');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/doctor', doctorRouter);
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.get('/api/health', async (req, res) => res.json({ ok: true, model: (await reasoning.health()).ok === true }));
+app.use('/api/scans', scans.router);
+app.get('/api/stations/:stationId/live', scans.stationLive);
 app.use('/api/triage', triageRouter); // reasoning-model demo; needs no database
 app.use('/api', apiRouter);
 
@@ -32,7 +36,9 @@ function keepAwake(url) {
   }, 5 * 60 * 1000);
 }
 
-// DEMO_WITHOUT_DB=1: a presentation laptop without MongoDB. Only the database-free routes work (the kiosk demo QR,
+reasoning.start();
+
+// DEMO_WITHOUT_DB=1: a presentation laptop without MongoDB. Only the database-free routes work (the triage demo,
 // the reasoning-model demo at /demo, health); every other API call fails with a database error.
 if (process.env.DEMO_WITHOUT_DB === '1') {
   app.listen(PORT, () => console.log(`Aura Screen API (demo, no database) listening on port ${PORT}`));

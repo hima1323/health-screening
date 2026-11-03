@@ -7,6 +7,7 @@
     "start": "node index.js",
     "seed": "node scripts/seed.js",
     "sessions": "node scripts/load-sessions.js",
+    "demo-qr": "node scripts/demo-qr.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

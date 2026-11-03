@@ -7,6 +7,9 @@ const Report = require('../models/Report');
 const ScreeningLog = require('../models/ScreeningLog');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const { patientFor } = require('../lib/patient');
+const Scan = require('../models/Scan');
+const DoctorNote = require('../models/DoctorNote');
 const ReportShare = require('../models/ReportShare');
 const loadSessions = require('./load-sessions');
 
@@ -31,6 +34,8 @@ async function seed() {
     ScreeningLog.deleteMany({}),
     Doctor.deleteMany({}),
     ReportShare.deleteMany({}),
+    Scan.deleteMany({}),
+    DoctorNote.deleteMany({}),
   ]);
 
   const patient = await Patient.create({
@@ -237,9 +242,13 @@ async function seed() {
   ]);
   console.log(`Demo doctor: ${DEMO_DOCTOR.email} — Google sign-in, or the password in scripts/seed.js`);
 
-  // accounts survive a reset — point them at the new demo patient so nobody is signed out
-  const relinked = await User.updateMany({ patientId: { $ne: null } }, { patientId: patient._id });
-  console.log(`Accounts kept: ${await User.countDocuments()} (${relinked.modifiedCount} relinked)`);
+  // accounts survive a reset with a fresh record of their own, so nobody is signed out or sent back to onboarding
+  const users = await User.find({ 'profile.fullName': { $exists: true } });
+  for (const user of users) {
+    user.patientId = undefined;
+    await patientFor(user);
+  }
+  console.log(`Accounts kept: ${await User.countDocuments()} (${users.length} with a fresh patient record)`);
 
   console.log(`Study sessions: ${await loadSessions()}`);
 

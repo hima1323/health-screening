@@ -1,0 +1,12 @@
+flowchart TB
+    subgraph A ["1 · Input and two branches"]
+        direction LR
+        V["Face video<br/>30-60 s"] --> PRE["Face crop · 128 × 128<br/>DiffNormalized<br/>160-frame windows"]
+        PRE --> VB["Video branch<br/>TDC encoder → ZAS →<br/>TD-transformer"]
+        PRE --> SB["STMap branch<br/>5 × 5 regions →<br/>SDMU (PDC)"]
+    end
+    subgraph B ["2 · Fuse, clean, read the pulse"]
+        direction LR
+        DC["DCEB<br/>confidence-gated<br/>exchange"] --> FQ["ASF + frequency<br/>PBF → PSM → ASS"] --> GT["Physics GTCN<br/>+ SAFD decoder"] --> W["rPPG<br/>waveform"] --> HR["FFT →<br/>heart rate"]
+    end
+    A --> B

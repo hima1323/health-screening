@@ -74,10 +74,16 @@ def build():
     rng = np.random.default_rng(7)
     samples = []
 
-    mi = mimic_ed.load(cfg=cfg)
-    mi = mi[mi["esi"].notna()]
-    mi = mi[~ed_cases.mimic_dev_mask(mi)]
-    for c in pick_ed(mi, rng, 1):
+    # a machine without the ED datasets (the hosted demo) builds the rPPG and vignette samples only
+    try:
+        mi = mimic_ed.load(cfg=cfg)
+    except (FileNotFoundError, ImportError) as e:
+        print(f"skipping MIMIC-IV-ED samples: {e}")
+        mi = None
+    if mi is not None:
+        mi = mi[mi["esi"].notna()]
+        mi = mi[~ed_cases.mimic_dev_mask(mi)]
+    for c in pick_ed(mi, rng, 1) if mi is not None else []:
         samples.append({"id": f"mimic-{c['case_id']}", "dataset": "MIMIC-IV-ED Demo",
                         "title": f"ED visit: {(c['complaint'] or 'no complaint recorded').lower()}",
                         "source": "MIMIC-IV-ED Demo v2.2 (PhysioNet, open), test subjects only",
@@ -86,11 +92,16 @@ def build():
                         "case": ed_case_row(c, cfg, with_age=False),
                         "reference_level": ref_level(c["esi"], c["admitted"])})
 
-    ya = yale.load()
-    ya = ya[ya["esi"].notna()]
-    ya = ya[np.random.default_rng(0).random(len(ya)) >= 0.2]                 # benchmark test split
-    ya = ya[(ya["age"] >= 18) & (ya["age"] <= 65)]
-    for c in pick_ed(ya, rng, 1):
+    try:
+        ya = yale.load()
+    except (FileNotFoundError, ImportError) as e:
+        print(f"skipping Yale ED samples: {e}")
+        ya = None
+    if ya is not None:
+        ya = ya[ya["esi"].notna()]
+        ya = ya[np.random.default_rng(0).random(len(ya)) >= 0.2]             # benchmark test split
+        ya = ya[(ya["age"] >= 18) & (ya["age"] <= 65)]
+    for c in pick_ed(ya, rng, 1) if ya is not None else []:
         samples.append({"id": f"yale-{c['case_id']}", "dataset": "Yale ED (Hong et al. 2018)",
                         "title": f"ED visit, age {int(c['age'])}: {(c['complaint'] or 'no complaint').split(';')[0]}",
                         "source": "Yale ED triage data (Zenodo 1308993, open), benchmark test split",

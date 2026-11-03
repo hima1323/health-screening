@@ -1,11 +1,19 @@
 sequenceDiagram
-    participant K as Kiosk
-    participant S as Server
+    participant K as Kiosk screen
     participant P as Patient phone
-    K->>S: GET /api/stations/:id/code
-    S-->>K: signed, short-lived code
-    K->>K: show code as QR
-    P->>P: scan QR with camera (jsQR)
+    participant S as Express API
+    participant R as Reasoning model
+    participant D as MongoDB
+    K->>S: GET /api/stations/station-2/code
+    S-->>K: signed code, expires in 10 min
+    P->>P: Begin contactless scan, read the QR (jsQR)
     P->>S: POST /api/stations/verify
-    S-->>P: valid → scan starts
-    S-->>P: results → session report
+    S-->>P: station verified
+    P->>S: POST /api/scans
+    S->>D: scan record (linked)
+    Note over S,K: capturing, 12 s · the kiosk follows the stages
+    S->>R: POST /run with the station's case
+    R-->>S: level, rule, readings, explanation card
+    S->>D: report + share code
+    S-->>P: done → session report
+    Note over P,R: A printed case QR skips the station:<br/>verify → /api/triage/run → result screen
