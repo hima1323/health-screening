@@ -24,7 +24,7 @@ const READING_TONE = { in: 'ok', borderline: 'warn', out: 'crit' };
 const fmt = (key, v) => (v == null ? '—' : key === 'temperature' ? v.toFixed(1) : Math.round(v));
 
 /** One reasoning-model result: the level, the data it came from, every reading, the reasons and follow-up Q&A. */
-export default function TriageResult({ result, onAgain }) {
+export default function TriageResult({ result, onAgain, source = 'Demo data from the QR code' }) {
   const { sample, card } = result;
   const ref = sample.reference_level;
 
@@ -51,7 +51,7 @@ export default function TriageResult({ result, onAgain }) {
 
       <Card>
         <p className="label icon-line">
-          <Database size={13} aria-hidden="true" /> Demo data from the QR code
+          <Database size={13} aria-hidden="true" /> {source}
         </p>
         <h3 className={styles.sampleTitle}>{sample.title}</h3>
         <p className="muted small">{sample.dataset}</p>

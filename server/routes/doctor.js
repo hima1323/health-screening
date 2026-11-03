@@ -62,7 +62,8 @@ router.use(requireDoctor);
 // GET /api/doctor/me — restore the session the browser remembered
 router.get('/me', (req, res) => res.json({ doctor: req.doctor.toClient() }));
 
-const REPORT_FIELDS = 'sessionId shareCode recordedAt nurseCheck heartRate bodyTemp respiration model.summary model.sample';
+const REPORT_FIELDS =
+  'sessionId shareCode recordedAt nurseCheck heartRate bodyTemp respiration model.summary model.sample reasoning.level reasoning.label reasoning.rule reasoning.sample';
 
 // GET /api/doctor/patients — everyone who has shared a report with this doctor, with those reports
 router.get('/patients', async (req, res) => {

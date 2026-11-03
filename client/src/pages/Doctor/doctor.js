@@ -1,5 +1,6 @@
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
+import { modelCall } from '../../utils/reasoning';
 
 export const normaliseCode = (code) => code.trim().toUpperCase();
 
@@ -15,12 +16,13 @@ export function triage(report) {
   });
   const watched = RESULTS.some(({ key }) => /watch/i.test(report[key]?.status ?? ''));
 
-  // a confident high-load call from the reasoning model is worth a look, never an alarm on its own
-  const model = report.model?.summary;
-  const highLoad = model && model.label === 'high' && !model.abstain;
+  // the reasoning model's urgent call needs the doctor; a see-a-doctor (or high-load) call is worth a look
+  const call = modelCall(report);
 
-  if (report.nurseCheck?.queueId || outOfRange.length >= 2) return { level: 'attention', label: 'Needs attention', rank: 0, outOfRange };
-  if (outOfRange.length === 1 || watched || highLoad) return { level: 'review', label: 'Review', rank: 1, outOfRange };
+  if (report.nurseCheck?.queueId || outOfRange.length >= 2 || call?.urgent) {
+    return { level: 'attention', label: 'Needs attention', rank: 0, outOfRange };
+  }
+  if (outOfRange.length === 1 || watched || call?.review) return { level: 'review', label: 'Review', rank: 1, outOfRange };
   return { level: 'stable', label: 'Stable', rank: 2, outOfRange };
 }
 

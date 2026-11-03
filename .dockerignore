@@ -9,6 +9,7 @@ reasoning_model
 !reasoning_model/knowledge
 !reasoning_model/vignettes
 !reasoning_model/evidence
+model_service
 rppg1
 analysis
 docs

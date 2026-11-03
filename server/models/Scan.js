@@ -17,8 +17,8 @@ const scanSchema = new mongoose.Schema(
     },
     stages: { type: Map, of: Date, default: {} },
     captureSeconds: Number,
-    sample: { key: String, task: String, dataset: String, windows: Number, sensors: [String] },
-    upload: { bytes: Number, modelMs: Number },
+    sample: { key: String, task: String, dataset: String },
+    upload: { modelMs: Number },
     sessionId: String, // the report the result became
     error: String,
   },

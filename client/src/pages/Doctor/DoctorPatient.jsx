@@ -10,6 +10,7 @@ import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import { SUMMARY_LABEL, initials, triage } from './doctor';
 import styles from './DoctorPatient.module.css';
+import { modelCall } from '../../utils/reasoning';
 
 const POSITION_LABEL = { above: 'Above range', below: 'Below range', within: 'In range' };
 
@@ -119,14 +120,17 @@ export default function DoctorPatient() {
                     })}
                   </tr>
                 ))}
-                {reports.some((r) => r.model) && (
+                {reports.some(modelCall) && (
                   <tr>
-                    <th scope="row">Mental load (model)</th>
-                    {oldestFirst.map((r) => (
-                      <td key={r.shareCode} className={modelCall(r) === 'high' ? styles.out : ''}>
-                        {r.model ? `${modelCall(r)} · ${Math.round(r.model.summary.confidence * 100)}%` : '—'}
-                      </td>
-                    ))}
+                    <th scope="row">Reasoning model</th>
+                    {oldestFirst.map((r) => {
+                      const call = modelCall(r);
+                      return (
+                        <td key={r.shareCode} className={call?.urgent || call?.review ? styles.out : ''}>
+                          {call?.title ?? '—'}
+                        </td>
+                      );
+                    })}
                   </tr>
                 )}
               </tbody>
@@ -148,7 +152,7 @@ export default function DoctorPatient() {
                       {r.triage.outOfRange.length > 0
                         ? `Out of range: ${r.triage.outOfRange.map((x) => x.label.toLowerCase()).join(', ')}`
                         : 'All readings in range'}
-                      {r.model && ` · model: ${modelCall(r)} mental load`} · shared {formatDate(r.sharedAt)}
+                      {modelCall(r) && ` · model: ${modelCall(r).title}`} · shared {formatDate(r.sharedAt)}
                     </p>
                   </div>
                   <StatusPill dot={false}>{r.triage.label}</StatusPill>
@@ -221,9 +225,6 @@ export default function DoctorPatient() {
   );
 }
 
-/** "high" / "low" / "unclear" for a report the reasoning model read. */
-const modelCall = (r) => (r.model.summary.abstain ? 'unclear' : r.model.summary.label);
-
 /** The doctor's own notes on this patient — private to them, newest first. */
 function Notes({ patientId }) {
   const [notes, setNotes] = useState(null);
@@ -267,7 +268,7 @@ function Notes({ patientId }) {
           className={styles.noteInput}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="e.g. High mental load on today's scan — ask about sleep and work stress."
+          placeholder="e.g. Fever on today's scan — ask about sore throat and fluids."
           maxLength={2000}
           rows={3}
           aria-label="New note"

@@ -8,12 +8,12 @@ const ScreeningLog = require('../models/ScreeningLog');
 const requireUser = require('../middleware/requireUser');
 const { readStationCode } = require('../lib/stationCode');
 const { patientFor } = require('../lib/patient');
-const model = require('../lib/model');
+const reasoning = require('../lib/reasoning');
 const { rangeStatus } = require('../lib/ranges');
 
 const router = express.Router();
 
-// how long the station "records"; the demo station replays a recorded sample in this time
+// how long the station "records"; the demo station then sends one of the reasoning model's demo cases
 const CAPTURE_SECONDS = Number(process.env.DEMO_CAPTURE_SECONDS) || 12;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -55,14 +55,14 @@ async function startOrResume(user, patient, stationId) {
   });
   if (running) return [200, { scan: running.toClient() }];
 
-  const sample = model.nextSample();
+  const sample = await reasoning.nextSample();
   const scan = await Scan.create({
     userId: user._id,
     patientId: patient._id,
     stationId,
     captureSeconds: CAPTURE_SECONDS,
     stages: { linked: new Date() },
-    sample: { key: sample.key, task: sample.task, dataset: sample.dataset, windows: sample.windows.length, sensors: sample.sensors },
+    sample: { key: sample.id, task: sample.title, dataset: sample.dataset },
   });
   run(scan, sample, patient).catch((err) => console.error('Scan pipeline crashed', err));
   return [201, { scan: scan.toClient() }];
@@ -87,67 +87,56 @@ async function run(scan, sample, patient) {
     await sleep(CAPTURE_SECONDS * 1000);
 
     await step('uploading');
-    const { result, bytes, modelMs } = await model.predict(sample);
-    await step('analysing', { upload: { bytes, modelMs } });
+    const { result, modelMs } = await reasoning.run(sample.id);
+    await step('analysing', { upload: { modelMs } });
 
-    const report = await writeReport({ scan, sample, patient, result, bytes, modelMs });
+    const report = await writeReport({ scan, patient, result });
     await step('done', { sessionId: report.sessionId });
   } catch (err) {
     const reason = err.name === 'TimeoutError' || err.cause?.code === 'ECONNREFUSED'
-      ? 'The model server did not answer. Try the scan again in a moment.'
+      ? 'The reasoning model did not answer. Try the scan again in a moment.'
       : err.message;
     await step('failed', { error: reason });
   }
 }
 
-async function writeReport({ scan, sample, patient, result, bytes, modelMs }) {
-  const { summary, windows, vitals } = result;
-  const heart = vitals.heartRate && Math.round(vitals.heartRate);
-  const breath = vitals.breathingRate && Math.round(vitals.breathingRate);
+const NOTES = {
+  heart_rate: 'Heart rate the station measured.',
+  resp_rate: 'Breathing rate the station measured.',
+  temperature: 'Temperature the station measured.',
+};
+// the reasoning model's levels that need a clinician's eye
+const WATCH = ['URGENT', 'SEE_DOCTOR_SOON', 'REMEASURE'];
+
+async function writeReport({ scan, patient, result }) {
+  const measured = (key, unit) => {
+    const item = result.readings.find((r) => r.key === key && r.value != null);
+    if (!item?.normal) return undefined;
+    const value = key === 'temperature' ? Math.round(item.value * 10) / 10 : Math.round(item.value);
+    return reading(value, `${item.normal} ${unit}`, NOTES[key]);
+  };
   const now = new Date();
 
   const report = await Report.create({
     sessionId: await freeSessionId(),
     patientId: patient._id,
     recordedAt: now,
-    heartRate: heart && reading(heart, '60–100 bpm', 'From the ECG during the capture.'),
-    respiration: breath && reading(breath, '12–20 /min', 'From the breathing belt during the capture.'),
+    heartRate: measured('heart_rate', 'bpm'),
+    respiration: measured('resp_rate', '/min'),
+    bodyTemp: measured('temperature', '°C'),
     shareCode: shareCode(),
     encryptionNote: 'Kept on the clinic server. Only a doctor you give the code to can open it.',
-    model: {
-      scanId: scan._id,
-      stationId: scan.stationId,
-      summary,
-      windows: windows.map(({ label, probability_high, confidence, abstain, agents }) => ({
-        label,
-        probability_high,
-        confidence,
-        abstain,
-        agents,
-      })),
-      skinTempC: vitals.skinTempC,
-      sample: {
-        key: sample.key,
-        dataset: sample.dataset,
-        subject: sample.subject,
-        task: sample.task,
-        truth: sample.truth,
-        durationSeconds: sample.durationSeconds,
-        windowSeconds: sample.windowSeconds,
-      },
-      trainedOnSubjects: result.trained_on_subjects,
-      transfer: { bytes, modelMs },
-    },
+    reasoning: { ...result, scanId: scan._id, stationId: scan.stationId, modelMs: scan.upload?.modelMs },
   });
 
-  const outOfRange = [report.heartRate, report.respiration].some((r) => r && r.status !== 'Normal');
+  const outOfRange = [report.heartRate, report.respiration, report.bodyTemp].some((r) => r?.value && r.status !== 'Normal');
   await ScreeningLog.create({
     patientId: patient._id,
     type: 'Contactless scan',
     dateLabel: `${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(now)} · Live scan`,
     location: `Central Diagnostic Centre · ${scan.stationId.replace(/^station-/, 'Station ')}`,
-    heartRate: heart,
-    status: outOfRange || (summary.label === 'high' && !summary.abstain) ? 'Watch' : 'Cleared',
+    heartRate: report.heartRate?.value,
+    status: outOfRange || WATCH.includes(result.level) ? 'Watch' : 'Cleared',
     occurredAt: now,
   });
   return report;
@@ -184,7 +173,6 @@ async function stationLive(req, res) {
       stages: scan.stages,
       captureSeconds: scan.captureSeconds,
       task: scan.sample?.task,
-      sensors: scan.sample?.sensors,
     },
   });
 }

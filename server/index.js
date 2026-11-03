@@ -8,7 +8,6 @@ const authRouter = require('./routes/auth');
 const doctorRouter = require('./routes/doctor');
 const scans = require('./routes/scans');
 const triageRouter = require('./routes/triage');
-const model = require('./lib/model');
 const reasoning = require('./lib/reasoning');
 
 const app = express();
@@ -16,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/doctor', doctorRouter);
-app.get('/api/health', async (req, res) => res.json({ ok: true, model: (await model.health()).ok === true }));
+app.get('/api/health', async (req, res) => res.json({ ok: true, model: (await reasoning.health()).ok === true }));
 app.use('/api/scans', scans.router);
 app.get('/api/stations/:stationId/live', scans.stationLive);
 app.use('/api/triage', triageRouter); // reasoning-model demo; needs no database
@@ -37,7 +36,6 @@ function keepAwake(url) {
   }, 5 * 60 * 1000);
 }
 
-model.start();
 reasoning.start();
 
 // DEMO_WITHOUT_DB=1: a presentation laptop without MongoDB. Only the database-free routes work (the triage demo,

@@ -8,6 +8,7 @@ import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
 import { formatDate } from '../../components/SessionCard';
 import ModelResult from '../../components/ModelResult';
+import TriageResult from '../../components/TriageResult';
 import { normaliseCode, triage } from './doctor';
 import styles from './Doctor.module.css';
 
@@ -110,7 +111,8 @@ export default function DoctorReport() {
         </div>
       </Card>
 
-      {report.model && <ModelResult model={report.model} />}
+      {report.reasoning && <TriageResult result={report.reasoning} source="Demo case the station sent" />}
+      {!report.reasoning && report.model && <ModelResult model={report.model} />}
 
       <Card>
         <h3>Screening history</h3>

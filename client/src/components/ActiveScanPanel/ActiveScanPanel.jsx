@@ -84,21 +84,19 @@ export default function ActiveScanPanel({ code, stationLabel = 'Station 2', onCo
     {
       key: 'capturing',
       label: 'Station capturing',
-      detail: scan?.sample
-        ? `Demo station replays a recorded ${scan.sample.task} (${scan.sample.windows} windows of 30 s, ${scan.sample.sensors.length} sensors).`
-        : 'Reading your signals.',
+      detail: scan?.sample ? `Demo station sends a demo case: ${scan.sample.task}` : 'Reading your signals.',
     },
     {
       key: 'uploading',
-      label: 'Sending sample to the model server',
-      detail: scan?.upload ? `${(scan.upload.bytes / 1024).toFixed(1)} KB of feature windows sent.` : 'Uploading the capture.',
+      label: 'Sending the case to the reasoning model',
+      detail: 'Readings and answers go to the triage expert system.',
     },
     {
       key: 'analysing',
       label: 'Model analysing',
       detail: scan?.upload
-        ? `8 sensor agents + fusion answered in ${scan.upload.modelMs} ms.`
-        : 'Running the sensor agents and the fusion model.',
+        ? `The triage rules answered in ${scan.upload.modelMs} ms.`
+        : 'Applying the triage rules and writing the explanation.',
     },
   ];
 

@@ -192,7 +192,7 @@ gh pr create --base main              # open a pull request into main
 | 6 Oct 2026 | Doctor portal for shared reports; README with problem statement, objectives, workflow diagrams and screenshots | `5bb5c98`, `71b1edb` … `d8e71a4` |
 | 25 Oct 2026 | Deployed to Render as one service; live scans run the reasoning model; full doctor dashboard | `bed1160`, `84d33b1` |
 | 2 Nov 2026 | Reasoning model: expert triage system, Triage Lab, CVPR Lab rPPG model and trained weights | `347b611` … `63c924c` |
-| 3 Nov 2026 | Reasoning model merged into the website (Android app dropped), original theme kept, printed demo QR codes, keep-awake ping | `e8fb2d8` … |
+| 3 Nov 2026 | Reasoning model merged into the website (Android app dropped), original theme kept, printed demo QR codes, keep-awake ping; live scans run the triage reasoning model | `e8fb2d8` … |
 
 Run `git log --oneline` for the full list.
 
@@ -212,7 +212,7 @@ health-screening/
 ├── client/                 Vite React app (patient screens, kiosk, triage result, doctor portal)
 ├── server/                 Express + Mongoose API (auth, screening data, live scans, doctor, /api/triage proxy)
 │   └── scripts/            seed.js (demo data), load-sessions.js, demo-qr.js (printable demo QR codes)
-├── model_service/          the reasoning model as an HTTP service (Python), its fold models and samples
+├── model_service/          the earlier stress model (LightGBM + fusion on ADABase); no longer run by the app
 ├── rppg1/                  rPPG training, benchmark and live dashboard
 │   ├── model/              PhysFormer
 │   ├── bench/              preprocessing, training harness, infer.py (Predictor), benchmark
@@ -242,7 +242,7 @@ the Windows form beside them where it differs.
 |------|---------|----------|
 | Git | any | cloning |
 | Node.js | 22 or newer (with npm) | the app and the API |
-| Python | 3.12 or 3.13 | the reasoning model, the model service, the Triage Lab |
+| Python | 3.12 or 3.13 | the reasoning model and the Triage Lab |
 | MongoDB | 7 or newer, running locally — or a MongoDB Atlas database | the app's data |
 
 ### 1. Get the code
@@ -254,14 +254,14 @@ cd health-screening
 
 ### 2. Python environment (once)
 
-One virtual environment serves the Triage Lab, the triage demo service and the live-scan model service. The server
-finds it at `reasoning_model/.venv` by itself.
+One virtual environment serves the Triage Lab and the reasoning model the app runs. The server finds it at
+`reasoning_model/.venv` by itself.
 
 ```bash
 cd reasoning_model
 python3 -m venv .venv                   # Windows: python -m venv .venv
 source .venv/bin/activate               # Windows: .venv\Scripts\activate
-pip install -r requirements-lab.txt -r ../model_service/requirements.txt
+pip install -r requirements-lab.txt
 python -m pytest -q                     # expect: 244 passed
 cd ..
 ```
@@ -294,20 +294,12 @@ cd server
 npm install
 cp .env.example .env                    # Windows: copy .env.example .env
 npm run seed                            # demo patient, station, past sessions, demo doctor
-npm start                               # http://localhost:4000 — also starts the model service
+npm start                               # http://localhost:4000 — also starts the reasoning model
 ```
 
 `.env` works as copied for a local MongoDB. For Atlas, set `MONGODB_URI` in it (see [Environment](#environment)).
 
-**Terminal 2 — triage demo service:**
-
-```bash
-cd reasoning_model/src                  # venv from step 2 active
-python -m triage.demo_samples --build   # once: writes the demo cases to reasoning_model/demo_samples/
-python -m triage.demo_service           # http://127.0.0.1:5055
-```
-
-**Terminal 3 — app:**
+**Terminal 2 — app:**
 
 ```bash
 cd client
@@ -347,23 +339,23 @@ python3 analysis/build_sessions.py && (cd server && npm run sessions)
 
 ## Live scan and the reasoning model
 
-A scan runs end to end on real requests:
+A scan runs end to end on real requests, and the reasoning model is the triage expert system in
+`reasoning_model/src/triage/` (rules decide the level, the explainer words it, the verifier checks it):
 
 1. The kiosk (`/kiosk`) shows a QR code the server signed; it changes every 10 minutes.
 2. The phone scans it (**Begin contactless scan**); the server checks the signature and starts a scan
    (`POST /api/scans`). The kiosk screen follows along (`GET /api/stations/:id/live`).
-3. The station "captures". This demo station has no sensors, so it replays a recorded sample: one
-   2-minute n-back block from ADABase, as 30 s feature windows of 8 sensors (`model_service/samples/`).
-4. The server sends that sample to the model service (`model_service/serve.py`, Python): 8 LightGBM sensor
-   agents + the fusion model from `reasoning_model/`, using the fold that was trained on the other 29 people,
-   so it never saw the person it reads. It returns the call, confidence, each sensor's exact log-odds push,
-   each window, the strongest features (TreeSHAP) and a template explanation.
-5. The answer becomes a report with its own share code. The patient sees it in plain words; a doctor who
-   enters the code sees the full analysis, and it lists under **Model results**.
+3. The station "captures". This demo station has no sensors, so it sends one of the reasoning model's demo cases
+   (readings and answers, `reasoning_model/demo_samples/`), in turn.
+4. The server runs the triage on that case (`server/lib/reasoning.js` → `python -m triage.demo_service`). It returns
+   the level (Urgent / See a doctor soon / Self-care / …), the rule that fired and why, every reading against its
+   normal and urgent range, and the explanation card.
+5. The answer becomes a report with its own share code. The patient sees the result screen; a doctor who enters the
+   code sees the same, and it lists under **Model results**.
 
-The server starts the model service itself (Python from `reasoning_model/.venv`, else `python3`, or
-`MODEL_PYTHON`). `python model_service/serve.py --check` confirms it reproduces `fusion.py`'s own
-probabilities; `model_service/export_samples.py` rebuilds the samples and copies their fold models.
+The server starts the reasoning model itself (Python from `reasoning_model/.venv`, else `python3`, or `MODEL_PYTHON`),
+building the demo cases first if they are missing. Reports from before this change carry the earlier stress model's
+output (`model_service/`) and still display.
 
 ### Presentation run-through
 
@@ -373,20 +365,21 @@ straight away.
 1. Laptop / projector: open `https://<app>/kiosk` — the QR code.
 2. Phone (app or browser): create an account, fill in details, **Begin contactless scan**, point at the QR.
    If the camera won't start, **Continue without camera** links to the same station.
-3. Watch both screens: capture countdown → sample sent → model answers (about 15 s). **View session report**.
+3. Watch both screens: capture countdown → case sent → the reasoning model answers (about 15 s).
+   **View session report**.
 4. On the report, **Share with doctor** shows the code.
 5. Doctor: `/doctor/login` (or **I'm a doctor** on the sign-in screen) → **Add shared report** → the code.
-   The report shows the model output; **Model results** lists every scan and how often the call matched what
-   the person was really doing. Add a note on the patient page. The dashboard refreshes every 10 s.
+   The report shows the reasoning model's result; **Model results** lists every scan with its level and the rule
+   that fired. Add a note on the patient page. The dashboard refreshes every 10 s.
 
-Scans rotate through the samples (3-back high, 1-back low, 3-back dual high), so a second scan shows a
+Scans rotate through the demo cases (self-care, urgent, see a doctor soon, not suitable), so a second scan shows a
 different result.
 
 ## Deploy (Render)
 
 `render.yaml` defines one free Docker web service (`Dockerfile`): the built client, the Express API and the
-Python model service and the triage reasoning service, all on one HTTPS URL. The image build runs the model self-check, so a broken model
-fails the deploy instead of the demo.
+reasoning model, all on one HTTPS URL. The image build makes the demo cases with the model's own code, so a broken
+model fails the deploy instead of the demo.
 
 1. Render dashboard → **New → Blueprint** → pick this repo and branch.
 2. Fill in `MONGODB_URI` (MongoDB Atlas; allow `0.0.0.0/0` in Network Access),

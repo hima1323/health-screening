@@ -25,6 +25,11 @@ const TONE_BY_STATUS = {
   'below range': 'warn',
   'low mental load': 'ok',
   'high mental load': 'warn',
+  // the reasoning model's triage levels
+  urgent: 'crit',
+  'see a doctor soon': 'warn',
+  'self-care': 'ok',
+  remeasure: 'warn',
   linked: 'warn',
   uploading: 'warn',
   done: 'ok',

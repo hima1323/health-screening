@@ -18,6 +18,8 @@ import {
 } from '../../components/ui';
 import { rangePosition } from '../../utils/range';
 import { RESULTS } from '../../utils/results';
+import TriageResult from '../../components/TriageResult';
+import { modelCall } from '../../utils/reasoning';
 import styles from './SessionReport.module.css';
 import usePrefs from '../../hooks/usePrefs';
 
@@ -129,7 +131,8 @@ function Report({ sessionId }) {
         </ul>
       </Card>
 
-      {data.model && <ModelReading model={data.model} />}
+      {data.reasoning && <TriageResult result={data.reasoning} source="Demo case the station sent" />}
+      {!data.reasoning && data.model && <ModelReading model={data.model} />}
 
       <Button onClick={() => setSharing(true)} aria-haspopup="dialog">
         {t(`Share with doctor · Code ${shareCode}`)}
@@ -189,8 +192,8 @@ function shareText(data, sessionId) {
     const r = data[key];
     return `• ${label}: ${r.value} ${unit} — ${r.status}${r.normalRange ? ` (normal ${r.normalRange})` : ''}`;
   });
-  const model = data.model?.summary;
-  if (model) lines.push(`• Mental load: ${MODEL_READING[model.abstain ? 'unsure' : model.label].title}`);
+  const call = modelCall(data);
+  if (call) lines.push(`• Reasoning model: ${call.title}`);
   return [
     `My Aura Screen results, session ${sessionId}:`,
     ...lines,
