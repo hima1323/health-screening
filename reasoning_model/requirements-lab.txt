@@ -8,5 +8,5 @@ jsonschema
 openpyxl
 streamlit
 pytest
-opencv-python-headless
+opencv-python-headless>=4.8,<5   # OpenCV 5 dropped the Haar face detector (CascadeClassifier) the face crop uses
 torch

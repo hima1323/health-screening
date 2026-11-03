@@ -262,6 +262,7 @@ cd reasoning_model
 python3 -m venv .venv                   # Windows: python -m venv .venv
 source .venv/bin/activate               # Windows: .venv\Scripts\activate
 pip install -r requirements-lab.txt
+cd src && python -m triage.demo_samples --build && cd ..   # the demo cases (one test and the app use them)
 python -m pytest -q                     # expect: 244 passed
 cd ..
 ```
