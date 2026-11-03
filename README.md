@@ -1,6 +1,6 @@
 # Aura Screen
 
-### 🌐 Live website: **https://aura-screen.onrender.com**
+### 🌐 Live website: **[aura-screen.onrender.com](https://aura-screen.onrender.com)**
 
 A contactless health pre-screening app. A patient scans the QR code at a screening station with their phone; the
 station reads their vital signs without touching them, a **reasoning model** decides how urgently they should see a
@@ -16,6 +16,7 @@ doctor.
 
 | Link | |
 |---|---|
+| **Live website (hosted on Render)** | **[https://aura-screen.onrender.com](https://aura-screen.onrender.com)** |
 | Code | https://github.com/hima1323/health-screening |
 | Presentation (PPT) | _add link here_ |
 | Demo video | _add link here_ |
@@ -475,7 +476,7 @@ different result.
 
 ## Deployment
 
-Live on Render at **https://aura-screen.onrender.com** (service `aura-screen`, free plan, deploys from this
+Live on Render at **[https://aura-screen.onrender.com](https://aura-screen.onrender.com)** (service `aura-screen`, free plan, deploys from this
 repository's `reasoning-model` branch on every push).
 
 `render.yaml` defines one free Docker web service (`Dockerfile`): the built client, the Express API and the
@@ -495,7 +496,7 @@ GitHub Actions job (`.github/workflows/keep-awake.yml`) pings https://aura-scree
 minutes too, so the free instance doesn't sleep. `/api/health` also reports whether the reasoning model is up
 (`"model": true`) — check it before presenting.
 
-The site works in any phone or laptop browser at https://aura-screen.onrender.com.
+The site works in any phone or laptop browser at [https://aura-screen.onrender.com](https://aura-screen.onrender.com).
 Uploaded past reports live on the instance's disk and are lost on each redeploy.
 
 The triage demo runs on the hosted site too: scan a printed code from `docs/demo-qr/` with **Begin contactless
