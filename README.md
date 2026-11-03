@@ -475,6 +475,9 @@ different result.
 
 ## Deployment
 
+Live on Render at **https://aura-screen.onrender.com** (service `aura-screen`, free plan, deploys from this
+repository's `reasoning-model` branch on every push).
+
 `render.yaml` defines one free Docker web service (`Dockerfile`): the built client, the Express API and the
 reasoning model, all on one HTTPS URL. The image build makes the demo cases with the model's own code, so a broken
 model fails the deploy instead of the demo.
@@ -487,11 +490,12 @@ model fails the deploy instead of the demo.
 4. For Google sign-in, add the `https://<name>.onrender.com` URL to the OAuth
    client's Authorised JavaScript origins.
 
-The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_URL`
-is set, which Render does) so the free instance doesn't sleep. `/api/health` also reports whether the model
-service is up (`"model": true`) — check it before presenting.
+The server pings its own `/api/health` every 5 minutes (when `RENDER_EXTERNAL_URL` is set, which Render does), and a
+GitHub Actions job (`.github/workflows/keep-awake.yml`) pings https://aura-screen.onrender.com/api/health every 5
+minutes too, so the free instance doesn't sleep. `/api/health` also reports whether the reasoning model is up
+(`"model": true`) — check it before presenting.
 
-The site works in any phone or laptop browser at the onrender.com URL.
+The site works in any phone or laptop browser at https://aura-screen.onrender.com.
 Uploaded past reports live on the instance's disk and are lost on each redeploy.
 
 The triage demo runs on the hosted site too: scan a printed code from `docs/demo-qr/` with **Begin contactless
