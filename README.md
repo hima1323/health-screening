@@ -337,6 +337,142 @@ python3 analysis/build_sessions.py && (cd server && npm run sessions)
 
 `cd server && npm run demo-qr` remakes the printable QR codes after the demo cases change.
 
+## Models: setup, training and evaluation
+
+The app needs none of this: the trained rPPG weights are committed and the triage rules are plain YAML. This is how
+to rebuild or retrain each model. Every command assumes the venv from [step 2](#2-python-environment-once) is active.
+
+| Model | Folder | Used by the app | What "training" means |
+|-------|--------|-----------------|-----------------------|
+| rPPG (heart rate from a face video) | `rppg1/`, `cvprlab/` | Triage Lab face-video tab, live webcam dashboard | Deep learning (PyTorch) on MCD-rPPG, tested on UBFC-rPPG |
+| Triage reasoning model | `reasoning_model/src/triage/`, `configs/triage/` | Live scans and the printed QR codes | No fitting: rules are written, checked against ED data and benchmarked |
+| Earlier stress model | `reasoning_model/src/*.py`, `model_service/` | No longer (kept for the report) | LightGBM + fusion, leave-one-subject-out on ADABase |
+
+### A. rPPG model (CVPR Lab P4 and PhysFormer)
+
+**Setup.** `requirements-lab.txt` (step 2) already has PyTorch, OpenCV and SciPy. Training needs an NVIDIA GPU with
+6 GB or more (runs use fp16); inference and the tests run on CPU.
+
+**1. Get the data** (from `rppg1/`; each script is resumable):
+
+```bash
+cd rppg1
+python -m bench.download_mcd --n 100 --camera IriunWebcam     # MCD-rPPG (Hugging Face, CC-BY-4.0): video + synced PPG
+python -m bench.fetch_ubfc                                    # UBFC-rPPG DATASET_2, cached and raw deleted (~4 GB)
+```
+
+UBFC-rPPG is for research use; faces of subjects 21 and 27 must not appear in any report or presentation.
+
+**2. Preprocess** (face crop, 128 × 128, DiffNormalized) into `rppg1/data/cache`:
+
+```bash
+python -m bench.preprocess --dataset mcd --raw data/raw/MCD-rPPG --camera IriunWebcam --max-seconds 60
+```
+
+(`fetch_ubfc` already writes UBFC-rPPG to the cache.)
+
+**3. Train.** Subject-disjoint split: 64 train / 16 validation / 20 held-out test subjects; best epoch by validation
+heart-rate RMSE. Weights go to `rppg1/runs/<name>/best.pt`.
+
+```bash
+# the model the app uses: CVPR Lab phase 4 (frequency), 30 epochs
+python -m bench.run train --arch cvprlab:phase4_frequency --train mcd_IriunWebcam --test mcd_IriunWebcam \
+    --epochs 30 --name CVPR_P4_e30_MCD
+# the PhysFormer baseline (rppg1/model/physformer.py)
+python -m bench.run train --train mcd_IriunWebcam --test mcd_IriunWebcam --name MCD_MCD
+
+python -m bench.ladder       # ablation: CVPR Lab phase 1 -> 2 -> 3 -> 4, each also tested on UBFC-rPPG
+python -m bench.campaign     # the longer / deeper runs (30 epochs, depth 12, augmentation)
+```
+
+**4. Evaluate:**
+
+```bash
+python -m bench.run test --arch cvprlab:phase4_frequency --ckpt runs/CVPR_P4_e30_MCD/best.pt --test ubfc
+python -m bench.run pos --test ubfc        # classical POS baseline, no training
+python -m bench.run report                 # -> runs/REPORT.md (every run vs rPPG-Toolbox published numbers)
+python -m bench.tables_figure              # -> runs/comparison_tables*.png
+```
+
+**5. Use a trained model:**
+
+```bash
+python -m bench.infer --list                          # the trained models
+python -m bench.infer --video my_face.mp4             # heart rate from a 30-60 s face video (best model, P4)
+streamlit run webapp/streamlit_app.py                 # live webcam heart rate in the browser
+```
+
+**Tests:** `cd cvprlab && python -m pytest tests -q` (18 tests: the architecture's claims, not just shapes).
+Results so far are in [`rppg1/runs/REPORT.md`](rppg1/runs/REPORT.md); the architecture is described in
+[`cvprlab/README.md`](cvprlab/README.md).
+
+### B. Triage reasoning model (the one the app runs)
+
+It is an expert system, so there is nothing to fit: ordered rules in `configs/triage/rules.yaml` decide the level,
+ranges come from `vital_ranges.yaml`, red flags from `red_flags.yaml`. The data is used to **check and tune** the
+draft rules and to **benchmark** them. All commands run from `reasoning_model/src`.
+
+**1. Tests** (no data needed): `cd reasoning_model && python -m pytest -q` (244 tests).
+
+**2. Get the open ED data** into `reasoning_model/data/public/` (not committed):
+
+| Dataset | Source | Put it at |
+|---------|--------|-----------|
+| MIMIC-IV-ED Demo v2.2 | https://physionet.org/content/mimic-iv-ed-demo/2.2/ (open) | `data/public/mimic_iv_ed_demo/mimic-iv-ed-demo-2.2/ed/*.csv.gz` |
+| Yale ED triage (Hong et al. 2018) | Zenodo 1308993 (repo `yaleemmlc/admissionprediction`) | `data/public/yale_triage/yaleemmlc-admissionprediction-5cf50bc/Results/5v_cleandf.RData` |
+| NHANES 2017-2018 (DEMO_J, BPX_J) | CDC | fetched by `--download` below |
+
+```bash
+cd reasoning_model/src
+python -m triage.bench.yale --build                    # streams the 972-column RData -> cases.parquet
+```
+
+**3. Check and tune the rules** (dev split only; outputs are aggregates in `results/triage/derive/`):
+
+```bash
+python -m triage.derive.mimic_dev_bands                # urgent-visit rates per vital-sign band, per cut-off
+python -m triage.derive.nhanes_overreferral --download # how many healthy adults each cut-off would flag
+python -m triage.derive.rule_learning --yale           # small decision tree: rule suggestions for the clinician
+python -m triage.derive.source_check                   # every range and score against its official source
+python -m triage.derive.delphi --round 1               # Delphi pack for the clinicians to rate the rules
+```
+
+A rule changes only in `configs/triage/rules.yaml`, after review; the tests then pin its behaviour.
+
+**4. Benchmark** on the held-out data (Yale test split and MIMIC-IV-ED Demo) against NEWS2, always-refer and
+learned baselines:
+
+```bash
+python -m triage.bench.run_bench                       # -> results/triage/REPORT.md, bench_results.json
+python -m triage.bench.vignettes                       # the draft vignettes
+```
+
+**5. Explanations with the local LLM** (optional; templates otherwise): install Ollama, `ollama pull
+qwen2.5:3b-instruct`. The model only words the explanation; the verifier rejects any number not in the record.
+
+**6. The app's cases:** `python -m triage.demo_samples --build` writes `reasoning_model/demo_samples/` (MIMIC, Yale
+and rPPG cases when that data is present, else the draft vignettes); `cd server && npm run demo-qr` prints their QR
+codes. The server builds the cases by itself on first start.
+
+### C. Earlier stress model (ADABase; kept for the report, not run by the app)
+
+Predicts high vs low mental load from physiological signals with per-modality LightGBM agents and a fusion model,
+leave-one-subject-out over 30 ADABase subjects, with SHAP evidence and an LLM explanation checked by a verifier.
+Details in [`reasoning_model/CLAUDE.md`](reasoning_model/CLAUDE.md).
+
+```bash
+cd reasoning_model
+pip install -r requirements.txt                          # full set (mlx / mlx-lm only on Apple Silicon)
+export ADABASE_PASSWORD='<share password>'               # from the ADABase authors; never commit it
+python src/features.py --all --delete-raw                # download -> features -> delete raw, one subject at a time
+python src/train.py --task binary --tune                 # LightGBM, LOSO, isotonic calibration, SHAP
+python src/fusion.py                                     # modality agents + fusion
+python src/evidence.py --all --fusion                    # evidence records
+python src/reasoner.py --subject 0 --fusion              # explanation (Ollama, else template) + verifier
+python src/evaluate.py --ablations                       # metrics, ablations, calibration, faithfulness
+sh run_pipeline.sh                                       # all of the above, plus the LoRA fine-tune
+```
+
 ## Live scan and the reasoning model
 
 A scan runs end to end on real requests, and the reasoning model is the triage expert system in
