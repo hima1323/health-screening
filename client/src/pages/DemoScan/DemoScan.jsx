@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { runTriage } from '../../api';
 import Layout from '../../components/Layout';
 import AuraOrb from '../../components/AuraOrb';
@@ -7,16 +7,15 @@ import TriageResult from '../../components/TriageResult';
 import { Card, Button } from '../../components/ui';
 import styles from './DemoScan.module.css';
 
-const PHASES = ['Reading the sample file', 'Checking signal quality', 'Applying the triage rules', 'Writing the explanation'];
+const PHASES = ['Reading your measurements', 'Checking signal quality', 'Applying the triage rules', 'Writing the explanation'];
 
 /**
- * Reasoning-model demo result (/demo?sample=<id>). The Scan Hub opens it when the patient scans a printed demo QR
- * (server/scripts/demo-qr.js); the server runs the rule-based triage on that sample file and this page shows the
- * readings, the decision and why.
+ * The reasoning model's result for a scanned case (/result). The Scan Hub opens it, passing the case id in the
+ * navigation state, when the patient scans a printed case QR (server/scripts/demo-qr.js); the server runs the
+ * rule-based triage on that case and this page shows the readings, the decision and why.
  */
 export default function DemoScan() {
-  const [params] = useSearchParams();
-  const sample = params.get('sample');
+  const sample = useLocation().state?.sample;
   const navigate = useNavigate();
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);

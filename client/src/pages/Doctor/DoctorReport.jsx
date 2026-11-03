@@ -111,7 +111,7 @@ export default function DoctorReport() {
         </div>
       </Card>
 
-      {report.reasoning && <TriageResult result={report.reasoning} source="Demo case the station sent" />}
+      {report.reasoning && <TriageResult result={report.reasoning} />}
       {!report.reasoning && report.model && <ModelResult model={report.model} />}
 
       <Card>

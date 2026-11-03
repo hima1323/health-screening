@@ -45,9 +45,9 @@ export default function ScanHub() {
     return (
       <Layout eyebrow="Aura Screen" title="Scan to begin" showTabs={false}>
         <QrScanner
-          // a demo kiosk code carries a sample data file: run the reasoning model on it (/demo)
+          // a printed case code names one of the reasoning model's cases: show its result (/result)
           onScanned={(text, verified) => {
-            if (verified?.sample) return navigate(`/demo?sample=${encodeURIComponent(verified.sample)}`);
+            if (verified?.sample) return navigate('/result', { state: { sample: verified.sample } });
             setCode(text);
             setStep('scanning');
           }}

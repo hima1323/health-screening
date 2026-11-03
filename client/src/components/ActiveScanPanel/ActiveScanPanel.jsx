@@ -84,7 +84,7 @@ export default function ActiveScanPanel({ code, stationLabel = 'Station 2', onCo
     {
       key: 'capturing',
       label: 'Station capturing',
-      detail: scan?.sample ? `Demo station sends a demo case: ${scan.sample.task}` : 'Reading your signals.',
+      detail: 'Measuring your heart rate, breathing and temperature.',
     },
     {
       key: 'uploading',

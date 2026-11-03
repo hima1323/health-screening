@@ -13,7 +13,7 @@ function detail(report) {
     const { rule, sample } = report.reasoning;
     const ref = sample.reference_level;
     const check = ref ? (ref === report.reasoning.level ? ' · matches the reference' : ' · differs from the reference') : '';
-    return `Rule ${rule.id} · case: ${sample.title}${check}`;
+    return `Rule ${rule.id}: ${rule.reason}${check}`;
   }
   const { summary, sample } = report.model;
   const matched = !summary.abstain && summary.label === sample.truth;

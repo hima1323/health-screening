@@ -31,7 +31,7 @@ async function main() {
       .split('-')
       .slice(0, 6)
       .join('-');
-    const name = `${sample.id}${LEVELS[sample.reference_level] ? `-${LEVELS[sample.reference_level]}` : ''}-${slug}.png`;
+    const name = `aura-scan-${slug}${LEVELS[sample.reference_level] ? `-${LEVELS[sample.reference_level]}` : ''}.png`;
     await QRCode.toFile(path.join(OUT, name), `AURA-DEMO:${sample.id}`, { width: 720, margin: 2, errorCorrectionLevel: 'M' });
     console.log(`${name}  ${sample.title}`);
   }

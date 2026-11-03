@@ -77,7 +77,7 @@ export default function Kiosk() {
 const STAGE_TEXT = {
   linked: 'Phone linked — starting the capture',
   capturing: 'Capturing — please hold still',
-  uploading: 'Sending the sample to the model server',
+  uploading: 'Sending the readings to the model',
   analysing: 'Model analysing the capture',
   done: 'Done — the results are on the phone',
   failed: 'The scan stopped — please scan again',

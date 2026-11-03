@@ -131,7 +131,7 @@ function Report({ sessionId }) {
         </ul>
       </Card>
 
-      {data.reasoning && <TriageResult result={data.reasoning} source="Demo case the station sent" />}
+      {data.reasoning && <TriageResult result={data.reasoning} />}
       {!data.reasoning && data.model && <ModelReading model={data.model} />}
 
       <Button onClick={() => setSharing(true)} aria-haspopup="dialog">
@@ -155,7 +155,7 @@ function Report({ sessionId }) {
 
 function ModelReading({ model }) {
   const { t } = usePrefs();
-  const { summary, sample, skinTempC } = model;
+  const { summary, skinTempC } = model;
   const reading = MODEL_READING[summary.abstain ? 'unsure' : summary.label];
   const sure = Math.round(summary.confidence * 100);
   return (
@@ -179,9 +179,6 @@ function ModelReading({ model }) {
       {skinTempC != null && (
         <p className="muted small">{t(`Finger skin temperature ${skinTempC.toFixed(1)} °C — skin runs cooler than the body inside.`)}</p>
       )}
-      <p className="muted small">
-        {t(`Demo station: it replayed a recorded ${sample.task} from a research study instead of live sensors.`)}
-      </p>
     </Card>
   );
 }

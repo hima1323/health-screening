@@ -46,8 +46,8 @@ export default function App() {
 
             {/* the station's own screen — shows the signed QR code, needs no account */}
             <Route path="/kiosk" element={<Kiosk />} />
-            {/* reasoning-model demo result: the Scan Hub opens it for a printed demo QR (server/scripts/demo-qr.js) */}
-            <Route path="/demo" element={<DemoScan />} />
+            {/* the reasoning model's result for a printed case QR (server/scripts/demo-qr.js), opened by the Scan Hub */}
+            <Route path="/result" element={<DemoScan />} />
 
             {/* the clinician side — its own sign-in; a doctor sees only reports patients shared with them */}
             <Route path="/doctor/login" element={<DoctorLogin />} />
