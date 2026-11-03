@@ -18,8 +18,8 @@ doctor.
 |---|---|
 | **Live website (hosted on Render)** | **[https://aura-screen.onrender.com](https://aura-screen.onrender.com)** |
 | Code | https://github.com/hima1323/health-screening |
-| Presentation (PPT) | _add link here_ |
-| Demo video | _add link here_ |
+| Presentation (PPT) | [Google Drive folder](https://drive.google.com/drive/folders/1_JIU5m7tUj5NBQN36SzoFNGy4ilYeFui?usp=sharing) |
+| Demo video | [YouTube](https://youtu.be/e6dh0Q-tbj0) |
 | Case QR codes | [`docs/demo-qr/`](docs/demo-qr/): print one and scan it from the Scan Hub |
 
 The live site runs on Render's free plan: the first visit after a quiet spell can take about 50 seconds.
