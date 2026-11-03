@@ -40,7 +40,7 @@ function keepAwake(url) {
 model.start();
 reasoning.start();
 
-// DEMO_WITHOUT_DB=1: a presentation laptop without MongoDB. Only the database-free routes work (the kiosk demo QR,
+// DEMO_WITHOUT_DB=1: a presentation laptop without MongoDB. Only the database-free routes work (the triage demo,
 // the reasoning-model demo at /demo, health); every other API call fails with a database error.
 if (process.env.DEMO_WITHOUT_DB === '1') {
   app.listen(PORT, () => console.log(`Aura Screen API (demo, no database) listening on port ${PORT}`));
