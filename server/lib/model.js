@@ -14,8 +14,12 @@ const URL = process.env.MODEL_URL || `http://127.0.0.1:${PORT}`;
 
 function pythonPath() {
   if (process.env.MODEL_PYTHON) return process.env.MODEL_PYTHON;
-  const venv = path.join(SERVICE_DIR, '..', 'reasoning_model', '.venv', 'bin', 'python');
-  return fs.existsSync(venv) ? venv : 'python3';
+  const venv = path.join(SERVICE_DIR, '..', 'reasoning_model', '.venv');
+  // macOS/Linux venvs keep python in bin/, Windows ones in Scripts\
+  for (const python of [path.join(venv, 'bin', 'python'), path.join(venv, 'Scripts', 'python.exe')]) {
+    if (fs.existsSync(python)) return python;
+  }
+  return process.platform === 'win32' ? 'python' : 'python3';
 }
 
 function start() {

@@ -9,10 +9,14 @@ from MongoDB, nothing is hardcoded in the client.
 
 | What | Link |
 |------|------|
+| Live site | https://aura-screen.onrender.com (free plan: the first visit after a quiet spell can take ~50 s) |
 | Code | https://github.com/hima1323/health-screening |
 | Presentation (PPT) | _add link here_ |
 | Demo video | _add link here_ |
-| Live site | _add link here after deployment_ |
+| Demo QR codes | [`docs/demo-qr/`](docs/demo-qr/) — print one and scan it from the Scan Hub |
+
+**Evaluators:** the quickest check is the live site. To run it yourself, follow
+[Setup and steps to execute](#setup-and-steps-to-execute) from a fresh clone.
 
 ## Project components
 
@@ -186,6 +190,9 @@ gh pr create --base main              # open a pull request into main
 | 30 Sep 2026 | Fewer sample reports, dates on session cards | `0b00956` |
 | 5 Oct 2026 | Clearer camera errors, only the kiosk's own QR codes accepted, shorter session report with working sharing, step-by-step explanation of each past session | `a1dce8d`, `ed9dcd7`, `21886b9` |
 | 6 Oct 2026 | Doctor portal for shared reports; README with problem statement, objectives, workflow diagrams and screenshots | `5bb5c98`, `71b1edb` … `d8e71a4` |
+| 25 Oct 2026 | Deployed to Render as one service; live scans run the reasoning model; full doctor dashboard | `bed1160`, `84d33b1` |
+| 2 Nov 2026 | Reasoning model: expert triage system, Triage Lab, CVPR Lab rPPG model and trained weights | `347b611` … `63c924c` |
+| 3 Nov 2026 | Reasoning model merged into the website (Android app dropped), original theme kept, printed demo QR codes, keep-awake ping | `e8fb2d8` … |
 
 Run `git log --oneline` for the full list.
 
@@ -196,14 +203,15 @@ git clone https://github.com/hima1323/health-screening.git
 cd health-screening
 ```
 
-Then follow [Run it](#run-it) below.
+Then follow [Setup and steps to execute](#setup-and-steps-to-execute) below.
 
 ## Structure
 
 ```
 health-screening/
-├── client/                 Vite React app (patient screens, kiosk, demo scan, doctor portal)
+├── client/                 Vite React app (patient screens, kiosk, triage result, doctor portal)
 ├── server/                 Express + Mongoose API (auth, screening data, live scans, doctor, /api/triage proxy)
+│   └── scripts/            seed.js (demo data), load-sessions.js, demo-qr.js (printable demo QR codes)
 ├── model_service/          the reasoning model as an HTTP service (Python), its fold models and samples
 ├── rppg1/                  rPPG training, benchmark and live dashboard
 │   ├── model/              PhysFormer
@@ -217,24 +225,52 @@ health-screening/
 │   │                       lab_app (Triage Lab), kiosk_app, demo_service, bench/, derive/, measure/
 │   ├── vignettes/ templates/ evidence/   sample cases and clinician templates
 │   └── tests/              244 tests
-├── docs/                   diagrams, screenshots
+├── docs/                   diagrams, screenshots, demo-qr/ (printable QR codes for the triage demo)
+├── .github/workflows/      keep-awake.yml: pings the live site every 5 min so it never sleeps
+├── Dockerfile              one image: built client + API + both Python services
 └── render.yaml             Render deployment
 ```
 
 ## Setup and steps to execute
 
-Tested on Windows 11 with Python 3.13/3.14 and Node 24. Everything below runs from a fresh clone.
+Tested on Windows 11 and macOS. Every command runs from a fresh clone; commands are written for macOS/Linux, with
+the Windows form beside them where it differs.
 
-### A. Triage Lab (reasoning model and rPPG model) - no database needed
+### Prerequisites
+
+| Tool | Version | Used for |
+|------|---------|----------|
+| Git | any | cloning |
+| Node.js | 22 or newer (with npm) | the app and the API |
+| Python | 3.12 or 3.13 | the reasoning model, the model service, the Triage Lab |
+| MongoDB | 7 or newer, running locally — or a MongoDB Atlas database | the app's data |
+
+### 1. Get the code
 
 ```bash
 git clone https://github.com/hima1323/health-screening.git
-cd health-screening/reasoning_model
-python -m venv .venv
-.venv\Scripts\activate                 # macOS/Linux: source .venv/bin/activate
-pip install -r requirements-lab.txt
+cd health-screening
+```
+
+### 2. Python environment (once)
+
+One virtual environment serves the Triage Lab, the triage demo service and the live-scan model service. The server
+finds it at `reasoning_model/.venv` by itself.
+
+```bash
+cd reasoning_model
+python3 -m venv .venv                   # Windows: python -m venv .venv
+source .venv/bin/activate               # Windows: .venv\Scripts\activate
+pip install -r requirements-lab.txt -r ../model_service/requirements.txt
 python -m pytest -q                     # expect: 244 passed
-streamlit run src/triage/lab_app.py     # opens http://localhost:8501
+cd ..
+```
+
+### 3. Triage Lab (reasoning model and rPPG model) — no database needed
+
+```bash
+cd reasoning_model
+streamlit run src/triage/lab_app.py     # opens http://localhost:8501 (venv from step 2 active)
 ```
 
 1. Tab **0 - Try a sample**: choose "Draft vignettes" (or "Template sample"), pick a case. Section 1 shows the input,
@@ -249,35 +285,55 @@ streamlit run src/triage/lab_app.py     # opens http://localhost:8501
 The explanation text uses fixed templates by default. To use the local LLM, install Ollama, run
 `ollama pull qwen2.5:3b-instruct`, and switch on "Write the explanation with the local LLM".
 
-### B. Patient app
+### 4. Patient app
+
+**Terminal 1 — API** (MongoDB must be running):
 
 ```bash
-cd server && npm install && cp .env.example .env     # set MONGODB_URI (local MongoDB or Atlas)
-npm run seed && npm start                             # API on http://localhost:4000
-cd ../client && npm install && npm run dev            # http://localhost:5173
+cd server
+npm install
+cp .env.example .env                    # Windows: copy .env.example .env
+npm run seed                            # demo patient, station, past sessions, demo doctor
+npm start                               # http://localhost:4000 — also starts the model service
 ```
 
-### C. Patient app with the triage demo (QR -> sample -> result)
+`.env` works as copied for a local MongoDB. For Atlas, set `MONGODB_URI` in it (see [Environment](#environment)).
 
-Start the reasoning service, then the app: `cd reasoning_model/src && python -m triage.demo_service` (port 5055), and
-run section B. Print the demo QR codes in `docs/demo-qr/` (one per demo case; `cd server && npm run demo-qr` remakes
-them from `reasoning_model/demo_samples`). Sign in, press **Begin contactless scan** on the Scan Hub and scan one: the
-app shows the triage result for that case. The codes never expire.
-
-## Run it (patient app, detail)
-
-Needs MongoDB on `mongodb://127.0.0.1:27017`, or set `MONGODB_URI`.
+**Terminal 2 — triage demo service:**
 
 ```bash
-# 1. configure and seed (once)
-cd server && npm install && cp .env.example .env && npm run seed
-
-# 2. API
-npm start                       # http://localhost:4000
-
-# 3. client, in a second terminal
-cd ../client && npm install && npm run dev    # http://localhost:5173
+cd reasoning_model/src                  # venv from step 2 active
+python -m triage.demo_samples --build   # once: writes the demo cases to reasoning_model/demo_samples/
+python -m triage.demo_service           # http://127.0.0.1:5055
 ```
+
+**Terminal 3 — app:**
+
+```bash
+cd client
+npm install
+npm run dev                             # open http://localhost:5173
+```
+
+### 5. Try it
+
+1. Open http://localhost:5173, step through the introduction (or **Skip the introduction**), choose
+   **Create account** and fill in the details.
+2. **Triage demo:** on the Scan Hub press **Begin contactless scan** and scan a printed code from
+   [`docs/demo-qr/`](docs/demo-qr/) (or show it on a second screen). The app shows the triage result for that case:
+   level, reason, readings against their ranges and the explanation.
+3. **Live scan:** open http://localhost:5173/kiosk on a second screen and scan its QR from the Scan Hub. After the
+   capture countdown the model answers and **View session report** opens the report
+   ([details](#live-scan-and-the-reasoning-model)).
+4. **Doctor:** http://localhost:5173/doctor/login. With `DEMO_DOCTOR_EMAIL` left empty the demo doctor is
+   `doctor@aura.test`, password `aura-5e9394ee` (from `server/scripts/seed.js`); with your Google address there,
+   sign in with Google.
+
+A phone allows the camera only on https or localhost. To scan from a phone on the same Wi-Fi, start the app with
+`HTTPS=1 npm run dev` (Windows: `set HTTPS=1&& npm run dev`) and open `https://<laptop IP>:5173`, accepting the
+certificate warning once. `start_aura_demo.bat` starts all three terminals on Windows.
+
+### Rebuilding data
 
 After changing the analysis, rebuild the study sessions and reload just those —
 `npm run sessions` leaves user accounts alone, so nobody gets signed out.
@@ -286,6 +342,8 @@ After changing the analysis, rebuild the study sessions and reload just those �
 ```bash
 python3 analysis/build_sessions.py && (cd server && npm run sessions)
 ```
+
+`cd server && npm run demo-qr` remakes the printable QR codes after the demo cases change.
 
 ## Live scan and the reasoning model
 
@@ -308,6 +366,9 @@ The server starts the model service itself (Python from `reasoning_model/.venv`,
 probabilities; `model_service/export_samples.py` rebuilds the samples and copies their fold models.
 
 ### Presentation run-through
+
+For the reasoning-model triage demo instead, scan a printed code from `docs/demo-qr/` in step 2; the result shows
+straight away.
 
 1. Laptop / projector: open `https://<app>/kiosk` — the QR code.
 2. Phone (app or browser): create an account, fill in details, **Begin contactless scan**, point at the QR.
