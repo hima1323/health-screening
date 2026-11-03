@@ -1,22 +1,20 @@
 flowchart LR
-    subgraph Kiosk station
-        CAM[Camera / thermal / ECG / EMG]
-        KS[Kiosk page<br/>rotating QR]
+    subgraph Users ["Any browser"]
+        P["Patient<br/>phone app"]
+        K["Kiosk screen<br/>signed QR, live status"]
+        DR["Doctor<br/>portal"]
+        Q[["Printed case<br/>QR codes"]]
     end
-    subgraph Client [React client · Vite]
-        P[Patient app]
-        DR[Doctor portal]
+    subgraph Render ["Render · one Docker web service<br/>aura-screen.onrender.com"]
+        WEB["React + Vite client<br/>built, served by Express"]
+        API["Express API<br/>auth · scans · reports ·<br/>doctor · triage"]
+        RM["Reasoning model<br/>Python triage expert system<br/>started by the API"]
     end
-    subgraph Server [Express API]
-        AUTH["/api/auth<br/>JWT + Google"]
-        API["/api<br/>scan hub, sessions, reports"]
-        DOC["/api/doctor<br/>shared reports"]
-    end
-    DB[(MongoDB)]
-    PY[Python analysis<br/>rPPG POS/CHROM, PhysFormer]
+    DB[("MongoDB Atlas<br/>accounts, patients, scans,<br/>reports, past sessions")]
+    GH["GitHub Actions<br/>pings every 5 min"]
 
-    KS -- QR --> P
-    P --> AUTH & API
-    DR --> DOC
-    AUTH & API & DOC --> DB
-    CAM --> PY -- session JSON --> DB
+    Users -- "HTTPS" --> API
+    WEB --- API
+    API -- "case → result" --> RM
+    API --> DB
+    GH -. "/api/health" .-> API
