@@ -165,21 +165,6 @@ git push -u origin feature/<name>     # publish it
 gh pr create --base main              # open a pull request into main
 ```
 
-<img src="docs/screenshots/github-pull-request.png" alt="Pull request #1 merging merge/device-frame into main" width="760">
-
-### Commit conventions
-
-- One logical change per commit, so any commit can be reverted on its own.
-- The subject line says what the change does for the user, in the imperative
-  ("Explain camera errors and accept only our kiosk's QR codes"), not which
-  files changed.
-- Code, docs, screenshots and the trained rPPG weights (`rppg1/runs/*/best.pt`) are committed. Secrets, build
-  output and large data are not. `.gitignore` excludes `.env`, `node_modules/`, `dist/`, uploaded patient reports
-  (`server/uploads/`), the rPPG datasets and caches (`rppg1/data/`), clinical data (`reasoning_model/data/`),
-  screen recordings and voice notes.
-
-<img src="docs/screenshots/github-commits.png" alt="Commit history on GitHub" width="760">
-
 ### History
 
 | Date | What changed | Commits |
